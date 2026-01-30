@@ -10,6 +10,7 @@ function App() {
   const containerRef = useRef();
 
   useGSAP(() => {
+    // Header text animation
     gsap.from(".anim-text", {
       y: 30,
       opacity: 0,
@@ -18,6 +19,15 @@ function App() {
       ease: "power3.out",
       delay: 0.2
     });
+
+    // Hero image zoom-in animation
+    gsap.from(".heroImg", {
+      scale: 0.8,
+      opacity: 0,
+      duration: 1,
+      delay: 0.5,
+      ease: "power3.out"
+    });
   }, { scope: containerRef });
 
   return (
@@ -25,8 +35,8 @@ function App() {
       <NavBar />
       <div className="App">
 
-        <header className="App-header">
-          <div className="App-header-text" ref={containerRef}>
+        <header className="App-header" ref={containerRef}>
+          <div className="App-header-text">
             <h2 className="anim-text">Meet your doctor with</h2>
             <h1 className="anim-text">(Project Name)</h1>
             <p className="anim-text">Book appointments with qualified doctors easily and quickly.</p>
