@@ -4,9 +4,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #0056b3; /* Medical blue */
+  background-color: #365470;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -28,6 +27,7 @@
   margin: 0;
   padding: 0;
   gap: 20px;
+  align-items: center;
 }
 
 .nav-link {
@@ -41,6 +41,12 @@
 .nav-link:hover, .nav-link.active {
   color: #ffffff;
   text-decoration: underline;
+}
+
+
+.nav-login-btn{
+  background-color: #ffffff;
+  
 }
 
 @media (max-width: 768px) {

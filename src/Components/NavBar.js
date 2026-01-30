@@ -19,7 +19,7 @@ const NavBar = () => {
                     <Link to="/global appointments" className="nav-link">Appointments</Link>
                 </li>
                 <li>
-                    <Link to="/login" className="nav-link">Login</Link>
+                    <Link to="/login" className="nav-link"><button className="nav-login-btn">Login</button></Link>
                 </li>
             </ul>
         </nav>
