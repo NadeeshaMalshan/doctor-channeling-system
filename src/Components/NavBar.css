@@ -1,0 +1,55 @@
+/* NavBar.css */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0056b3; /* Medical blue */
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+.navbar-links {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+}
+
+.nav-link {
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .navbar-links {
+    margin-top: 1rem;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+}
