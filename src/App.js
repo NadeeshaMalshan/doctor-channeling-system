@@ -1,4 +1,4 @@
-import NavBar from './components/NavBar';
+import NavBar from './Components/NavBar';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -7,13 +7,13 @@ function App() {
     <Router>
       <NavBar />
       <div className="App">
-        
+
         <header className="App-header">
           <h1>Meet your doctor with (Project Name)</h1>
         </header>
       </div>
     </Router>
-    
+
   );
 }
 
