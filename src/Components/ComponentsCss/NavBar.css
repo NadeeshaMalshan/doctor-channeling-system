@@ -1,5 +1,6 @@
 /* NavBar.css */
 .navbar {
+    width: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -9,6 +10,8 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+  gap: 100px;
+  width: auto;
 }
 
 .navbar-brand {
