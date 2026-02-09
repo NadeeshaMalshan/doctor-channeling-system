@@ -1,35 +1,31 @@
-.App-header {
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-    gap: 200px;
-    min-height: 80vh;
-    color: #fff;
-
-
+/* ===== CSS Variables ===== */
+:root {
+    --color-primary: #3B5DB0;
+    --color-primary-dark: #2A4494;
+    --color-primary-light: rgba(59, 93, 176, 0.1);
+    --color-primary-hover: #2a4a8f;
+    --color-secondary: #1E3A5F;
+    --color-tertiary: #6B7280;
+    --color-white: #ffffff;
+    --color-background: #f8faff;
+    --color-border: #E5E7EB;
+    --color-accent: #5DADE2;
+    --gradient-primary: linear-gradient(135deg, #3B5DB0 0%, #1E3A5F 100%);
 }
 
-.App-header h1 {
-    font-size: 80px;
+/* ===== General Styles ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.App-header h2 {
-    font-weight: 300;
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--color-background);
 }
 
 .App {
-    background-color: #365470;
+    background-color: var(--color-background);
     min-height: 100vh;
-
-}
-
-.heroImg {
-    width: 750px;
-}
-
-.btn-container {
-    display: flex;
-    gap: 20px;
 }
