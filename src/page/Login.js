@@ -125,7 +125,7 @@ const Login = () => {
                                 <span className="checkmark"></span>
                                 Remember me
                             </label>
-                            <a href="#" className="forgot-link">Forgot Password?</a>
+                            <button type="button" className="forgot-link">Forgot Password?</button>
                         </div>
 
                         <button type="submit" className="login-btn" disabled={isLoading}>

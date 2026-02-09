@@ -9,6 +9,7 @@ const ChannelDoctor = ({ onSearch }) => {
         date: ''
     });
 
+    // eslint-disable-next-line no-unused-vars
     const hospitals = [
         'Any Hospital',
         'NC+ Hospital Narammala',
@@ -69,7 +70,7 @@ const ChannelDoctor = ({ onSearch }) => {
                     </div>
                 </div>
 
-                
+
 
                 <div className="form-group">
                     <div className="input-icon">
