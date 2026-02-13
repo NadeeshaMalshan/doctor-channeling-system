@@ -66,7 +66,7 @@ const Signup = () => {
         }, 1500);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!validateForm()) {
@@ -75,13 +75,44 @@ const Signup = () => {
 
         setIsLoading(true);
 
-        // Simulate Signup API call
-        setTimeout(() => {
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    firstName: formData.firstName,
+                    secondName: formData.secondName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    nic: formData.nic,
+                    password: formData.password
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Success
+                alert('Account created successfully!');
+                navigate('/login');
+            } else {
+                // Backend returned an error
+                setErrors(prev => ({
+                    ...prev,
+                    submit: data.message || 'Registration failed'
+                }));
+            }
+        } catch (error) {
+            console.error('Error during signup:', error);
+            setErrors(prev => ({
+                ...prev,
+                submit: 'Connection error. Please try again later.'
+            }));
+        } finally {
             setIsLoading(false);
-            // Ideally navigate to login or dashboard
-            // For now, let's go to Login so they can sign in
-            navigate('/login');
-        }, 1500);
+        }
     };
 
     return (
@@ -240,6 +271,7 @@ const Signup = () => {
                         <button type="submit" className="signup-btn" disabled={isLoading}>
                             {isLoading ? 'Creating Account...' : 'Sign Up'}
                         </button>
+                        {errors.submit && <div className="error-message" style={{ justifyContent: 'center', marginTop: '10px' }}>{errors.submit}</div>}
                     </form>
 
                     <div className="divider">
