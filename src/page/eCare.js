@@ -100,33 +100,105 @@ const ECare = () => {
                     </div>
                 </section>
 
-                {/* Smart Specialist Suggestion Banner */}
-                <section className="smart-suggestion-banner">
-                    <div className="banner-content">
-                        <div className="banner-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.4 3-5.7 0-3.9-3.1-7-7-7zm2.9 11.1l-.9.6V16h-4v-2.3l-.9-.6C7.8 12.2 7 10.6 7 9c0-2.8 2.2-5 5-5s5 2.2 5 5c0 1.6-.8 3.2-2.1 4.1z" />
-                            </svg>
+                {/* AI-Powered Features Banner */}
+                <section className="ai-features-banner">
+                    <div className="ai-features-container">
+                        {/* Left Side - Smart Suggestions */}
+                        <div className="ai-feature-card ai-suggestion-card">
+                            <div className="ai-card-glow"></div>
+                            <div className="ai-card-content">
+                                <div className="ai-card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 017 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" />
+                                    </svg>
+                                </div>
+                                <div className="ai-card-badge">
+                                    <span className="ai-badge-dot"></span>
+                                    AI Powered
+                                </div>
+                                <h3>Smart Suggestions</h3>
+                                <p>Not sure which specialist to visit? Our AI analyzes your symptoms and medical history to recommend the perfect doctor for you.</p>
+                                <div className="ai-card-features">
+                                    <div className="ai-card-feature-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                        <span>Symptom-based matching</span>
+                                    </div>
+                                    <div className="ai-card-feature-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                        <span>Personalized recommendations</span>
+                                    </div>
+                                    <div className="ai-card-feature-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                        <span>Smart scheduling optimization</span>
+                                    </div>
+                                </div>
+                                <span className="ai-card-disclaimer">⚠️ This is only a suggestion tool and works for selected conditions.</span>
+                                <button className="ai-card-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z" />
+                                    </svg>
+                                    Try Smart Suggestion
+                                </button>
+                            </div>
                         </div>
-                        <div className="banner-text">
-                            <h3>Not sure which specialist to visit?</h3>
-                            <p>Try our <strong>Smart Specialist Suggestion</strong>! Check your symptoms, predict potential conditions, and get matched with the right specialist for you.</p>
-                            <span className="banner-disclaimer">⚠️ Disclaimer: This is only a doctor suggestion tool and works for several diseases only.</span>
+
+                        {/* Right Side - AI Report Explainer */}
+                        <div className="ai-feature-card ai-explainer-card">
+                            <div className="ai-card-glow"></div>
+                            <div className="ai-card-content">
+                                <div className="ai-card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                                    </svg>
+                                </div>
+                                <div className="ai-card-badge ai-explainer-badge">
+                                    <span className="ai-badge-dot"></span>
+                                    Report Analysis
+                                </div>
+                                <h3>AI Report Explainer</h3>
+                                <p>Upload your lab reports and get instant AI-powered summaries in simple language. Understand your health metrics, normal ranges, and what needs attention.</p>
+                                <div className="ai-card-features">
+                                    <div className="ai-card-feature-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                        <span>Plain language summaries</span>
+                                    </div>
+                                    <div className="ai-card-feature-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                        <span>Highlight critical values</span>
+                                    </div>
+                                    <div className="ai-card-feature-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                        <span>Track health trends over time</span>
+                                    </div>
+                                </div>
+                                <button className="ai-card-btn ai-explainer-btn" >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6z" />
+                                    </svg>
+                                    Analyze My Report
+                                </button>
+                            </div>
                         </div>
-                        <button className="banner-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-2V9h-2l3-4 3 4h-2v8z" />
-                            </svg>
-                            Try Smart Suggestion
-                        </button>
                     </div>
                 </section>
 
                 {/* Doctors Section */}
                 <section className="ecare-doctors-section">
                     <div className="section-header">
-                        <h2>Available Doctors</h2>
-                        <p>Choose from our experienced specialists and book your appointment today</p>
+                        <h2>Our Doctors</h2>
+                        <p>Meet our team of highly qualified and experienced doctors who are committed to providing the best possible care to our patients.</p>
                     </div>
 
                     <div className="doctors-grid">
@@ -143,48 +215,34 @@ const ECare = () => {
                                         <p className="doctor-specialty">{doctor.specialty}</p>
                                         <p className="doctor-hospital">{doctor.hospital}</p>
                                     </div>
-                                    <span className={`availability-badge ${doctor.available ? 'available' : 'unavailable'}`}>
-                                        {doctor.available ? 'Available' : 'Unavailable'}
-                                    </span>
+                                    
                                 </div>
 
                                 <div className="doctor-card-body">
                                     <span className={`specialty-tag ${doctor.tagClass}`}>{doctor.specialty}</span>
                                     <p className="experience">{doctor.experience}</p>
 
-                                    <div className="schedule-info">
-                                        <div className="schedule-item">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
-                                            </svg>
-                                            <span>{doctor.days}</span>
-                                        </div>
-                                        <div className="schedule-item">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                                            </svg>
-                                            <span>{doctor.time}</span>
-                                        </div>
-                                    </div>
+                                    
                                 </div>
 
                                 <div className="doctor-card-footer">
-                                    <div className="fee-info">
-                                        <span className="fee-label">Channel Fee</span>
-                                        <span className="fee-amount">{doctor.fee}</span>
-                                    </div>
-                                    <button
-                                        className={`book-btn ${!doctor.available ? 'disabled' : ''}`}
-                                        disabled={!doctor.available}
-                                    >
-                                        {doctor.available ? 'Book Now' : 'Not Available'}
-                                    </button>
+                                    
+                                    <button className="viewInfo-btn">View info</button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </section>
             </main>
+
+            {/* Sticky Support Button */}
+            <div className="ecare-support-btn" title="Contact Support">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 14v4h-2v-4h2M7 14v4H6c-1.1 0-2-.9-2-2v-2h3m13-3V9c0-3.31-2.69-6-6-6S6 5.69 6 9v4h12m-6-8c-2.21 0-4 1.79-4 4v3h8V9c0-2.21-1.79-4-4-4z" />
+                    <path d="M19 20v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1H19z" opacity="0.3" />
+                    <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.48 3.53 1.34 5.02L2.3 20.82a1 1 0 0 0 1.22 1.22l3.8-1.04A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z" />
+                </svg>
+            </div>
 
             {/* Footer */}
             <footer className="ecare-footer">
