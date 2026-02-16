@@ -507,6 +507,11 @@
     transition: all 0.3s ease;
 }
 
+.viewInfo-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(59, 93, 176, 0.4);
+}
+
 .book-btn:hover:not(.disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(229, 57, 53, 0.4);
@@ -515,6 +520,48 @@
 .book-btn.disabled {
     background: #ccc;
     cursor: not-allowed;
+}
+
+/* Doctor Contact Information */
+.doctor-contact {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.doctor-email,
+.doctor-phone {
+    font-size: 0.85rem;
+    color: var(--color-tertiary);
+    margin: 0;
+}
+
+/* Loading, Error, and No Doctors Messages */
+.loading-message,
+.error-message,
+.no-doctors-message {
+    text-align: center;
+    padding: 40px 20px;
+    width: 100%;
+}
+
+.loading-message p {
+    font-size: 1.1rem;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.error-message p {
+    font-size: 1.1rem;
+    color: #e53935;
+    font-weight: 600;
+}
+
+.no-doctors-message p {
+    font-size: 1.1rem;
+    color: var(--color-tertiary);
+    font-weight: 600;
 }
 
 /* ===== Footer ===== */
