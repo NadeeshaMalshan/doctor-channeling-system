@@ -1,83 +1,47 @@
+import React, { useState, useEffect } from 'react';
 import ECareNavBar from '../Components/eCareNavBar';
 import ChannelDoctor from '../Components/ChannelDoctor';
 import './css/eCare.css';
 
 const ECare = () => {
-    // Sample doctors data
-    const doctors = [
-        {
-            id: 1,
-            name: "Dr. Priyantha Silva",
-            specialty: "General Physician",
-            hospital: "NC+ Hospital Narammala",
-            experience: "15 years experience",
-            days: "Mon, Wed, Fri",
-            time: "4:00 PM - 8:00 PM",
-            fee: "Rs. 1,500",
-            available: true,
-            tagClass: "general"
-        },
-        {
-            id: 2,
-            name: "Dr. Kumari Fernando",
-            specialty: "Cardiologist",
-            hospital: "NC+ Hospital Narammala",
-            experience: "12 years experience",
-            days: "Tue, Thu",
-            time: "5:00 PM - 9:00 PM",
-            fee: "Rs. 2,500",
-            available: true,
-            tagClass: "cardiology"
-        },
-        {
-            id: 3,
-            name: "Dr. Mahesh Perera",
-            specialty: "Pediatrician",
-            hospital: "NC+ Hospital Narammala",
-            experience: "10 years experience",
-            days: "Mon, Sat",
-            time: "3:00 PM - 7:00 PM",
-            fee: "Rs. 1,800",
-            available: false,
-            tagClass: "pediatric"
-        },
-        {
-            id: 4,
-            name: "Dr. Anura Jayasinghe",
-            specialty: "Dermatologist",
-            hospital: "NC+ Hospital Narammala",
-            experience: "8 years experience",
-            days: "Wed, Fri",
-            time: "2:00 PM - 6:00 PM",
-            fee: "Rs. 2,000",
-            available: true,
-            tagClass: "dermatology"
-        },
-        {
-            id: 5,
-            name: "Dr. Nilmini Rathnayake",
-            specialty: "Gynecologist",
-            hospital: "NC+ Hospital Narammala",
-            experience: "14 years experience",
-            days: "Mon, Thu",
-            time: "4:00 PM - 8:00 PM",
-            fee: "Rs. 2,200",
-            available: true,
-            tagClass: "gynecology"
-        },
-        {
-            id: 6,
-            name: "Dr. Sampath Wijesinghe",
-            specialty: "Neurologist",
-            hospital: "NC+ Hospital Narammala",
-            experience: "18 years experience",
-            days: "Tue, Sat",
-            time: "5:00 PM - 9:00 PM",
-            fee: "Rs. 3,000",
-            available: true,
-            tagClass: "neurology"
-        }
-    ];
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch doctors from the database
+    useEffect(() => {
+        const fetchDoctors = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('http://localhost:5000/api/auth/doctors');
+                const data = await response.json();
+
+                if (response.ok) {
+                    setDoctors(data.doctors);
+                } else {
+                    setError(data.message || 'Failed to fetch doctors');
+                }
+            } catch (err) {
+                console.error('Error fetching doctors:', err);
+                setError('Failed to connect to the server');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDoctors();
+    }, []);
+
+    // Helper function to get tag class based on specialization
+    const getTagClass = (specialization) => {
+        const spec = specialization.toLowerCase();
+        if (spec.includes('cardio')) return 'cardiology';
+        if (spec.includes('pediatric') || spec.includes('child')) return 'pediatric';
+        if (spec.includes('derma')) return 'dermatology';
+        if (spec.includes('gynec') || spec.includes('obstetric')) return 'gynecology';
+        if (spec.includes('neuro')) return 'neurology';
+        return 'general';
+    };
 
     const handleSearch = (searchData) => {
         console.log('Search data:', searchData);
@@ -201,37 +165,53 @@ const ECare = () => {
                         <p>Meet our team of highly qualified and experienced doctors who are committed to providing the best possible care to our patients.</p>
                     </div>
 
-                    <div className="doctors-grid">
-                        {doctors.map((doctor) => (
-                            <div className="ecare-doctor-card" key={doctor.id}>
-                                <div className="doctor-card-header">
-                                    <div className="doctor-avatar">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                        </svg>
+                    {loading ? (
+                        <div className="loading-message">
+                            <p>Loading doctors...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="error-message">
+                            <p>Error: {error}</p>
+                        </div>
+                    ) : doctors.length === 0 ? (
+                        <div className="no-doctors-message">
+                            <p>No doctors available at the moment.</p>
+                        </div>
+                    ) : (
+                        <div className="doctors-grid">
+                            {doctors.map((doctor) => (
+                                <div className="ecare-doctor-card" key={doctor.id}>
+                                    <div className="doctor-card-header">
+                                        <div className="doctor-avatar">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        </div>
+                                        <div className="doctor-info">
+                                            <h3>{doctor.name}</h3>
+                                            <p className="doctor-specialty">{doctor.specialization}</p>
+                                            <p className="doctor-hospital">{doctor.hospital || 'NC+ Hospital Narammala'}</p>
+                                        </div>
                                     </div>
-                                    <div className="doctor-info">
-                                        <h3>{doctor.name}</h3>
-                                        <p className="doctor-specialty">{doctor.specialty}</p>
-                                        <p className="doctor-hospital">{doctor.hospital}</p>
+
+                                    <div className="doctor-card-body">
+                                        <span className={`specialty-tag ${getTagClass(doctor.specialization)}`}>{doctor.specialization}</span>
+                                        <div className="doctor-contact">
+                                            <p className="doctor-email">{doctor.email}</p>
+                                            <p className="doctor-phone">{doctor.phone}</p>
+                                        </div>
                                     </div>
-                                    
-                                </div>
 
-                                <div className="doctor-card-body">
-                                    <span className={`specialty-tag ${doctor.tagClass}`}>{doctor.specialty}</span>
-                                    <p className="experience">{doctor.experience}</p>
-
-                                    
+                                    <div className="doctor-card-footer">
+                                        <div className="availability-badge available">
+                                            Available
+                                        </div>
+                                        <button className="viewInfo-btn">View info</button>
+                                    </div>
                                 </div>
-
-                                <div className="doctor-card-footer">
-                                    
-                                    <button className="viewInfo-btn">View info</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </section>
             </main>
 
