@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './css/Login.css';
 
 const Login = () => {
@@ -18,14 +19,30 @@ const Login = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        // Simulate login - replace with actual authentication logic
-        setTimeout(() => {
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+
+            if (response.status === 200) {
+                alert("Login Successful");
+                // Store user data if needed
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                localStorage.setItem('token', response.data.token); // Assuming token is returned
+                navigate('/eCare');
+            }
+        } catch (error) {
+            console.error("Login Error:", error);
+            if (error.response && error.response.data && error.response.data.message) {
+                alert(error.response.data.message);
+            } else {
+                alert("Login failed. Please try again.");
+            }
+        } finally {
             setIsLoading(false);
-            navigate('/eCare');
-        }, 1500);
+        }
     };
 
     const handleGoogleLogin = () => {
