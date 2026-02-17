@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+
 import './css/Login.css';
 import ReCAPTCHA from "react-google-recaptcha";
 
@@ -49,7 +49,7 @@ const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Store user info if needed
+                // Store user info if neede
                 localStorage.setItem('user', JSON.stringify(data.user));
                 localStorage.setItem('userType', data.userType);
                 navigate('/eCare');

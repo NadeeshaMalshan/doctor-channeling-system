@@ -100,7 +100,7 @@ const DoctorSignup = () => {
                     phone: formData.phone,
                     email: formData.email,
                     password: formData.password,
-                    password: formData.password,
+
                     role: 'doctor',
                     recaptchaToken
                 }),

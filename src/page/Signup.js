@@ -94,7 +94,7 @@ const Signup = () => {
                     email: formData.email,
                     phone: formData.phone,
                     nic: formData.nic,
-                    nic: formData.nic,
+
                     password: formData.password,
                     recaptchaToken
                 }),
