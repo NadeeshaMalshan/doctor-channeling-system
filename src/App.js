@@ -11,6 +11,7 @@ import AdminDashboard from './page/staff/AdminDashboard';
 import CashierDashboard from './page/staff/CashierDashboard';
 import HRDashboard from './page/staff/HRDashboard';
 import BookingManagerDashboard from './page/staff/BookingManagerDashboard';
+import CustomerSupport from './page/CustomerSupport';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/ecare/staff/cashier" element={<CashierDashboard />} />
           <Route path="/ecare/staff/hr" element={<HRDashboard />} />
           <Route path="/ecare/staff/booking" element={<BookingManagerDashboard />} />
+          <Route path="/ecare/customer-support" element={<CustomerSupport />} />
         </Routes>
       </div>
     </>
