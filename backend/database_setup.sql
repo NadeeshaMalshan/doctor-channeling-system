@@ -1,5 +1,7 @@
--- Tables will be created in the default database (defaultdb in Aiven)
+-- Create the database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS doctor_channeling_db;
 
+USE doctor_channeling_db;
 
 -- Create patients table
 CREATE TABLE IF NOT EXISTS patients (
