@@ -2,11 +2,17 @@ import React, { useState, useEffect } from 'react';
 import ECareNavBar from '../Components/eCareNavBar';
 import ChannelDoctor from '../Components/ChannelDoctor';
 import './css/eCare.css';
+import { useNavigate } from 'react-router-dom';
 
 const ECare = () => {
+
+    const navigate = useNavigate();
+
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    
 
     // Fetch doctors from the database
     useEffect(() => {
@@ -216,7 +222,7 @@ const ECare = () => {
             </main>
 
             {/* Sticky Support Button */}
-            <div className="ecare-support-btn" title="Contact Support">
+            <div className="ecare-support-btn" title="Contact Support" onClick={() => navigate('/ecare/customerSupport')}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 14v4h-2v-4h2M7 14v4H6c-1.1 0-2-.9-2-2v-2h3m13-3V9c0-3.31-2.69-6-6-6S6 5.69 6 9v4h12m-6-8c-2.21 0-4 1.79-4 4v3h8V9c0-2.21-1.79-4-4-4z" />
                     <path d="M19 20v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1H19z" opacity="0.3" />
