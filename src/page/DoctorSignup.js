@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './css/Signup.css';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const DoctorSignup = () => {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ const DoctorSignup = () => {
         confirmPassword: ''
     });
     const [errors, setErrors] = useState({});
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -74,6 +76,11 @@ const DoctorSignup = () => {
             return;
         }
 
+        if (!recaptchaToken) {
+            setErrors(prev => ({ ...prev, submit: 'Please complete the reCAPTCHA' }));
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -93,7 +100,9 @@ const DoctorSignup = () => {
                     phone: formData.phone,
                     email: formData.email,
                     password: formData.password,
-                    role: 'doctor'
+                    password: formData.password,
+                    role: 'doctor',
+                    recaptchaToken
                 }),
             });
 
@@ -292,6 +301,13 @@ const DoctorSignup = () => {
                                 />
                             </div>
                             {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+                        </div>
+
+                        <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                            <ReCAPTCHA
+                                sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                                onChange={(token) => setRecaptchaToken(token)}
+                            />
                         </div>
 
                         <button type="submit" className="signup-btn" disabled={isLoading}>

@@ -17,9 +17,9 @@ async function createAdmin() {
     try {
         connection = await mysql.createConnection(dbConfig);
 
-        const username = 'cashier';
+        const username = 'Janindu';
         const password = '12345';
-        const role = 'Cashier';
+        const role = 'Booking Manager';
         const status = 'Active';
 
         const salt = await bcrypt.genSalt(10);

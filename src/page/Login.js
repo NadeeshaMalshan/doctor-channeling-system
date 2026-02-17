@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './css/Login.css';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -9,6 +10,8 @@ const Login = () => {
         email: '',
         password: ''
     });
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
+    const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -21,25 +24,41 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+
+        if (!recaptchaToken) {
+            setError('Please complete the reCAPTCHA');
+            return;
+        }
+
         setIsLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/login', formData);
+            const response = await fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                    recaptchaToken
+                }),
+            });
 
-            if (response.status === 200) {
-                alert("Login Successful");
-                // Store user data if needed
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-                localStorage.setItem('token', response.data.token); // Assuming token is returned
+            const data = await response.json();
+
+            if (response.ok) {
+                // Store user info if needed
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('userType', data.userType);
                 navigate('/eCare');
-            }
-        } catch (error) {
-            console.error("Login Error:", error);
-            if (error.response && error.response.data && error.response.data.message) {
-                alert(error.response.data.message);
             } else {
-                alert("Login failed. Please try again.");
+                setError(data.message || 'Login failed');
             }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('Connection error. Please try again later.');
         } finally {
             setIsLoading(false);
         }
@@ -144,6 +163,15 @@ const Login = () => {
                             </label>
                             <button type="button" className="forgot-link">Forgot Password?</button>
                         </div>
+
+                        <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                            <ReCAPTCHA
+                                sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                                onChange={(token) => setRecaptchaToken(token)}
+                            />
+                        </div>
+
+                        {error && <div className="error-message" style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
 
                         <button type="submit" className="login-btn" disabled={isLoading}>
                             {isLoading ? (
