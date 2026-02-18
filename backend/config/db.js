@@ -1,6 +1,6 @@
+const fs = require('fs');
 const mysql = require('mysql2');
 const dotenv = require('dotenv');
-
 dotenv.config();
 
 // SSL configuration for Aiven cloud database
