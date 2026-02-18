@@ -1,14 +1,25 @@
 const fs = require('fs');
+const path = require('path');
 const mysql = require('mysql2');
 const dotenv = require('dotenv');
 dotenv.config();
 
 // SSL configuration for Aiven cloud database
 let sslConfig = false;
-if (process.env.DB_SSL === 'true' || process.env.DB_PORT) {
-    sslConfig = {
-        rejectUnauthorized: true
-    };
+if (process.env.DB_SSL === 'true') {
+    const caPath = path.join(__dirname, '..', 'ca.pem');
+    if (fs.existsSync(caPath)) {
+        // Use the CA certificate file if available (local development)
+        sslConfig = {
+            ca: fs.readFileSync(caPath),
+            rejectUnauthorized: true
+        };
+    } else {
+        // On Vercel/cloud where ca.pem is not available
+        sslConfig = {
+            rejectUnauthorized: false
+        };
+    }
 }
 
 const pool = mysql.createPool({
