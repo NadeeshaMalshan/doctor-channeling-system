@@ -1,33 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './ComponentsCss/ChannelDoctor.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const ChannelDoctor = ({ onSearch }) => {
     const [searchData, setSearchData] = useState({
         doctorName: '',
-        hospital: '',
         specialization: '',
         date: ''
     });
 
-    // eslint-disable-next-line no-unused-vars
-    const hospitals = [
-        'Any Hospital',
-        'NC+ Hospital Narammala',
-        'Teaching Hospital Kurunegala',
-        'Base Hospital Narammala'
-    ];
+    const [specializations, setSpecializations] = useState([]);
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [searched, setSearched] = useState(false);
+    const [error, setError] = useState('');
 
-    const specializations = [
-        'Any Specialization',
-        'General Physician',
-        'Cardiologist',
-        'Pediatrician',
-        'Dermatologist',
-        'Neurologist',
-        'Orthopedic',
-        'ENT Specialist',
-        'Gynecologist'
-    ];
+    // Fetch specializations from the database on component mount
+    useEffect(() => {
+        const fetchSpecializations = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/auth/doctors/specializations`);
+                const data = await res.json();
+                if (res.ok) {
+                    setSpecializations(data.specializations || []);
+                }
+            } catch (err) {
+                console.error('Failed to fetch specializations:', err);
+            }
+        };
+        fetchSpecializations();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -37,10 +40,33 @@ const ChannelDoctor = ({ onSearch }) => {
         }));
     };
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
-        if (onSearch) {
-            onSearch(searchData);
+        setLoading(true);
+        setError('');
+        setSearched(true);
+
+        try {
+            const params = new URLSearchParams();
+            if (searchData.doctorName.trim()) params.append('name', searchData.doctorName.trim());
+            if (searchData.specialization) params.append('specialization', searchData.specialization);
+
+            const res = await fetch(`${API_URL}/api/auth/doctors?${params.toString()}`);
+            const data = await res.json();
+
+            if (res.ok) {
+                setDoctors(data.doctors || []);
+                if (onSearch) onSearch(data.doctors || []);
+            } else {
+                setError(data.message || 'Failed to fetch doctors.');
+                setDoctors([]);
+            }
+        } catch (err) {
+            console.error('Search error:', err);
+            setError('Unable to connect to server. Please try again.');
+            setDoctors([]);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -48,6 +74,7 @@ const ChannelDoctor = ({ onSearch }) => {
         <div className="channel-doctor-container">
             <h2 className="channel-title">Channel Your Doctor</h2>
             <form className="channel-form" onSubmit={handleSearch}>
+                {/* Doctor Name */}
                 <div className="form-group">
                     <div className="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -57,21 +84,15 @@ const ChannelDoctor = ({ onSearch }) => {
                     <input
                         type="text"
                         name="doctorName"
-                        placeholder="Doctor - Max 20 Characters"
+                        placeholder="Doctor Name"
                         maxLength={20}
                         value={searchData.doctorName}
                         onChange={handleChange}
                         className="form-input"
                     />
-                    <div className="input-help">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
-                        </svg>
-                    </div>
                 </div>
 
-
-
+                {/* Specialization */}
                 <div className="form-group">
                     <div className="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -84,14 +105,14 @@ const ChannelDoctor = ({ onSearch }) => {
                         onChange={handleChange}
                         className="form-select"
                     >
+                        <option value="">Any Specialization</option>
                         {specializations.map((spec, index) => (
-                            <option key={index} value={index === 0 ? '' : spec}>
-                                {spec}
-                            </option>
+                            <option key={index} value={spec}>{spec}</option>
                         ))}
                     </select>
                 </div>
 
+                {/* Date */}
                 <div className="form-group">
                     <div className="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -104,17 +125,84 @@ const ChannelDoctor = ({ onSearch }) => {
                         value={searchData.date}
                         onChange={handleChange}
                         className="form-input date-input"
-                        placeholder="Any Date"
                     />
                 </div>
 
-                <button type="submit" className="search-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-                    </svg>
-                    Search
+                <button type="submit" className="search-btn" disabled={loading}>
+                    {loading ? (
+                        <span className="btn-loading">Searching...</span>
+                    ) : (
+                        <>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            Search
+                        </>
+                    )}
                 </button>
             </form>
+
+            {/* Error Message */}
+            {error && <p className="search-error">{error}</p>}
+
+            {/* Search Results */}
+            {searched && !loading && (
+                <div className="doctor-results">
+                    {doctors.length === 0 ? (
+                        <p className="no-results">No doctors found matching your search.</p>
+                    ) : (
+                        <>
+                            <h3 className="results-title">{doctors.length} Doctor{doctors.length !== 1 ? 's' : ''} Found</h3>
+                            <div className="doctor-cards">
+                                {doctors.map((doctor) => (
+                                    <div key={doctor.id} className="doctor-card">
+                                        <div className="doctor-card-header">
+                                            <div className="doctor-avatar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                                </svg>
+                                            </div>
+                                            <div className="doctor-header-info">
+                                                <h4 className="doctor-name">Dr. {doctor.name}</h4>
+                                                <span className="doctor-specialization">{doctor.specialization}</span>
+                                            </div>
+                                        </div>
+                                        <div className="doctor-card-body">
+                                            {doctor.hospital && (
+                                                <div className="doctor-detail">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                                                    </svg>
+                                                    <span>{doctor.hospital}</span>
+                                                </div>
+                                            )}
+                                            {doctor.phone && (
+                                                <div className="doctor-detail">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                                                    </svg>
+                                                    <span>{doctor.phone}</span>
+                                                </div>
+                                            )}
+                                            {doctor.email && (
+                                                <div className="doctor-detail">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                                                    </svg>
+                                                    <span>{doctor.email}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="doctor-card-footer">
+                                            <button className="channel-btn">Channel Now</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
