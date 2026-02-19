@@ -233,10 +233,24 @@ exports.login = async (req, res) => {
 
 exports.getDoctors = async (req, res) => {
     try {
-        // Fetch all doctors from the database
-        const [doctors] = await db.execute(
-            'SELECT id, name, specialization, email, phone, hospital FROM doctors'
-        );
+        const { name, specialization } = req.query;
+
+        let query = 'SELECT id, name, specialization, email, phone, hospital FROM doctors WHERE 1=1';
+        const params = [];
+
+        if (name && name.trim() !== '') {
+            query += ' AND name LIKE ?';
+            params.push(`%${name.trim()}%`);
+        }
+
+        if (specialization && specialization.trim() !== '') {
+            query += ' AND specialization = ?';
+            params.push(specialization.trim());
+        }
+
+        // Use db.query (not db.execute) for dynamically built queries
+        // db.execute uses server-side prepared statement caching which breaks dynamic queries
+        const [doctors] = await db.query(query, params);
 
         res.status(200).json({
             message: 'Doctors fetched successfully',
@@ -246,5 +260,19 @@ exports.getDoctors = async (req, res) => {
     } catch (error) {
         console.error('Error fetching doctors:', error);
         res.status(500).json({ message: 'Server error while fetching doctors' });
+    }
+};
+
+
+exports.getSpecializations = async (req, res) => {
+    try {
+        const [rows] = await db.execute(
+            'SELECT DISTINCT specialization FROM doctors ORDER BY specialization ASC'
+        );
+        const specializations = rows.map(r => r.specialization);
+        res.status(200).json({ specializations });
+    } catch (error) {
+        console.error('Error fetching specializations:', error);
+        res.status(500).json({ message: 'Server error while fetching specializations' });
     }
 };
