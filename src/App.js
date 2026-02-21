@@ -12,6 +12,7 @@ import CashierDashboard from './page/staff/CashierDashboard';
 import HRDashboard from './page/staff/HRDashboard';
 import BookingManagerDashboard from './page/staff/BookingManagerDashboard';
 import CustomerSupport from './page/CustomerSupport';
+import PaymentPortal from './page/PaymentPortal';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/ecare/staff/hr" element={<HRDashboard />} />
           <Route path="/ecare/staff/booking" element={<BookingManagerDashboard />} />
           <Route path="/ecare/customer-support" element={<CustomerSupport />} />
+          <Route path="/ecare/payment" element={<PaymentPortal />} />
         </Routes>
       </div>
     </>
