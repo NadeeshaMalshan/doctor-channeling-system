@@ -10,9 +10,8 @@ const ECareNavBar = () => {
     const patientName = user ? (user.firstName || user.name || user.fullName || user.email) : null;
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        localStorage.removeItem('userType');
-        navigate('/login');
+        localStorage.clear();
+        navigate('/');
     };
 
     return (
