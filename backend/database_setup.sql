@@ -37,5 +37,22 @@ CREATE TABLE IF NOT EXISTS doctors (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
+CREATE TABLE IF NOT EXISTS payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    appointment_id INT NOT NULL,          
+    patient_id INT NOT NULL,              
+    doctor_id INT NOT NULL,               
+    amount DECIMAL(10, 2) NOT NULL,      
+    payhere_payment_id VARCHAR(100),              
+    payment_method VARCHAR(50),          
+    card_last_digits VARCHAR(10),        
+    payment_status VARCHAR(20), 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    
+    
+    -- FOREIGN KEY (appointment_id) REFERENCES appointments(id),
+    
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+);
 
