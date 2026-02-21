@@ -13,6 +13,8 @@ import HRDashboard from './page/staff/HRDashboard';
 import BookingManagerDashboard from './page/staff/BookingManagerDashboard';
 import CustomerSupport from './page/CustomerSupport';
 import PaymentPortal from './page/PaymentPortal';
+import SuccessPayment from './Components/sucessPayment';
+import FailedPayment from './Components/failedPayment';
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
           <Route path="/ecare/staff/booking" element={<BookingManagerDashboard />} />
           <Route path="/ecare/customer-support" element={<CustomerSupport />} />
           <Route path="/ecare/payment" element={<PaymentPortal />} />
+          <Route path="/ecare/payment/success" element={<SuccessPayment />} />
+          <Route path="/ecare/payment/failed" element={<FailedPayment />} />
         </Routes>
       </div>
     </>

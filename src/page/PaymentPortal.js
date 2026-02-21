@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import './css/paymentPortal.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
 
+
+
+
 const PaymentPortal = () => {
+    const navigate = useNavigate();
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -12,8 +17,11 @@ const PaymentPortal = () => {
     const patientId = user ? user.id : null;
     const doctorId = 1;
 
+
+
     useEffect(() => {
         document.title = "Payment Portal";
+
 
         const fetchDetails = async () => {
             try {
@@ -79,10 +87,108 @@ const PaymentPortal = () => {
         totalAmount: 3400.00
     };
 
-    const handlePayHereClick = () => {
-        // This will be implemented next
-        console.log("Redirecting to PayHere with data:", paymentData);
-    };
+    const handlePayHereClick = async () => {
+        const appointmentID = details.appointmentId || "1";
+        const paymentID = 'ORD' + appointmentID + '_' + Date.now();
+        const amount = paymentData.totalAmount;
+        const currency = 'LKR';
+
+        try {
+            // get backend hash
+            const hashResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/payment/generate-hash`,
+                {
+                    paymentID: paymentID,
+                    amount: amount,
+                    currency: currency,
+                    patientID: patientId,
+                    doctorID: doctorId
+                }
+            );
+            const { hash, merchantID } = hashResponse.data;
+
+            // payhere payment obj
+            const payment = {
+                "sandbox": true,
+                "merchant_id": merchantID,
+                "return_url": "http://localhost:3000/ecare/payment",
+                "cancel_url": "http://localhost:3000/ecare/payment",
+                "notify_url": "https://unboldly-nonpantheistic-dwight.ngrok-free.dev/api/payment/notify",
+                "order_id": paymentID,
+                "items": "Doctor Appointment",
+                "amount": amount,
+                "currency": currency,
+                "hash": hash,
+                "first_name": details.first_name,
+                "last_name": details.second_name,
+                "email": user.email,
+                "phone": user.phone || "0771234567",
+                "address": "Narammala",
+                "city": "Narammala",
+                "country": "Sri Lanka",
+            };
+
+            // PayHere Callbacks - Register BEFORE starting payment
+            window.payhere.onCompleted = async function onCompleted(order_id) {
+                console.log("--- PayHere onCompleted Triggered --- for OrderID:", order_id);
+
+                let attempts = 0;
+                const maxAttempts = 15; // Increased attempts
+
+                const checkStatus = async () => {
+                    attempts++;
+                    console.log(`Polling status for ${order_id}... Attempt ${attempts}`);
+                    try {
+                        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/payment/status/${order_id}`);
+                        const status = response.data.status;
+                        console.log(`Current Status from Backend: ${status}`);
+
+                        if (status === 'SUCCESS') {
+                            console.log("Payment SUCCESS detected. Navigating...");
+                            navigate('/ecare/payment/success', {
+                                state: { ...paymentData, paymentID: order_id }
+                            });
+                            return;
+                        } else if (['FAILED', 'CANCELED', 'CHARGEDBACK'].includes(status)) {
+                            console.log("Payment FAILURE detected. Navigating...");
+                            navigate('/ecare/payment/failed');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error("Status check error:", error);
+                    }
+
+                    if (attempts < maxAttempts) {
+                        setTimeout(checkStatus, 2000);
+                    } else {
+                        console.log("Max attempts reached. No status update found.");
+                        alert("Payment verification is taking longer than expected. Please check your appointments later.");
+                    }
+                };
+
+                checkStatus();
+            };
+
+            window.payhere.onDismissed = function onDismissed() {
+                console.log("--- PayHere onDismissed Triggered ---");
+            };
+
+            window.payhere.onError = function onError(error) {
+                console.error("--- PayHere onError Triggered ---", error);
+                alert("Payment Error: " + error);
+            };
+
+            //starting payment
+            console.log("Starting PayHere payment...");
+            window.payhere.startPayment(payment);
+        }
+        catch (error) {
+            console.error("Error", error);
+            alert("Error");
+        }
+
+    }
+
+
 
     return (
         <div className="payment-page-wrapper">
@@ -115,7 +221,7 @@ const PaymentPortal = () => {
                             </div>
                         </div>
 
-                        
+
                     </div>
                     <div className="bg-circles">
                         <div className="circle circle-1"></div>

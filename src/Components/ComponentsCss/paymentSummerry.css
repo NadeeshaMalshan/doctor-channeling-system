@@ -1,0 +1,206 @@
+.status-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 20px;
+}
+
+.status-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.status-icon-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 24px;
+}
+
+.success .status-icon-container {
+    background-color: #e6f7ed;
+    color: #00c853;
+}
+
+.failed .status-icon-container {
+    background-color: #feeceb;
+    color: #ff5252;
+}
+
+.status-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.status-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+    font-family: 'Inter', sans-serif;
+}
+
+.status-message {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 32px;
+    font-size: 1.1rem;
+}
+
+.status-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.status-actions.vertical {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+}
+
+.primary-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #007bff;
+    color: white;
+}
+
+.primary-btn:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.secondary-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+    background: #f8f9fa;
+    border-color: #ccc;
+}
+
+.full-width {
+    width: 100%;
+}
+
+/* PDF Button - More compact style */
+.pdf-btn {
+    background: #27ae60;
+    padding: 8px 20px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 10px;
+}
+
+.pdf-btn:hover {
+    background: #2ecc71;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+.btn-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+}
+
+/* Receipt Styling */
+.receipt-section {
+    background: #f9fafb;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+    text-align: left;
+    border: 1px dashed #d1d5db;
+}
+
+.receipt-section h3 {
+    font-size: 1.1rem;
+    color: #4b5563;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.receipt-row .label {
+    color: #6b7280;
+    font-size: 0.95rem;
+}
+
+.receipt-row .value {
+    color: #111827;
+    font-weight: 500;
+    text-align: right;
+}
+
+.receipt-row .value.highlight {
+    color: #007bff;
+    font-weight: 700;
+}
+
+.receipt-row .value.price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.receipt-row .value.small {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.receipt-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 16px 0;
+}
