@@ -1,0 +1,862 @@
+/* ===========================
+   Customer Support Page Styles
+   =========================== */
+
+/* Page Background */
+.cs-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #c3d4f7 0%, #d5c8f5 30%, #c8d8f8 60%, #d0c6f3 100%);
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===========================
+   Notification
+   =========================== */
+.cs-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 1000;
+    animation: csSlideIn 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.cs-notification.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.cs-notification.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+@keyframes csSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===========================
+   Navbar
+   =========================== */
+.cs-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 32px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+.cs-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cs-brand-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cs-brand-icon svg {
+    width: 22px;
+    height: 22px;
+    color: white;
+    fill: white;
+}
+
+.cs-brand-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.cs-brand-text span {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 400;
+}
+
+.cs-navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.cs-navbar-links a {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+}
+
+.cs-navbar-links a:hover {
+    color: #4361ee;
+}
+
+.cs-navbar-roles {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cs-role-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+}
+
+.cs-role-patient {
+    background: transparent;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.cs-role-patient.active {
+    background: #4361ee;
+    color: white;
+    border-color: #4361ee;
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+.cs-role-hr {
+    background: transparent;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.cs-role-hr.active {
+    background: #7c3aed;
+    color: white;
+    border-color: #7c3aed;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.cs-role-btn svg {
+    fill: currentColor;
+}
+
+/* ===========================
+   Main Content
+   =========================== */
+.cs-main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+/* ===========================
+   User Card
+   =========================== */
+.cs-user-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 22px 28px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.cs-user-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.cs-user-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cs-user-avatar svg {
+    width: 28px;
+    height: 28px;
+    fill: white;
+}
+
+.cs-avatar-hr {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+.cs-user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cs-user-label {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.cs-user-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.cs-user-badge {
+    display: inline-block;
+    width: fit-content;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: #dbeafe;
+    color: #3b82f6;
+    margin-top: 2px;
+}
+
+.cs-badge-hr {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.cs-create-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(67, 97, 238, 0.3);
+}
+
+.cs-create-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+}
+
+.cs-create-btn svg {
+    fill: white;
+}
+
+/* ===========================
+   Tickets Section
+   =========================== */
+.cs-tickets-section {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.cs-tickets-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 28px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.cs-tickets-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.cs-tickets-count {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.cs-tickets-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cs-tickets-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: #64748b;
+}
+
+/* Loading */
+.cs-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+}
+
+.cs-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #4361ee;
+    border-radius: 50%;
+    animation: csSpin 0.8s linear infinite;
+}
+
+@keyframes csSpin {
+    to { transform: rotate(360deg); }
+}
+
+.cs-loading p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Empty State */
+.cs-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+}
+
+.cs-empty svg {
+    fill: #cbd5e1;
+}
+
+.cs-empty p {
+    color: #94a3b8;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.cs-create-btn-sm {
+    padding: 8px 20px;
+    background: #4361ee;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+
+.cs-create-btn-sm:hover {
+    background: #3a0ca3;
+}
+
+/* ===========================
+   Ticket Items
+   =========================== */
+.cs-tickets-list {
+    padding: 0;
+}
+
+.cs-ticket-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.cs-ticket-item:last-child {
+    border-bottom: none;
+}
+
+.cs-ticket-item:hover {
+    background: rgba(243, 244, 246, 0.5);
+}
+
+.cs-ticket-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.cs-ticket-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #4361ee;
+    margin: 0 0 6px;
+}
+
+.cs-ticket-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 10px;
+    line-height: 1.5;
+    max-width: 500px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cs-ticket-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.cs-ticket-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 500;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.cs-ticket-meta-item svg {
+    fill: #94a3b8;
+}
+
+/* ===========================
+   Ticket Actions
+   =========================== */
+.cs-ticket-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 20px;
+}
+
+/* Status Badge */
+.cs-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.cs-status-pending {
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.cs-status-pending svg {
+    fill: #d97706;
+}
+
+.cs-status-resolved {
+    background: #d1fae5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.cs-status-resolved svg {
+    fill: #059669;
+}
+
+/* HR Action Buttons */
+.cs-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1.5px solid;
+    background: transparent;
+    white-space: nowrap;
+}
+
+.cs-action-pending {
+    color: #94a3b8;
+    border-color: #e2e8f0;
+}
+
+.cs-action-pending svg {
+    fill: #94a3b8;
+}
+
+.cs-action-pending:hover,
+.cs-action-pending.cs-action-active {
+    background: #fef3c7;
+    color: #d97706;
+    border-color: #fde68a;
+}
+
+.cs-action-pending:hover svg,
+.cs-action-pending.cs-action-active svg {
+    fill: #d97706;
+}
+
+.cs-action-resolved {
+    color: #94a3b8;
+    border-color: #e2e8f0;
+}
+
+.cs-action-resolved svg {
+    fill: #94a3b8;
+}
+
+.cs-action-resolved:hover,
+.cs-action-resolved.cs-action-active {
+    background: #d1fae5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.cs-action-resolved:hover svg,
+.cs-action-resolved.cs-action-active svg {
+    fill: #059669;
+}
+
+/* Delete Button */
+.cs-delete-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.cs-delete-btn svg {
+    fill: #ef4444;
+    transition: transform 0.2s;
+}
+
+.cs-delete-btn:hover {
+    background: #fef2f2;
+}
+
+.cs-delete-btn:hover svg {
+    transform: scale(1.1);
+}
+
+/* ===========================
+   Create Ticket Modal
+   =========================== */
+.cs-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    animation: csFadeIn 0.2s ease;
+}
+
+@keyframes csFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.cs-modal {
+    background: white;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    animation: csModalSlide 0.3s ease;
+    overflow: hidden;
+}
+
+@keyframes csModalSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.cs-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.cs-modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cs-modal-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cs-modal-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: white;
+}
+
+.cs-modal-header-left h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.cs-modal-header-left p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 2px 0 0;
+}
+
+.cs-modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f1f5f9;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.cs-modal-close:hover {
+    background: #e2e8f0;
+}
+
+.cs-modal-close svg {
+    fill: #64748b;
+}
+
+.cs-modal-body {
+    padding: 24px 28px;
+}
+
+.cs-form-group {
+    margin-bottom: 20px;
+}
+
+.cs-form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.cs-required {
+    color: #ef4444;
+}
+
+.cs-form-group input,
+.cs-form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1a1a2e;
+    background: #fafbfd;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.cs-form-group input:focus,
+.cs-form-group textarea:focus {
+    outline: none;
+    border-color: #4361ee;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.cs-form-group input::placeholder,
+.cs-form-group textarea::placeholder {
+    color: #bcc5d3;
+}
+
+.cs-form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.cs-modal-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #eff6ff;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border: 1px solid #dbeafe;
+}
+
+.cs-modal-note svg {
+    fill: #3b82f6;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.cs-modal-note span {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.cs-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.cs-btn-cancel {
+    padding: 10px 24px;
+    border: 1.5px solid #e2e8f0;
+    background: white;
+    color: #475569;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cs-btn-cancel:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.cs-btn-submit {
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(67, 97, 238, 0.3);
+}
+
+.cs-btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+}
+
+.cs-btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+@media (max-width: 768px) {
+    .cs-navbar {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+
+    .cs-navbar-links {
+        gap: 16px;
+    }
+
+    .cs-navbar-links a {
+        font-size: 12px;
+    }
+
+    .cs-main {
+        padding: 20px 12px;
+    }
+
+    .cs-user-card {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 16px 20px;
+    }
+
+    .cs-ticket-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 20px;
+    }
+
+    .cs-ticket-actions {
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+
+    .cs-modal {
+        margin: 16px;
+        max-width: calc(100% - 32px);
+    }
+}
