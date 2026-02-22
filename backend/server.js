@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
+const patientRoutes = require('./routes/patientRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const supportRoutes = require('./routes/supportRoutes');
+const path = require('path');
 const supportRoutes = require('./routes/supportRoutes');
 
 dotenv.config();
@@ -18,6 +22,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/patient', patientRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/payment', paymentRoutes);
+
 app.use('/api/support', supportRoutes);
 
 // Test Route

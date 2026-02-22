@@ -259,6 +259,15 @@ const ECare = () => {
             </main>
 
             {/* Sticky Support Button */}
+            <div className="ecare-support-btn" title="Contact Support" onClick={() => {
+                const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+        alert('Please login or register to access Customer Support.');
+        navigate('/login');
+    } else {
+        navigate('/ecare/customer-support');
+    }
+}}>                
             <div className="ecare-support-btn" title="Contact Support" onClick={() => navigate('/ecare/customer-support')}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 14v4h-2v-4h2M7 14v4H6c-1.1 0-2-.9-2-2v-2h3m13-3V9c0-3.31-2.69-6-6-6S6 5.69 6 9v4h12m-6-8c-2.21 0-4 1.79-4 4v3h8V9c0-2.21-1.79-4-4-4z" />

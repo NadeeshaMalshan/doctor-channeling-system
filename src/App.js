@@ -11,6 +11,7 @@ import AdminDashboard from './page/staff/AdminDashboard';
 import CashierDashboard from './page/staff/CashierDashboard';
 import HRDashboard from './page/staff/HRDashboard';
 import BookingManagerDashboard from './page/staff/BookingManagerDashboard';
+import HRCustomerSupport from './page/staff/HRCustomerSupport';
 import CustomerSupport from './page/CustomerSupport';
 import PaymentPortal from './page/PaymentPortal';
 import SuccessPayment from './Components/sucessPayment';
@@ -30,6 +31,7 @@ function App() {
           <Route path="/ecare/doc-signup" element={<DoctorSignup />} />
           <Route path="/ecare/staff-login" element={<StaffLogin />} />
           <Route path="/ecare/staff/admin" element={<AdminDashboard />} />
+          <Route path="/ecare/staff/hr/customer-support" element={<HRCustomerSupport />} />
           <Route path="/ecare/staff/cashier" element={<CashierDashboard />} />
           <Route path="/ecare/staff/hr" element={<HRDashboard />} />
           <Route path="/ecare/staff/booking" element={<BookingManagerDashboard />} />
