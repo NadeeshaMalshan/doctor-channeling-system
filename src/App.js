@@ -15,6 +15,7 @@ import CustomerSupport from './page/CustomerSupport';
 import PaymentPortal from './page/PaymentPortal';
 import SuccessPayment from './Components/sucessPayment';
 import FailedPayment from './Components/failedPayment';
+import ReportExplainer from './page/reportExplainer';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           <Route path="/ecare/payment" element={<PaymentPortal />} />
           <Route path="/ecare/payment/success" element={<SuccessPayment />} />
           <Route path="/ecare/payment/failed" element={<FailedPayment />} />
+          <Route path="/ecare/report-explainer" element={<ReportExplainer />} />
         </Routes>
       </div>
     </>
