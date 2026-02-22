@@ -391,6 +391,13 @@ const Landing = () => {
                 </div>
             </section>
 
+            {/* Sticky Support Button */}
+            <div className="landing-support-btn" title="Customer Support" onClick={() => navigate('/ecare/customer-support')}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.48 3.53 1.34 5.02L2.3 20.82a1 1 0 0 0 1.22 1.22l3.8-1.04A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+            </div>
+
             {/* Footer */}
             <footer className='footer'>
                 <div className="footer-container">
