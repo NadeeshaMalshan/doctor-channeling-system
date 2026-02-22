@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ECareNavBar from '../Components/eCareNavBar';
 import ChannelDoctor from '../Components/ChannelDoctor';
+import Profile from '../Components/Profile';
+
 import './css/eCare.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +13,31 @@ const ECare = () => {
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showProfile, setShowProfile] = useState(false);
+    const [patientUser, setPatientUser] = useState(null);
+
+    // Get patient user from local storage
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setPatientUser(JSON.parse(storedUser));
+        }
+    }, []);
+
+    // Expose show profile function to window for Navbar access
+    useEffect(() => {
+        window.showPatientProfile = () => setShowProfile(true);
+        return () => { window.showPatientProfile = null; };
+    }, []);
+
+    const handleProfileUpdate = (updatedUser) => {
+        if (updatedUser) {
+            setPatientUser(updatedUser);
+        }
+        console.log('Profile updated');
+    };
+
+
 
 
 
@@ -57,6 +84,15 @@ const ECare = () => {
     return (
         <div className="ecare-page">
             <ECareNavBar />
+
+            {showProfile && patientUser && (
+                <Profile
+                    patientId={patientUser.id}
+                    onClose={() => setShowProfile(false)}
+                    onUpdate={handleProfileUpdate}
+                />
+            )}
+
 
             <main className="ecare-main">
                 {/* Hero Section with Channel Doctor */}
