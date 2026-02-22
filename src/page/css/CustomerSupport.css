@@ -52,7 +52,7 @@
 }
 
 .btn-create-ticket {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, rgb(54, 58, 139), #764ba2);
     color: white;
     border: none;
     padding: 12px 24px;
@@ -134,7 +134,7 @@
 /* Tickets List */
 .tickets-section h2 {
     margin-bottom: 16px;
-    color: #1a1a2e;
+    color: #092181;
 }
 
 .no-tickets {
@@ -165,7 +165,7 @@
 
 .ticket-header h3 {
     font-size: 17px;
-    color: #1a1a2e;
+    color: #4a4ad3;
 }
 
 .ticket-status {
