@@ -58,3 +58,19 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id)
 );
 
+CREATE TABLE IF NOT EXISTS support_tickets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    status ENUM('Open', 'In Progress', 'Resolved', 'Closed') DEFAULT 'Open',
+    priority ENUM('Low', 'Medium', 'High') DEFAULT 'Medium',
+    hr_reply TEXT,
+    hr_staff_id INT,
+    is_deleted TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
+    FOREIGN KEY (hr_staff_id) REFERENCES staff(id)
+);
+
