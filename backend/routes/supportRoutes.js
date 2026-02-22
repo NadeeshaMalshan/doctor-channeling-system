@@ -11,5 +11,12 @@ router.put('/tickets/:ticketId/delete', supportController.deleteTicket);
 router.get('/tickets/all', supportController.getAllTickets);
 router.put('/tickets/:ticketId/status', supportController.updateTicketStatus);
 router.put('/tickets/:ticketId/reply', supportController.replyToTicket);
+router.get('/tickets/patient/:patientId', supportController.getTicketsByPatient);
+router.delete('/tickets/:id', supportController.deleteTicket);
+
+// HR Staff routes
+router.get('/tickets', supportController.getAllTickets);
+router.put('/tickets/:id/status', supportController.updateTicketStatus);
+router.put('/tickets/:id/soft-delete', supportController.softDeleteTicket);
 
 module.exports = router;

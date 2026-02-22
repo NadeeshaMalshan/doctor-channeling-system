@@ -6,6 +6,7 @@ const patientRoutes = require('./routes/patientRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const path = require('path');
+const supportRoutes = require('./routes/supportRoutes');
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/patient', patientRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/payment', paymentRoutes);
 
+app.use('/api/support', supportRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
