@@ -49,18 +49,7 @@ def query_llm_for_report(report_text):
     return completion.choices[0].message.content
 
 
-
-def detect_specialization(symptoms):
-    symptoms_lower = symptoms.lower()
-    for spec, keywords in SPECIALIZATION_MAP.items():
-        for keyword in keywords:
-            if keyword in symptoms_lower:
-                return spec.title()
-    return "General"
-
-
 # ENDPOINT 1: Medical Report Explainer (LLM)
-
 
 @app.post("/api/explain")
 async def explain_report(req: ReportTextRequest):
@@ -72,8 +61,7 @@ async def explain_report(req: ReportTextRequest):
         return {"success": False, "error": str(e)}
 
 
-# ENDPOINT 2: OCR(mock)
-
+# ENDPOINT 2: OCR (mock)
 
 @app.post("/api/ocr")
 async def ocr_extract(file: UploadFile = File(...)):
@@ -101,6 +89,35 @@ async def ocr_extract(file: UploadFile = File(...)):
     except Exception as e:
         print(f"ERROR in ocr: {e}")
         return {"success": False, "error": str(e)}
+
+
+# ENDPOINT 3: Doctor Suggestion (from Database by specialization)
+
+def get_db_connection():
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT", 3306)),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME"),
+        ssl_disabled=False
+    )
+
+@app.get("/api/suggest-doctor")
+async def suggest_doctor(specialization: str = "General"):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT id, name, specialization, hospital, email, phone FROM doctors WHERE LOWER(specialization) LIKE LOWER(%s)",
+            (f"%{specialization}%",)
+        )
+        doctors = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return {"success": True, "doctors": doctors, "specialization": specialization}
+    except Exception as e:
+        return {"success": False, "error": str(e), "doctors": []}
 
 
 # Health Check Endpoint
