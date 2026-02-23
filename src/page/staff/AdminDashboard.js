@@ -10,9 +10,10 @@ const AdminDashboard = () => {
     const [expandedId, setExpandedId] = useState(null);
 
     // Staff Form State
-    const [staffFormData, setStaffFormData] = useState({ name: '', email: '', phone: '', role: '' });
+    const [staffFormData, setStaffFormData] = useState({ name: '', email: '', phone: '', role: '', password: '' });
     const [editingStaffId, setEditingStaffId] = useState(null);
     const [formErrors, setFormErrors] = useState({});
+    const [showStaffPassword, setShowStaffPassword] = useState(false);
 
     const [requests, setRequests] = useState([
         { id: 1, name: 'Dr. John Doe', email: 'john@example.com', specialization: 'Cardiology', slmc: 'SLMC/12345' },
@@ -88,10 +89,11 @@ const AdminDashboard = () => {
             name: !staffFormData.name,
             email: !staffFormData.email,
             phone: !staffFormData.phone,
-            role: !staffFormData.role
+            role: !staffFormData.role,
+            password: !staffFormData.password
         };
 
-        if (errors.name || errors.email || errors.phone || errors.role) {
+        if (errors.name || errors.email || errors.phone || errors.role || errors.password) {
             setFormErrors(errors);
             alert("Please fill all required fields");
             return;
@@ -112,8 +114,9 @@ const AdminDashboard = () => {
             setStaff([...staff, newStaff]);
             alert("Staff Added Successfully");
         }
-        setStaffFormData({ name: '', email: '', phone: '', role: '' });
+        setStaffFormData({ name: '', email: '', phone: '', role: '', password: '' });
         setFormErrors({});
+        setShowStaffPassword(false);
     };
 
     const handleEditStaff = (member) => {
@@ -121,7 +124,8 @@ const AdminDashboard = () => {
             name: member.name,
             email: member.email,
             phone: member.phone,
-            role: member.role
+            role: member.role,
+            password: member.password || ''
         });
         setEditingStaffId(member.id);
         setFormErrors({});
@@ -142,8 +146,9 @@ const AdminDashboard = () => {
                     onClick={() => {
                         setSelectedCategory(null);
                         setEditingStaffId(null);
-                        setStaffFormData({ name: '', email: '', phone: '', role: '' });
+                        setStaffFormData({ name: '', email: '', phone: '', role: '', password: '' });
                         setFormErrors({});
+                        setShowStaffPassword(false);
                     }}
                     style={{
                         padding: '0.6rem 1.2rem',
@@ -170,29 +175,59 @@ const AdminDashboard = () => {
                                 <input type="text" name="name" placeholder="Name" value={staffFormData.name} onChange={handleStaffFormChange} style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.name ? '1px solid #dc3545' : '1px solid #ccc' }} />
                                 <input type="email" name="email" placeholder="Email" value={staffFormData.email} onChange={handleStaffFormChange} style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.email ? '1px solid #dc3545' : '1px solid #ccc' }} />
                                 <input type="text" name="phone" placeholder="Phone" value={staffFormData.phone} onChange={handleStaffFormChange} style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.phone ? '1px solid #dc3545' : '1px solid #ccc' }} />
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                    <input
+                                        type={showStaffPassword ? "text" : "password"}
+                                        name="password"
+                                        placeholder="Password"
+                                        value={staffFormData.password}
+                                        onChange={handleStaffFormChange}
+                                        style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.password ? '1px solid #dc3545' : '1px solid #ccc', width: '100%', paddingRight: '3.5rem' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowStaffPassword(!showStaffPassword)}
+                                        style={{ position: 'absolute', right: '5px', background: 'none', border: 'none', color: '#4CA1AF', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}
+                                    >
+                                        {showStaffPassword ? 'Hide' : 'Show'}
+                                    </button>
+                                </div>
                                 <div>
                                     <select
                                         name="role"
                                         value={staffFormData.role}
                                         onChange={handleStaffFormChange}
-                                        style={{ width: '100%', padding: '0.6rem', borderRadius: '4px', border: formErrors.role ? '1px solid #dc3545' : '1px solid #ccc', backgroundColor: 'white' }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.6rem 1rem',
+                                            borderRadius: '8px',
+                                            border: formErrors.role ? '2px solid #dc3545' : '1px solid #ced4da',
+                                            backgroundColor: 'white',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none'
+                                        }}
+                                        onFocus={(e) => e.target.style.border = '2px solid #4CA1AF'}
+                                        onBlur={(e) => e.target.style.border = formErrors.role ? '2px solid #dc3545' : '1px solid #ced4da'}
                                     >
-                                        <option value="" disabled>Select Role</option>
-                                        <option value="Receptionist">Receptionist</option>
-                                        <option value="Nurse">Nurse</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Doctor">Doctor</option>
-                                        <option value="Pharmacist">Pharmacist</option>
-                                        <option value="Lab Assistant">Lab Assistant</option>
+                                        <option value="" disabled style={{ color: '#999', padding: '10px' }}>Select Role</option>
+                                        <option value="Receptionist" style={{ padding: '10px' }}>Admin</option>
+                                        <option value="Nurse" style={{ padding: '10px' }}>Cashier</option>
+                                        <option value="Manager" style={{ padding: '10px' }}>Booking Manager</option>
+                                        <option value="Doctor" style={{ padding: '10px' }}>HR</option>
                                     </select>
                                     {formErrors.role && <p style={{ color: '#dc3545', fontSize: '0.8rem', margin: '0.2rem 0 0 0' }}>Role is required</p>}
                                 </div>
                                 <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem' }}>
-                                    <button type="submit" style={{ flex: 1, backgroundColor: editingStaffId ? '#0b154eff' : '#0b154eff', color: 'white', border: 'none', padding: '0.7rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    <button
+                                        type="submit"
+                                        style={{ flex: 1, background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.7rem', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease' }}
+                                        onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                    >
                                         {editingStaffId ? 'Update Staff' : 'Add Staff'}
                                     </button>
                                     {editingStaffId && (
-                                        <button type="button" onClick={() => { setEditingStaffId(null); setStaffFormData({ name: '', email: '', phone: '', role: '' }); setFormErrors({}); }} style={{ backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '0.7rem', borderRadius: '4px', cursor: 'pointer' }}>
+                                        <button type="button" onClick={() => { setEditingStaffId(null); setStaffFormData({ name: '', email: '', phone: '', role: '', password: '' }); setFormErrors({}); setShowStaffPassword(false); }} style={{ backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '0.7rem', borderRadius: '4px', cursor: 'pointer' }}>
                                             Cancel
                                         </button>
                                     )}
@@ -213,19 +248,79 @@ const AdminDashboard = () => {
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                                             {selectedCategory === 'staff' ? (
                                                 <>
-                                                    <button onClick={() => handleEditStaff(item)} style={{ backgroundColor: '#0b154eff', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
+                                                    <button
+                                                        onClick={() => handleEditStaff(item)}
+                                                        style={{ background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', transition: 'all 0.3s ease' }}
+                                                        onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                                        onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                                    >
                                                         Edit
                                                     </button>
-                                                    <button onClick={() => handleDeleteRecord(item.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
+                                                    <button
+                                                        onClick={() => handleDeleteRecord(item.id)}
+                                                        style={{
+                                                            backgroundColor: '#ef4444',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            padding: '0.5rem 1rem',
+                                                            borderRadius: '8px',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.3s ease',
+                                                            fontWeight: '500',
+                                                            boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
+                                                        }}
+                                                        onMouseOver={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#dc2626';
+                                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
+                                                        }}
+                                                        onMouseOut={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#ef4444';
+                                                            e.currentTarget.style.transform = 'translateY(0)';
+                                                            e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
+                                                        }}
+                                                        onMouseDown={(e) => e.currentTarget.style.backgroundColor = '#991b1b'}
+                                                        onMouseUp={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                                                    >
                                                         Delete
                                                     </button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <button onClick={() => handleToggleInfo(item.id)} style={{ backgroundColor: '#0b154eff', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
+                                                    <button
+                                                        onClick={() => handleToggleInfo(item.id)}
+                                                        style={{ background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', transition: 'all 0.3s ease' }}
+                                                        onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                                        onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                                    >
                                                         {expandedId === item.id ? 'Hide Details' : 'View Info'}
                                                     </button>
-                                                    <button onClick={() => handleDeleteRecord(item.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
+                                                    <button
+                                                        onClick={() => handleDeleteRecord(item.id)}
+                                                        style={{
+                                                            backgroundColor: '#ef4444',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            padding: '0.5rem 1rem',
+                                                            borderRadius: '8px',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.3s ease',
+                                                            fontWeight: '500',
+                                                            boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
+                                                        }}
+                                                        onMouseOver={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#dc2626';
+                                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
+                                                        }}
+                                                        onMouseOut={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#ef4444';
+                                                            e.currentTarget.style.transform = 'translateY(0)';
+                                                            e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
+                                                        }}
+                                                        onMouseDown={(e) => e.currentTarget.style.backgroundColor = '#991b1b'}
+                                                        onMouseUp={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                                                    >
                                                         Delete
                                                     </button>
                                                 </>
@@ -292,13 +387,38 @@ const AdminDashboard = () => {
                                             <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
                                                 <button
                                                     onClick={() => handleApprove(request.id)}
-                                                    style={{ backgroundColor: '#0b154eff', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', flex: 1 }}
+                                                    style={{ background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: '500', transition: 'all 0.3s ease' }}
+                                                    onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                                    onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                                                 >
                                                     Approve
                                                 </button>
                                                 <button
                                                     onClick={() => handleReject(request.id)}
-                                                    style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', flex: 1 }}
+                                                    style={{
+                                                        backgroundColor: '#ef4444',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        padding: '0.5rem 1rem',
+                                                        borderRadius: '8px',
+                                                        cursor: 'pointer',
+                                                        flex: 1,
+                                                        transition: 'all 0.3s ease',
+                                                        fontWeight: '500',
+                                                        boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
+                                                    }}
+                                                    onMouseOver={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#dc2626';
+                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
+                                                    }}
+                                                    onMouseOut={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#ef4444';
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
+                                                    }}
+                                                    onMouseDown={(e) => e.currentTarget.style.backgroundColor = '#991b1b'}
+                                                    onMouseUp={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
                                                 >
                                                     Reject
                                                 </button>
