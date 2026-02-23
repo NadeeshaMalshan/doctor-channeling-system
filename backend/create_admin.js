@@ -19,7 +19,7 @@ async function createAdmin() {
     try {
         connection = await mysql.createConnection(dbConfig);
 
-        const username = 'Kavishka';
+        const username = 'kavishka';
         const password = '12345';
         const role = 'Admin';
         const status = 'Active';
