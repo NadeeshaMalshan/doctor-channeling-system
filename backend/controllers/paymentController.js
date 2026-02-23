@@ -31,7 +31,7 @@ exports.generateHash = async (req, res) => {
     const merchentSecret = process.env.PAYHERE_SECRET_CODE.trim();
 
     try {
-        // 1. Create hash UpperCase(MD5(MerchantID + paymentID + Amount + Currency + UpperCase(MD5(MerchantSecret))))
+        // create hash upperCase(MD5(MerchantID + paymentID + Amount + Currency + UpperCase(MD5(MerchantSecret))))
         const hashedSecret = crypto.createHash('md5').update(merchentSecret).digest('hex').toUpperCase();
         const amountFormatted = Number(amount).toLocaleString('en-US', {
             minimumFractionDigits: 2
@@ -40,7 +40,7 @@ exports.generateHash = async (req, res) => {
         const hashRaw = merchantID + paymentID + amountFormatted + currency + hashedSecret;
         const hash = crypto.createHash('md5').update(hashRaw).digest('hex').toUpperCase();
 
-        // 2. Save a PENDING record in the database
+        // save a PENDING record in the database
         // paymentID format: ORD{appointmentID}_{timestamp}
         const appointmentID = paymentID.split('_')[0].replace('ORD', '');
         console.log(`Backend: paymentID Received: ${paymentID}, Calculated appointmentID: ${appointmentID}`);
@@ -100,7 +100,7 @@ exports.handleNotification = async (req, res) => {
 
     if (localMd5sig === md5sig || isTestMode) {
         try {
-            // Determine status based on PayHere status_code
+            // mapping status codes
             // 2: Success, 0: Pending, -1: Canceled, -2: Failed, -3: Chargedback
             let paymentStatus = 'PENDING';
             if (status_code === '2') {
