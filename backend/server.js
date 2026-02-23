@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const supportRoutes = require('./routes/supportRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 dotenv.config();
 
@@ -20,9 +21,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Test Route
-app.get('/', (req, res) => {
+app.get('/', (res) => {
     res.send('Doctor Channeling System API is running');
 });
 

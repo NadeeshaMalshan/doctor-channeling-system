@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './css/paymentPortal.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -11,25 +11,39 @@ const PaymentPortal = () => {
     const navigate = useNavigate();
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Get patientId from the 'user' object in localStorage
-    const user = JSON.parse(localStorage.getItem('user'));
-    const patientId = user ? user.id : null;
-    const doctorId = 1;
+    const storedUser = localStorage.getItem('user');
+    let user = null;
+    let patientId = null;
+    try {
+        user = storedUser ? JSON.parse(storedUser) : null;
+        patientId = user ? user.id : null;
+    } catch (e) {
+        console.error('Error parsing user from localStorage:', e);
+    }
+    const doctorId = 4;
 
 
 
     useEffect(() => {
         document.title = "Payment Portal";
 
+        if (!patientId) {
+            setLoading(false);
+            setError('not_logged_in');
+            return;
+        }
 
         const fetchDetails = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/payment/details?patientID=${patientId}&doctorID=${doctorId}`);
                 setDetails(response.data);
                 setLoading(false);
-            } catch (error) {
-                console.error('Error fetching payment details', error);
+            } catch (err) {
+                console.error('Error fetching payment details', err);
+                setError('fetch_failed');
                 setLoading(false);
             }
         };
@@ -56,17 +70,36 @@ const PaymentPortal = () => {
         );
     }
 
-    if (!details) {
+    if (error === 'not_logged_in' || !user) {
         return (
             <>
                 <ECareNavBar />
                 <div className="payment-container">
                     <div className="payment-right">
                         <div className="summary-box">
-                            <h2>Can't detected User!</h2>
+                            <h2>Can't detect User!</h2>
                             <p>Please ensure you are logged in.</p>
                             <button className="login-btn" onClick={() => window.location.href = "/login"}>
                                 Login
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    if (error === 'fetch_failed' || !details) {
+        return (
+            <>
+                <ECareNavBar />
+                <div className="payment-container">
+                    <div className="payment-right">
+                        <div className="summary-box">
+                            <h2>Error Loading Payment Details</h2>
+                            <p>We couldn't load your payment information. Please try again.</p>
+                            <button className="login-btn" onClick={() => window.location.reload()}>
+                                Retry
                             </button>
                         </div>
                     </div>
