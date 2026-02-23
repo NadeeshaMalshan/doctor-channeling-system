@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './css/paymentPortal.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,7 @@ const PaymentPortal = () => {
     } catch (e) {
         console.error('Error parsing user from localStorage:', e);
     }
-    const doctorId = 1;
+    const doctorId = 4;
 
 
 
