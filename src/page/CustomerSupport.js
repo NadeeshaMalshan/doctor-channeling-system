@@ -6,33 +6,58 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 const CustomerSupport = () => {
     const navigate = useNavigate();
-    const [activeRole, setActiveRole] = useState('patient'); // 'patient' or 'hr'
+    const [user, setUser] = useState(null);
+    const [role, setRole] = useState(null); // 'patient' or 'hr'
     const [tickets, setTickets] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [ticketTitle, setTicketTitle] = useState('');
     const [ticketDescription, setTicketDescription] = useState('');
     const [creating, setCreating] = useState(false);
     const [notification, setNotification] = useState(null);
 
-    // Simulated user data (since no auth system yet)
-    const patientUser = { id: 1, name: 'Patient001', email: 'patient@example.com' };
-    const hrUser = { name: 'HR_Staff001' };
-
     // Show notification
-    const showNotification = (message, type = 'success') => {
+    const showNotification = useCallback((message, type = 'success') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
-    };
+    }, []);
+
+    // Authentication and Role Detection
+    useEffect(() => {
+        const storedPatient = localStorage.getItem('user');
+        const storedStaff = localStorage.getItem('staffUser');
+
+        if (storedStaff) {
+            const staffData = JSON.parse(storedStaff);
+            if (staffData.role === 'HR') {
+                setUser(staffData);
+                setRole('hr');
+            } else {
+                // If staff but not HR, maybe they shouldn't be here or we handle other roles later
+                setUser(staffData);
+                setRole('staff'); // Generic staff
+            }
+        } else if (storedPatient) {
+            setUser(JSON.parse(storedPatient));
+            setRole('patient');
+        } else {
+            // No user logged in
+            showNotification('Please register or login to use customer support', 'error');
+            setTimeout(() => navigate('/signup'), 2000);
+        }
+    }, [navigate, showNotification]);
 
     // Fetch tickets based on role
     const fetchTickets = useCallback(async () => {
+        if (!role || !user) return;
+
         setLoading(true);
         try {
             let url;
-            if (activeRole === 'patient') {
-                url = `${API_URL}/api/support/tickets/patient/${patientUser.id}`;
+            if (role === 'patient') {
+                url = `${API_URL}/api/support/tickets/patient/${user.id}`;
             } else {
+                // HR or other staff see all tickets
                 url = `${API_URL}/api/support/tickets`;
             }
             const response = await fetch(url);
@@ -48,7 +73,7 @@ const CustomerSupport = () => {
         } finally {
             setLoading(false);
         }
-    }, [activeRole]);
+    }, [role, user, showNotification]);
 
     useEffect(() => {
         fetchTickets();
@@ -67,9 +92,9 @@ const CustomerSupport = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    patientId: patientUser.id,
-                    patientName: patientUser.name,
-                    patientEmail: patientUser.email,
+                    patientId: user.id,
+                    patientName: user.name || `${user.firstName} ${user.lastName}`,
+                    patientEmail: user.email,
                     subject: ticketTitle,
                     description: ticketDescription,
                 }),
@@ -159,6 +184,17 @@ const CustomerSupport = () => {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
+    if (!role || !user) {
+        return (
+            <div className="cs-page">
+                <div className="cs-loading">
+                    <div className="cs-spinner"></div>
+                    <p>Authenticating...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="cs-page">
             {/* Notification */}
@@ -186,45 +222,23 @@ const CustomerSupport = () => {
                         </svg>
                     </div>
                     <div className="cs-brand-text">
-                        <h1>E-Channeling Support</h1>
-                        <span>Ticket Management System</span>
+                        <h1>NCC eCare Custommer support</h1>
+                        <span>Professional Channeling Support</span>
                     </div>
                 </div>
                 <div className="cs-navbar-links">
                     <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>HOME</a>
                     <a href="/eCare" onClick={(e) => { e.preventDefault(); navigate('/eCare'); }}>DOCTORS</a>
-                    <a href="/#services" onClick={(e) => { e.preventDefault(); }}>SERVICES</a>
-                    <a href="/#contact" onClick={(e) => { e.preventDefault(); }}>CONTACTS</a>
-                </div>
-                <div className="cs-navbar-roles">
-                    <button
-                        className={`cs-role-btn cs-role-patient ${activeRole === 'patient' ? 'active' : ''}`}
-                        onClick={() => setActiveRole('patient')}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                        Patient
-                    </button>
-                    <button
-                        className={`cs-role-btn cs-role-hr ${activeRole === 'hr' ? 'active' : ''}`}
-                        onClick={() => setActiveRole('hr')}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                        </svg>
-                        HR Staff
-                    </button>
                 </div>
             </nav>
 
             {/* Main Content */}
             <main className="cs-main">
                 {/* User Info Card */}
-                <div className={`cs-user-card ${activeRole === 'hr' ? 'cs-user-card-hr' : ''}`}>
+                <div className={`cs-user-card ${role === 'hr' ? 'cs-user-card-hr' : ''}`}>
                     <div className="cs-user-info">
-                        <div className={`cs-user-avatar ${activeRole === 'hr' ? 'cs-avatar-hr' : ''}`}>
-                            {activeRole === 'patient' ? (
+                        <div className={`cs-user-avatar ${role === 'hr' ? 'cs-avatar-hr' : ''}`}>
+                            {role === 'patient' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                                 </svg>
@@ -236,13 +250,13 @@ const CustomerSupport = () => {
                         </div>
                         <div className="cs-user-details">
                             <span className="cs-user-label">Logged in as</span>
-                            <h3 className="cs-user-name">{activeRole === 'patient' ? patientUser.name : hrUser.name}</h3>
-                            <span className={`cs-user-badge ${activeRole === 'hr' ? 'cs-badge-hr' : ''}`}>
-                                {activeRole === 'patient' ? 'Patient' : 'HR Staff Member'}
+                            <h3 className="cs-user-name">{role === 'patient' ? (user.name || `${user.firstName} ${user.lastName}`) : user.username}</h3>
+                            <span className={`cs-user-badge ${role === 'hr' ? 'cs-badge-hr' : ''}`}>
+                                {role === 'patient' ? 'Registered Patient' : `${user.role} Staff Member`}
                             </span>
                         </div>
                     </div>
-                    {activeRole === 'patient' && (
+                    {role === 'patient' && (
                         <button className="cs-create-btn" onClick={() => setShowCreateModal(true)}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                                 <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
@@ -256,7 +270,7 @@ const CustomerSupport = () => {
                 <div className="cs-tickets-section">
                     <div className="cs-tickets-header">
                         <div>
-                            <h2>{activeRole === 'patient' ? 'My Support Tickets' : 'All Support Tickets'}</h2>
+                            <h2>{role === 'patient' ? 'My Support Tickets' : 'Support Tickets Queue'}</h2>
                             <span className="cs-tickets-count">{tickets.length} ticket{tickets.length !== 1 ? 's' : ''} found</span>
                         </div>
                         <div className="cs-tickets-icon">
@@ -277,7 +291,7 @@ const CustomerSupport = () => {
                                 <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" />
                             </svg>
                             <p>No tickets found</p>
-                            {activeRole === 'patient' && (
+                            {role === 'patient' && (
                                 <button className="cs-create-btn-sm" onClick={() => setShowCreateModal(true)}>
                                     Create your first ticket
                                 </button>
@@ -306,7 +320,7 @@ const CustomerSupport = () => {
                                         </div>
                                     </div>
                                     <div className="cs-ticket-actions">
-                                        {activeRole === 'patient' ? (
+                                        {role === 'patient' ? (
                                             <>
                                                 <span className={`cs-status-badge ${ticket.status === 'Resolved' ? 'cs-status-resolved' : 'cs-status-pending'}`}>
                                                     {ticket.status === 'Resolved' ? (
