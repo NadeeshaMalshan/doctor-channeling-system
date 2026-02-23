@@ -57,9 +57,9 @@ const ReportExplainer = () => {
         setIsExtracting(true);
         try {
             const formData = new FormData();
-            formData.append('image', uploadedImage);
+            formData.append('file', uploadedImage);
 
-            const response = await fetch('http://localhost:5000/api/ocr', {
+            const response = await fetch('http://localhost:8000/api/ocr', {
                 method: 'POST',
                 body: formData,
             });
@@ -82,7 +82,7 @@ const ReportExplainer = () => {
         if (!ocrText.trim()) return;
         setIsAnalyzing(true);
         try {
-            const response = await fetch('http://localhost:5000/api/explain', {
+            const response = await fetch('http://localhost:8000/api/explain', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: ocrText }),
