@@ -24,7 +24,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/payment', paymentRoutes);
 
 // Test Route
-app.get('/', (req, res) => {
+app.get('/', (res) => {
     res.send('Doctor Channeling System API is running');
 });
 

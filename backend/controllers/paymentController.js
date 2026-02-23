@@ -2,6 +2,7 @@ const db = require('../config/db');
 const crypto = require('crypto');
 
 exports.getPaymentDetails = async (req, res) => {
+    //create URL query (?patientID=1&doctorID=2)
     const { patientID, doctorID } = req.query;
 
     try {
@@ -10,13 +11,13 @@ exports.getPaymentDetails = async (req, res) => {
             [patientID, doctorID]
         );
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'No payment details found' });
+            return res.status(404).json({ message: 'No payment details found (404)' });
         }
         res.status(200).json(rows[0]);
 
     } catch (error) {
         console.error('Error fetching payment details:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error (500)' });
 
     }
 };
