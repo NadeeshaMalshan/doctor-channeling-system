@@ -61,8 +61,8 @@ const StaffLogin = () => {
                 // Success
                 alert(`Login successful! Welcome ${data.user.username} (${data.user.role})`);
                 // You might want to store the token/user data here
-                // localStorage.setItem('staffToken', data.token);
-                // localStorage.setItem('staffUser', JSON.stringify(data.user));
+                localStorage.setItem('staffToken', data.token);
+                localStorage.setItem('staffUser', JSON.stringify(data.user));
 
                 // Redirect based on role
                 switch (data.user.role) {

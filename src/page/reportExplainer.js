@@ -57,9 +57,9 @@ const ReportExplainer = () => {
         setIsExtracting(true);
         try {
             const formData = new FormData();
-            formData.append('image', uploadedImage);
+            formData.append('file', uploadedImage);
 
-            const response = await fetch('http://localhost:5000/api/ocr', {
+            const response = await fetch('http://localhost:8000/api/ocr', {
                 method: 'POST',
                 body: formData,
             });
@@ -69,11 +69,11 @@ const ReportExplainer = () => {
                 setOcrText(data.text);
                 setStep(2);
             } else {
-                alert('Text extract කරන්න බැරි වුණා. නැවත උත්සාහ කරන්න.');
+                alert('Cant extract text.');
             }
         } catch (error) {
             console.error('OCR Error:', error);
-            alert('Server එකට connect වෙන්න බැරි වුණා.');
+            alert('Cant connect to server.');
         }
         setIsExtracting(false);
     };
@@ -82,7 +82,7 @@ const ReportExplainer = () => {
         if (!ocrText.trim()) return;
         setIsAnalyzing(true);
         try {
-            const response = await fetch('http://localhost:5000/api/explain', {
+            const response = await fetch('http://localhost:8000/api/explain', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: ocrText }),
@@ -93,11 +93,11 @@ const ReportExplainer = () => {
                 setExplainedText(data.explanation);
                 setStep(3);
             } else {
-                alert('Analyze කරන්න බැරි වුණා.');
+                alert('Cant explain text.');
             }
         } catch (error) {
             console.error('AI Error:', error);
-            alert('Server එකට connect වෙන්න බැරි වුණා.');
+            alert('Cant connect to server.');
         }
         setIsAnalyzing(false);
     };

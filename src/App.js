@@ -16,6 +16,7 @@ import PaymentPortal from './page/PaymentPortal';
 import SuccessPayment from './Components/sucessPayment';
 import FailedPayment from './Components/failedPayment';
 import ReportExplainer from './page/reportExplainer';
+import SmartDocSuggestion from './page/smartDocSuggestion';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/ecare/payment/success" element={<SuccessPayment />} />
           <Route path="/ecare/payment/failed" element={<FailedPayment />} />
           <Route path="/ecare/report-explainer" element={<ReportExplainer />} />
+          <Route path="/ecare/smart-doctor" element={<SmartDocSuggestion />} />
         </Routes>
       </div>
     </>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './css/paymentPortal.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,7 @@ const PaymentPortal = () => {
     } catch (e) {
         console.error('Error parsing user from localStorage:', e);
     }
-    const doctorId = 1;
+    const doctorId = 4;
 
 
 
@@ -57,16 +57,47 @@ const PaymentPortal = () => {
 
     if (loading) {
         return (
-            <>
+            <div className="payment-page-wrapper">
                 <ECareNavBar />
                 <div className="payment-container">
+                    {/* Skeleton left side */}
+                    <div className="payment-left">
+                        <div className="payment-left-content">
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '180px', height: '40px', marginBottom: '40px', borderRadius: '8px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '90%', height: '45px', marginBottom: '15px', borderRadius: '8px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '70%', height: '45px', marginBottom: '25px', borderRadius: '8px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '100%', height: '20px', marginBottom: '10px', borderRadius: '6px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '85%', height: '20px', marginBottom: '40px', borderRadius: '6px' }}></div>
+                            <div style={{ display: 'flex', gap: '20px' }}>
+                                <div className="skeleton-bar skeleton-pulse" style={{ width: '140px', height: '44px', borderRadius: '12px' }}></div>
+                                <div className="skeleton-bar skeleton-pulse" style={{ width: '160px', height: '44px', borderRadius: '12px' }}></div>
+                            </div>
+                        </div>
+                        <div className="bg-circles">
+                            <div className="circle circle-1"></div>
+                            <div className="circle circle-2"></div>
+                        </div>
+                    </div>
+
+                    {/* Skeleton right side */}
                     <div className="payment-right">
                         <div className="summary-box">
-                            <h2>Loading...</h2>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '60%', height: '28px', margin: '0 auto 30px', borderRadius: '8px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '100%', height: '18px', marginBottom: '18px', borderRadius: '6px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '90%', height: '18px', marginBottom: '18px', borderRadius: '6px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '80%', height: '18px', marginBottom: '18px', borderRadius: '6px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '75%', height: '18px', marginBottom: '18px', borderRadius: '6px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '85%', height: '18px', marginBottom: '18px', borderRadius: '6px' }}></div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '70%', height: '18px', marginBottom: '25px', borderRadius: '6px' }}></div>
+                            <div style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginBottom: '30px' }}>
+                                <div className="skeleton-bar skeleton-pulse" style={{ width: '60%', height: '20px', marginBottom: '8px', borderRadius: '6px' }}></div>
+                                <div className="skeleton-bar skeleton-pulse" style={{ width: '45%', height: '14px', borderRadius: '6px' }}></div>
+                            </div>
+                            <div className="skeleton-bar skeleton-pulse" style={{ width: '100%', height: '50px', borderRadius: '50px' }}></div>
                         </div>
                     </div>
                 </div>
-            </>
+            </div>
         );
     }
 

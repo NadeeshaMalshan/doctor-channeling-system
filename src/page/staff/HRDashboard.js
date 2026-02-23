@@ -29,6 +29,10 @@ const HRDashboard = () => {
                         <h3>Employee Directory</h3>
                         <p>View all staff members</p>
                     </div>
+                    <div className="dashboard-card" onClick={() => navigate('/ecare/customer-support')} style={{ cursor: 'pointer' }}>
+                        <h3>Customer Support</h3>
+                        <p>Manage support tickets and patient inquiries</p>
+                    </div>
                     <div className="dashboard-card">
                         <h3>Attendance</h3>
                         <p>Track employee attendance</p>
