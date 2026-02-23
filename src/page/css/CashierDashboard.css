@@ -1,0 +1,644 @@
+/* ===== Cashier Dashboard — Payment Portal Style ===== */
+
+/* page wrapper */
+.cashier-page-wrapper {
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    background-color: #e0e0e0;
+}
+
+/* ── Cashier NavBar (eCare-inspired) ── */
+.cashier-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.cashier-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cashier-logo-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #0055ff 0%, #369bf4 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cashier-logo-icon svg {
+    width: 28px;
+    height: 28px;
+    fill: white;
+}
+
+.cashier-brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.cashier-brand-text .brand-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e3a5f;
+    letter-spacing: -0.5px;
+}
+
+.cashier-brand-text .brand-tagline {
+    font-size: 0.75rem;
+    color: #6B7280;
+    margin-top: -2px;
+}
+
+.cashier-navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cashier-nav-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.cashier-nav-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+.cashier-nav-btn.btn-back {
+    background: linear-gradient(135deg, #1e3a5f 0%, #3B5DB0 100%);
+    color: white;
+}
+
+.cashier-nav-btn.btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(59, 93, 176, 0.4);
+}
+
+.cashier-nav-btn.btn-logout {
+    background-color: transparent;
+    color: #e53935;
+    border: 2px solid #e53935;
+}
+
+.cashier-nav-btn.btn-logout:hover {
+    background-color: #e53935;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(229, 57, 53, 0.35);
+}
+
+.cashier-staff-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(244, 67, 54, 0.12) 100%);
+    border-radius: 8px;
+    color: #0a4ffc;
+    font-size: 0.9rem;
+}
+
+.cashier-staff-badge svg {
+    width: 20px;
+    height: 20px;
+    fill: #006fe6;
+    flex-shrink: 0;
+}
+
+/* ── Main Content Area ── */
+.cashier-main-content {
+    padding: 40px;
+}
+
+/* ── Hero / Welcome Banner ── */
+.cashier-hero {
+    background: linear-gradient(135deg, #0d112b 0%, #1e3a5f 100%);
+    color: white;
+    padding: 50px 60px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cashier-hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.cashier-hero h1 {
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0 0 15px;
+    background: linear-gradient(to right, #fff, #99aab5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.cashier-hero p {
+    font-size: 1.1rem;
+    color: #cbd5e0;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* re-use the same pulse circles from payment portal */
+.cashier-hero .bg-circles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.cashier-hero .circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+}
+
+.cashier-hero .circle-1 {
+    width: 350px;
+    height: 350px;
+    background: rgba(75, 108, 183, 0.2);
+    top: -80px;
+    left: -80px;
+    animation: cashPulse 10s infinite alternate;
+}
+
+.cashier-hero .circle-2 {
+    width: 250px;
+    height: 250px;
+    background: rgba(29, 38, 113, 0.3);
+    bottom: -50px;
+    right: -50px;
+    animation: cashPulse 8s infinite alternate-reverse;
+}
+
+@keyframes cashPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+/* ── Stats Row ── */
+.cashier-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.cashier-stat-card {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.cashier-stat-card .stat-emoji {
+    font-size: 28px;
+}
+
+.cashier-stat-card .stat-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6B7280;
+}
+
+.cashier-stat-card .stat-info h3 {
+    margin: 4px 0 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1e3a5f;
+}
+
+/* ── Payment Table Section ── */
+.cashier-table-section {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+}
+
+.cashier-table-section h2 {
+    color: #1a237e;
+    margin: 0 0 25px;
+    font-size: 1.4rem;
+}
+
+/* ── Toolbar ── */
+.cashier-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.cashier-search-box {
+    flex: 1;
+    min-width: 240px;
+    padding: 12px 18px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.3s ease;
+}
+
+.cashier-search-box:focus {
+    border-color: #3B5DB0;
+}
+
+.cashier-toolbar-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    color: white;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+}
+
+.cashier-toolbar-btn.delete-old {
+    background: #0d112b;
+}
+
+.cashier-toolbar-btn.delete-old:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(13, 17, 43, 0.3);
+}
+
+.cashier-toolbar-btn.delete-sandbox {
+    background: #e53935;
+}
+
+.cashier-toolbar-btn.delete-sandbox:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(229, 57, 53, 0.35);
+}
+
+/* ── Filter Tabs ── */
+.cashier-filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.cashier-filter-tab {
+    padding: 8px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: white;
+    color: #6B7280;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.cashier-filter-tab:hover {
+    border-color: #3B5DB0;
+    color: #1e3a5f;
+}
+
+.cashier-filter-tab.active {
+    background: #0d112b;
+    color: white;
+    border-color: #0d112b;
+}
+
+/* ── Table ── */
+.cashier-table-wrapper {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+.cashier-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cashier-table thead {
+    background: linear-gradient(135deg, #0d112b 0%, #1e3a5f 100%);
+}
+
+.cashier-table thead th {
+    padding: 14px 16px;
+    text-align: left;
+    color: white;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+}
+
+.cashier-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s ease;
+}
+
+.cashier-table tbody tr:hover {
+    background: #f8f9ff;
+}
+
+.cashier-table tbody td {
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    color: #333;
+    vertical-align: middle;
+}
+
+/* ── Status Badges ── */
+.status-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.refunded {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-badge.failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-badge.canceled {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-badge.chargedback {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.sandbox-tag {
+    display: inline-block;
+    margin-left: 6px;
+    background: #fff3cd;
+    color: #856404;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 50px;
+    font-weight: 700;
+}
+
+/* ── Table Action Buttons ── */
+.table-refund-btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 50px;
+    background-color: #0d112b;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.table-refund-btn:hover {
+    transform: scale(1.02);
+}
+
+/* ── Empty State ── */
+.cashier-empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #6B7280;
+}
+
+.cashier-empty-state h3 {
+    margin: 12px 0 6px;
+    color: #333;
+    font-size: 16px;
+}
+
+/* ── Modal ── */
+.cashier-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(13, 17, 43, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: modalFadeIn 0.2s ease;
+}
+
+.cashier-modal {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.cashier-modal h3 {
+    margin: 0 0 12px;
+    color: #1a237e;
+    font-size: 18px;
+}
+
+.cashier-modal p {
+    margin: 0 0 24px;
+    color: #555;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.cashier-modal .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.modal-btn:hover {
+    transform: scale(1.02);
+}
+
+.modal-btn.cancel {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.modal-btn.confirm-primary {
+    background: #0d112b;
+    color: white;
+}
+
+.modal-btn.confirm-danger {
+    background: #e53935;
+    color: white;
+}
+
+/* ── Toast ── */
+.cashier-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #0d112b;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    z-index: 2100;
+    animation: toastSlideIn 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .cashier-navbar {
+        padding: 12px 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .cashier-navbar-actions {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .cashier-main-content {
+        padding: 20px;
+    }
+
+    .cashier-hero {
+        padding: 30px;
+    }
+
+    .cashier-hero h1 {
+        font-size: 1.8rem;
+    }
+
+    .cashier-table-section {
+        padding: 20px;
+    }
+
+    .cashier-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cashier-toolbar {
+        flex-direction: column;
+    }
+
+    .cashier-search-box {
+        width: 100%;
+    }
+
+    .cashier-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .cashier-table {
+        min-width: 700px;
+    }
+}
+
+@media (max-width: 520px) {
+    .cashier-stats-row {
+        grid-template-columns: 1fr;
+    }
+}
