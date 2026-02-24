@@ -6,6 +6,9 @@ import os
 import mysql.connector
 from dotenv import load_dotenv
 from prompts import REPORT_EXPLAIN_PROMPT
+import easyocr
+
+reader = easyocr.Reader(['en']) 
 
 load_dotenv()
 
@@ -61,35 +64,21 @@ async def explain_report(req: ReportTextRequest):
         return {"success": False, "error": str(e)}
 
 
-# ENDPOINT 2: OCR (mock)
+# ENDPOINT 2: OCR
 
 @app.post("/api/ocr")
 async def ocr_extract(file: UploadFile = File(...)):
-    try:
-        filename = file.filename
-        print(f"Received file: {filename}")
-
-        # Mock OCR response (will use EasyOCR in future)
-        mock_text = """Patient Name: User
-        Date: 2025-02-20
-        Test: Complete Blood Count (CBC)
-        Hemoglobin (Hb): 13.5 g/dL
-        White Blood Cell (WBC): 7,500 /μL
-        Red Blood Cell (RBC): 4.8 million/μL
-        Platelet Count: 250,000 /μL
-        Fasting Blood Sugar: 95 mg/dL
-        Total Cholesterol: 210 mg/dL
-        HDL Cholesterol: 55 mg/dL
-        LDL Cholesterol: 130 mg/dL
-        Doctor: Dr. Silva
-        Hospital: Narammala Channel Centre"""
-
-        return {"success": True, "text": mock_text}
-
-    except Exception as e:
-        print(f"ERROR in ocr: {e}")
-        return {"success": False, "error": str(e)}
-
+    # 1. Read the file into bytes
+    contents = await file.read()
+    
+    # 2. Extract text using the reader
+    # detail=0 returns only the text fragments
+    results = reader.readtext(contents, detail=0)
+    
+    # 3. Join the fragments into one string
+    extracted_text = " ".join(results)
+    
+    return {"success": True, "text": extracted_text}
 
 # ENDPOINT 3: Doctor Suggestion (from Database by specialization)
 
