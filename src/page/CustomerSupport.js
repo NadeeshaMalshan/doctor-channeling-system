@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ECareNavBar from '../Components/eCareNavBar';
 import './css/CustomerSupport.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -7,7 +8,6 @@ const API_URL = process.env.REACT_APP_API_URL;
 const CustomerSupport = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    const [role, setRole] = useState(null); // 'patient' or 'hr'
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -22,45 +22,24 @@ const CustomerSupport = () => {
         setTimeout(() => setNotification(null), 3000);
     }, []);
 
-    // Authentication and Role Detection
+    // Authentication
     useEffect(() => {
         const storedPatient = localStorage.getItem('user');
-        const storedStaff = localStorage.getItem('staffUser');
-
-        if (storedStaff) {
-            const staffData = JSON.parse(storedStaff);
-            if (staffData.role === 'HR') {
-                setUser(staffData);
-                setRole('hr');
-            } else {
-                // If staff but not HR, maybe they shouldn't be here or we handle other roles later
-                setUser(staffData);
-                setRole('staff'); // Generic staff
-            }
-        } else if (storedPatient) {
-            setUser(JSON.parse(storedPatient));
-            setRole('patient');
+        if (storedPatient) {
+            const patientData = JSON.parse(storedPatient);
+            setUser(patientData);
         } else {
-            // No user logged in
             showNotification('Please register or login to use customer support', 'error');
             setTimeout(() => navigate('/signup'), 2000);
         }
     }, [navigate, showNotification]);
 
-    // Fetch tickets based on role
+    // Fetch patient's tickets
     const fetchTickets = useCallback(async () => {
-        if (!role || !user) return;
-
+        if (!user) return;
         setLoading(true);
         try {
-            let url;
-            if (role === 'patient') {
-                url = `${API_URL}/api/support/tickets/patient/${user.id}`;
-            } else {
-                // HR or other staff see all tickets
-                url = `${API_URL}/api/support/tickets`;
-            }
-            const response = await fetch(url);
+            const response = await fetch(`${API_URL}/api/support/tickets/patient/${user.id}`);
             const data = await response.json();
             if (response.ok) {
                 setTickets(data.tickets || []);
@@ -73,11 +52,31 @@ const CustomerSupport = () => {
         } finally {
             setLoading(false);
         }
-    }, [role, user, showNotification]);
+    }, [user, showNotification]);
 
     useEffect(() => {
         fetchTickets();
     }, [fetchTickets]);
+
+    // Name logic fix
+    const getFullName = (userData) => {
+        if (!userData) return "User";
+        if (userData.name) return userData.name;
+        const first = userData.firstName || "";
+        const last = userData.lastName || "";
+        const full = `${first} ${last}`.trim();
+        return full || userData.username || "User";
+    };
+
+    const displayName = useMemo(() => getFullName(user), [user]);
+
+    // Ticket Summary
+    const summary = useMemo(() => {
+        const solved = tickets.filter(t => t.status === 'Resolved' || t.status === 'Approved').length;
+        const pending = tickets.filter(t => t.status === 'Pending').length;
+        const raised = tickets.length;
+        return { solved, pending, raised };
+    }, [tickets]);
 
     // Create ticket
     const handleCreateTicket = async (e) => {
@@ -93,7 +92,7 @@ const CustomerSupport = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     patientId: user.id,
-                    patientName: user.name || `${user.firstName} ${user.lastName}`,
+                    patientName: displayName,
                     patientEmail: user.email,
                     subject: ticketTitle,
                     description: ticketDescription,
@@ -117,336 +116,144 @@ const CustomerSupport = () => {
         }
     };
 
-    // Patient: Delete ticket
     const handleDeleteTicket = async (ticketId) => {
         if (!window.confirm('Are you sure you want to delete this ticket?')) return;
         try {
             const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}`, {
                 method: 'DELETE',
             });
-            const data = await response.json();
             if (response.ok) {
                 showNotification('Ticket deleted successfully!');
                 fetchTickets();
             } else {
+                const data = await response.json();
                 showNotification(data.message || 'Failed to delete ticket', 'error');
             }
         } catch (error) {
-            console.error('Error deleting ticket:', error);
             showNotification('Failed to connect to the server', 'error');
         }
     };
 
-    // HR: Update ticket status
-    const handleUpdateStatus = async (ticketId, newStatus) => {
-        try {
-            const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showNotification(`Ticket status updated to ${newStatus}!`);
-                fetchTickets();
-            } else {
-                showNotification(data.message || 'Failed to update status', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating status:', error);
-            showNotification('Failed to connect to the server', 'error');
-        }
-    };
-
-    // HR: Soft delete ticket
-    const handleSoftDelete = async (ticketId) => {
-        if (!window.confirm('Are you sure you want to remove this ticket?')) return;
-        try {
-            const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}/soft-delete`, {
-                method: 'PUT',
-            });
-            const data = await response.json();
-            if (response.ok) {
-                showNotification('Ticket removed successfully!');
-                fetchTickets();
-            } else {
-                showNotification(data.message || 'Failed to remove ticket', 'error');
-            }
-        } catch (error) {
-            console.error('Error soft deleting ticket:', error);
-            showNotification('Failed to connect to the server', 'error');
-        }
-    };
-
-    // Format date
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
-    if (!role || !user) {
-        return (
-            <div className="cs-page">
-                <div className="cs-loading">
-                    <div className="cs-spinner"></div>
-                    <p>Authenticating...</p>
-                </div>
-            </div>
-        );
-    }
+    if (!user) return <div className="cs-page"><div className="cs-loading">Authenticating...</div></div>;
 
     return (
         <div className="cs-page">
-            {/* Notification */}
+            <ECareNavBar />
             {notification && (
                 <div className={`cs-notification ${notification.type}`}>
-                    {notification.type === 'success' ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                        </svg>
-                    )}
                     <span>{notification.message}</span>
                 </div>
             )}
-
-            {/* Navbar */}
-            <nav className="cs-navbar">
-                <div className="cs-navbar-brand">
-                    <div className="cs-brand-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
-                        </svg>
-                    </div>
-                    <div className="cs-brand-text">
-                        <h1>NCC eCare Custommer support</h1>
-                        <span>Professional Channeling Support</span>
-                    </div>
-                </div>
-                <div className="cs-navbar-links">
-                    <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>HOME</a>
-                    <a href="/eCare" onClick={(e) => { e.preventDefault(); navigate('/eCare'); }}>DOCTORS</a>
-                </div>
-            </nav>
-
-            {/* Main Content */}
             <main className="cs-main">
-                {/* User Info Card */}
-                <div className={`cs-user-card ${role === 'hr' ? 'cs-user-card-hr' : ''}`}>
+                <div className="cs-topic-header">
+                    <h2>NCC eCare Customer Support</h2>
+                </div>
+
+                <div className="cs-user-card">
                     <div className="cs-user-info">
-                        <div className={`cs-user-avatar ${role === 'hr' ? 'cs-avatar-hr' : ''}`}>
-                            {role === 'patient' ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                </svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                                </svg>
-                            )}
+                        <div className="cs-user-avatar">
+                            <span className="material-symbols-outlined" style={{ color: 'white', fontSize: '32px' }}>account_circle</span>
                         </div>
                         <div className="cs-user-details">
                             <span className="cs-user-label">Logged in as</span>
-                            <h3 className="cs-user-name">{role === 'patient' ? (user.name || `${user.firstName} ${user.lastName}`) : user.username}</h3>
-                            <span className={`cs-user-badge ${role === 'hr' ? 'cs-badge-hr' : ''}`}>
-                                {role === 'patient' ? 'Registered Patient' : `${user.role} Staff Member`}
-                            </span>
+                            <h3 className="cs-user-name">{displayName}</h3>
+                            <span className="cs-user-badge">Registered Patient</span>
                         </div>
                     </div>
-                    {role === 'patient' && (
-                        <button className="cs-create-btn" onClick={() => setShowCreateModal(true)}>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                            </svg>
-                            Create Ticket
-                        </button>
-                    )}
+                    <button className="cs-create-btn" onClick={() => setShowCreateModal(true)}>
+                        <span className="material-symbols-outlined">add</span>
+                        Create Ticket
+                    </button>
                 </div>
 
-                {/* Tickets Section */}
-                <div className="cs-tickets-section">
-                    <div className="cs-tickets-header">
-                        <div>
-                            <h2>{role === 'patient' ? 'My Support Tickets' : 'Support Tickets Queue'}</h2>
-                            <span className="cs-tickets-count">{tickets.length} ticket{tickets.length !== 1 ? 's' : ''} found</span>
-                        </div>
-                        <div className="cs-tickets-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
-                            </svg>
-                        </div>
+                <div className="cs-summary-container">
+                    <div className="cs-summary-card cs-summary-raised">
+                        <h4>Raised Tickets</h4>
+                        <span className="cs-summary-value">{summary.raised}</span>
                     </div>
+                    <div className="cs-summary-card cs-summary-pending">
+                        <h4>Pending Tickets</h4>
+                        <span className="cs-summary-value">{summary.pending}</span>
+                    </div>
+                    <div className="cs-summary-card cs-summary-solved">
+                        <h4>Solved Tickets</h4>
+                        <span className="cs-summary-value">{summary.solved}</span>
+                    </div>
+                </div>
 
+                <div className="cs-topic-header" style={{ borderBottom: 'none' }}>
+                    <h2>MySupport Tickets</h2>
+                </div>
+
+                <div className="cs-tickets-list">
                     {loading ? (
-                        <div className="cs-loading">
-                            <div className="cs-spinner"></div>
-                            <p>Loading tickets...</p>
-                        </div>
+                        <div className="cs-loading"><div className="cs-spinner"></div></div>
                     ) : tickets.length === 0 ? (
-                        <div className="cs-empty">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
-                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" />
-                            </svg>
-                            <p>No tickets found</p>
-                            {role === 'patient' && (
-                                <button className="cs-create-btn-sm" onClick={() => setShowCreateModal(true)}>
-                                    Create your first ticket
-                                </button>
-                            )}
-                        </div>
+                        <div className="cs-empty"><p>No tickets found</p></div>
                     ) : (
-                        <div className="cs-tickets-list">
-                            {tickets.map((ticket) => (
-                                <div className="cs-ticket-item" key={ticket.id}>
-                                    <div className="cs-ticket-content">
-                                        <h3 className="cs-ticket-title">{ticket.subject}</h3>
-                                        <p className="cs-ticket-desc">{ticket.description}</p>
-                                        <div className="cs-ticket-meta">
-                                            <span className="cs-ticket-meta-item">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                                </svg>
-                                                {ticket.patient_name}
-                                            </span>
-                                            <span className="cs-ticket-meta-item">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                                                    <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                                                </svg>
-                                                {formatDate(ticket.created_at)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="cs-ticket-actions">
-                                        {role === 'patient' ? (
-                                            <>
-                                                <span className={`cs-status-badge ${ticket.status === 'Resolved' ? 'cs-status-resolved' : 'cs-status-pending'}`}>
-                                                    {ticket.status === 'Resolved' ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                                        </svg>
-                                                    ) : (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                                                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                                                        </svg>
-                                                    )}
-                                                    {ticket.status}
-                                                </span>
-                                                <button className="cs-delete-btn" onClick={() => handleDeleteTicket(ticket.id)} title="Delete ticket">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                                                    </svg>
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className={`cs-status-badge ${ticket.status === 'Resolved' ? 'cs-status-resolved' : 'cs-status-pending'}`}>
-                                                    {ticket.status === 'Resolved' ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                                        </svg>
-                                                    ) : (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                                                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                                                        </svg>
-                                                    )}
-                                                    {ticket.status}
-                                                </span>
-                                                <button
-                                                    className={`cs-action-btn cs-action-pending ${ticket.status === 'Pending' ? 'cs-action-active' : ''}`}
-                                                    onClick={() => handleUpdateStatus(ticket.id, 'Pending')}
-                                                    title="Set to Pending"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
-                                                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                                                    </svg>
-                                                    Pending
-                                                </button>
-                                                <button
-                                                    className={`cs-action-btn cs-action-resolved ${ticket.status === 'Resolved' ? 'cs-action-active' : ''}`}
-                                                    onClick={() => handleUpdateStatus(ticket.id, 'Resolved')}
-                                                    title="Set to Resolved"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
-                                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                                    </svg>
-                                                    Resolved
-                                                </button>
-                                                <button className="cs-delete-btn" onClick={() => handleSoftDelete(ticket.id)} title="Remove ticket">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                                                    </svg>
-                                                </button>
-                                            </>
-                                        )}
+                        tickets.map((ticket) => (
+                            <div className="cs-ticket-item cs-ticket-part" key={ticket.id} style={{ background: 'white', marginBottom: '15px', borderRadius: '12px', border: '1px solid #eee' }}>
+                                <div className="cs-ticket-content">
+                                    <h3 className="cs-ticket-title">{ticket.subject}</h3>
+                                    <p className="cs-ticket-desc">{ticket.description}</p>
+                                    <div className="cs-ticket-meta">
+                                        <span className="cs-ticket-meta-item">{ticket.patient_name}</span>
+                                        <span className="cs-ticket-meta-item">{formatDate(ticket.created_at)}</span>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="cs-ticket-actions">
+                                    <span className={`cs-status-badge ${ticket.status === 'Approved' || ticket.status === 'Resolved' ? 'cs-status-resolved' : ticket.status === 'Rejected' ? 'cs-status-deleted' : 'cs-status-pending'}`}>
+                                        {ticket.status}
+                                    </span>
+                                    {ticket.status === 'Pending' && (
+                                        <button className="cs-delete-btn" onClick={() => handleDeleteTicket(ticket.id)}>
+                                            <span className="material-symbols-outlined">delete</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))
                     )}
                 </div>
             </main>
 
-            {/* Create Ticket Modal */}
+            <div className="cs-sticky-support">
+                <div className="cs-tooltip">
+                    <h5>Customer Support</h5>
+                    <p>How can we help you today? Click to chat or create a ticket.</p>
+                </div>
+                <button className="cs-sticky-btn" onClick={() => setShowCreateModal(true)}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>support_agent</span>
+                </button>
+            </div>
+
             {showCreateModal && (
                 <div className="cs-modal-overlay" onClick={() => setShowCreateModal(false)}>
                     <div className="cs-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="cs-modal-header">
-                            <div className="cs-modal-header-left">
-                                <div className="cs-modal-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h2>Create Support Ticket</h2>
-                                    <p>Describe your issue and we'll help you resolve it</p>
-                                </div>
-                            </div>
+                            <h2>Create Support Ticket</h2>
                             <button className="cs-modal-close" onClick={() => setShowCreateModal(false)}>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                                </svg>
+                                <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
                         <form className="cs-modal-body" onSubmit={handleCreateTicket}>
                             <div className="cs-form-group">
-                                <label htmlFor="ticketTitle">Ticket Title <span className="cs-required">*</span></label>
-                                <input
-                                    type="text"
-                                    id="ticketTitle"
-                                    placeholder="e.g., Unable to book appointment"
-                                    value={ticketTitle}
-                                    onChange={(e) => setTicketTitle(e.target.value)}
-                                    required
-                                />
+                                <label>Title</label>
+                                <input type="text" value={ticketTitle} onChange={(e) => setTicketTitle(e.target.value)} required />
                             </div>
                             <div className="cs-form-group">
-                                <label htmlFor="ticketDesc">Description <span className="cs-required">*</span></label>
-                                <textarea
-                                    id="ticketDesc"
-                                    placeholder="Please describe your issue in detail..."
-                                    value={ticketDescription}
-                                    onChange={(e) => setTicketDescription(e.target.value)}
-                                    rows={6}
-                                    required
-                                ></textarea>
+                                <label>Description</label>
+                                <textarea value={ticketDescription} onChange={(e) => setTicketDescription(e.target.value)} rows={6} required />
                             </div>
-                            <div className="cs-modal-note">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-                                </svg>
-                                <span><strong>Note:</strong> Your ticket will be reviewed by our support team within 24 hours. You will receive updates on the status of your ticket.</span>
-                            </div>
+                            <p className="cs-modal-promise">Your problem will be solved within two working days</p>
                             <div className="cs-modal-footer">
-                                <button type="button" className="cs-btn-cancel" onClick={() => setShowCreateModal(false)}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="cs-btn-submit" disabled={creating}>
-                                    {creating ? 'Creating...' : 'Create Ticket'}
-                                </button>
+                                <button type="button" className="cs-btn-cancel" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                                <button type="submit" className="cs-btn-submit" disabled={creating}>{creating ? 'Creating...' : 'Create'}</button>
                             </div>
                         </form>
                     </div>
