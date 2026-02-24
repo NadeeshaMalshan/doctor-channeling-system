@@ -210,8 +210,7 @@ const DoctorAvailability = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('doctorInfo');
-        localStorage.removeItem('token');
+        localStorage.clear();
         navigate('/staff-login');
     };
 
