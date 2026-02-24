@@ -54,3 +54,18 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 );
 
 
+CREATE TABLE IF NOT EXISTS doc_availability_slots (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    doctor_id INT NOT NULL,
+    day_of_week VARCHAR(10),
+    start_time TIME,
+    end_time TIME,
+    capacity INT,
+    is_available BOOLEAN DEFAULT true,
+    slot_duration INT DEFAULT 10,
+    booked_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+);
+
+

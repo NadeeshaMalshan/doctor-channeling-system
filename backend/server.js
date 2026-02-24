@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const availabilityRoutes = require('./routes/availabilityRoutes');
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 // Test Route
 app.get('/', (res) => {
