@@ -222,16 +222,6 @@ const CustomerSupport = () => {
                 </div>
             </main>
 
-            <div className="cs-sticky-support">
-                <div className="cs-tooltip">
-                    <h5>Customer Support</h5>
-                    <p>How can we help you today? Click to chat or create a ticket.</p>
-                </div>
-                <button className="cs-sticky-btn" onClick={() => setShowCreateModal(true)}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>support_agent</span>
-                </button>
-            </div>
-
             {showCreateModal && (
                 <div className="cs-modal-overlay" onClick={() => setShowCreateModal(false)}>
                     <div className="cs-modal" onClick={(e) => e.stopPropagation()}>

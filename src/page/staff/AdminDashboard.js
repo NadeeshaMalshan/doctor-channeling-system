@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/StaffDashboard.css';
+import '../css/CustomerSupport.css';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -14,6 +15,12 @@ const AdminDashboard = () => {
     const [editingStaffId, setEditingStaffId] = useState(null);
     const [formErrors, setFormErrors] = useState({});
     const [showStaffPassword, setShowStaffPassword] = useState(false);
+
+    // Support Modal State
+    const [showSupportModal, setShowSupportModal] = useState(false);
+    const [ticketTitle, setTicketTitle] = useState('');
+    const [ticketDescription, setTicketDescription] = useState('');
+    const [creating, setCreating] = useState(false);
 
     const [requests, setRequests] = useState([
         { id: 1, name: 'Dr. John Doe', email: 'john@example.com', specialization: 'Cardiology', slmc: 'SLMC/12345' },
@@ -41,6 +48,37 @@ const AdminDashboard = () => {
 
     const handleLogout = () => {
         navigate('/ecare/staff-login');
+    };
+
+    const handleCreateSupportTicket = async (e) => {
+        e.preventDefault();
+        setCreating(true);
+        try {
+            const API_URL = process.env.REACT_APP_API_URL;
+            const response = await fetch(`${API_URL}/api/support/tickets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patientId: 0, // Staff-raised ticket
+                    subject: ticketTitle,
+                    description: ticketDescription
+                }),
+            });
+
+            if (response.ok) {
+                alert('Support ticket created successfully!');
+                setShowSupportModal(false);
+                setTicketTitle('');
+                setTicketDescription('');
+            } else {
+                alert('Failed to create support ticket');
+            }
+        } catch (error) {
+            console.error('Error creating ticket:', error);
+            alert('Failed to connect to the server');
+        } finally {
+            setCreating(false);
+        }
     };
 
     const handleApprove = (id) => {
@@ -450,6 +488,58 @@ const AdminDashboard = () => {
                     renderList()
                 )}
             </main>
+
+            <div className="cs-sticky-support">
+                <div className="cs-tooltip">
+                    <h5>Customer Support</h5>
+                    <p>How can we help you today? Click or create a ticket.</p>
+                </div>
+                <button className="cs-sticky-btn" onClick={() => setShowSupportModal(true)}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>support_agent</span>
+                </button>
+            </div>
+
+            {showSupportModal && (
+                <div className="cs-modal-overlay" onClick={() => setShowSupportModal(false)}>
+                    <div className="cs-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="cs-modal-header">
+                            <h2>Create Support Ticket</h2>
+                            <button className="cs-modal-close" onClick={() => setShowSupportModal(false)}>
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <form className="cs-modal-body" onSubmit={handleCreateSupportTicket}>
+                            <div className="cs-form-group" style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Title</label>
+                                <input
+                                    type="text"
+                                    value={ticketTitle}
+                                    onChange={(e) => setTicketTitle(e.target.value)}
+                                    required
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                />
+                            </div>
+                            <div className="cs-form-group" style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Description</label>
+                                <textarea
+                                    value={ticketDescription}
+                                    onChange={(e) => setTicketDescription(e.target.value)}
+                                    rows={6}
+                                    required
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', resize: 'vertical' }}
+                                />
+                            </div>
+                            <p className="cs-modal-promise" style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Your problem will be solved within two working days</p>
+                            <div className="cs-modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button type="button" className="cs-btn-cancel" onClick={() => setShowSupportModal(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', border: '1px solid #ddd', backgroundColor: '#f5f5f5', cursor: 'pointer' }}>Cancel</button>
+                                <button type="submit" className="cs-btn-submit" disabled={creating} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#004085', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    {creating ? 'Creating...' : 'Create'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
