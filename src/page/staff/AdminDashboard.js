@@ -35,11 +35,8 @@ const AdminDashboard = () => {
         { id: 3, name: 'Dr. Mike Ross', email: 'mike@example.com', specialization: 'Neurology', slmc: 'SLMC/11223' }
     ]);
 
-    const [users, setUsers] = useState([
-        { id: 1, name: 'Alice Johnson', email: 'alice@example.com', phone: '0771234567', role: 'Patient', details: 'Registered since Jan 2024' },
-        { id: 2, name: 'Bob Williams', email: 'bob@example.com', phone: '0719876543', role: 'Patient', details: 'History of appointments' },
-        { id: 3, name: 'Charlie Davis', email: 'charlie@example.com', phone: '0754433221', role: 'Patient', details: 'Subscribed to newsletter' }
-    ]);
+    const [users, setUsers] = useState([]);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
     // Removed dummy staff data
 
@@ -71,6 +68,28 @@ const AdminDashboard = () => {
         }
     };
 
+    // Fetch users from backend
+    const fetchUsers = async () => {
+        setIsLoadingUsers(true);
+        try {
+            const response = await axios.get(`${API_URL}/api/admin/users`);
+            // Map backend fields to frontend fields
+            const formattedUsers = response.data.map(u => ({
+                id: u.id,
+                name: `${u.first_name} ${u.second_name}`,
+                email: u.email,
+                phone: u.phone,
+                nic: u.nic,
+                role: 'Patient'
+            }));
+            setUsers(formattedUsers);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setIsLoadingUsers(false);
+        }
+    };
+
     useEffect(() => {
         const fetchDoctors = async () => {
             setIsLoadingDoctors(true);
@@ -95,6 +114,9 @@ const AdminDashboard = () => {
         }
         if (selectedCategory === 'staff') {
             fetchStaff();
+        }
+        if (selectedCategory === 'user') {
+            fetchUsers();
         }
     }, [selectedCategory, API_URL]);
 
@@ -122,7 +144,17 @@ const AdminDashboard = () => {
     };
 
     const handleDeleteRecord = async (id) => {
-        if (selectedCategory === 'user') setUsers(users.filter(item => item.id !== id));
+        if (selectedCategory === 'user') {
+            try {
+                const response = await axios.delete(`${API_URL}/api/admin/users/${id}`);
+                alert(response.data.message || "User Deleted Successfully");
+                fetchUsers(); // Refresh list from DB
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert(error.response?.data?.message || "Failed to delete user");
+            }
+            return;
+        }
         if (selectedCategory === 'staff') {
             try {
                 const response = await axios.delete(`${API_URL}/api/admin/staff/${id}`);
@@ -439,12 +471,22 @@ const AdminDashboard = () => {
                                     {expandedId === item.id && (
                                         <div style={{ marginTop: '1.2rem', padding: '1.2rem', backgroundColor: '#f8f9fa', borderRadius: '6px', fontSize: '0.95rem', borderLeft: '4px solid #0b154eff' }}>
                                             <p style={{ margin: '0.4rem 0' }}><strong>Name:</strong> {item.name}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Specialization:</strong> {item.specialization}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>SLMC Number:</strong> {item.slmc_no}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>NIC:</strong> {item.nic}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Hospital:</strong> {item.hospital || 'Not Specified'}</p>
+                                            {selectedCategory === 'doctor' ? (
+                                                <>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Specialization:</strong> {item.specialization}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>SLMC Number:</strong> {item.slmc_no}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>NIC:</strong> {item.nic}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Hospital:</strong> {item.hospital || 'Not Specified'}</p>
+                                                </>
+                                            ) : selectedCategory === 'user' ? (
+                                                <>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>NIC:</strong> {item.nic}</p>
+                                                </>
+                                            ) : null}
                                         </div>
                                     )}
                                 </div>

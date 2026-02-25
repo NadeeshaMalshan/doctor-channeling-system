@@ -24,6 +24,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin/doctors', require('./routes/adminDoctorRoutes'));
 app.use('/api/admin/staff', require('./routes/adminStaffRoutes'));
+app.use('/api/admin/users', require('./routes/adminUserRoutes'));
 
 // Test Route
 app.get('/', (res) => {
