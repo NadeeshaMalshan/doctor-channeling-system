@@ -15,6 +15,11 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 
+const scheduleRoutes = require('./routes/scheduleRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/appointments', appointmentRoutes);
+
 // Test Route
 app.get('/', (req, res) => {
     res.send('Doctor Channeling System API is running');

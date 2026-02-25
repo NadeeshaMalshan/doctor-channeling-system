@@ -1,0 +1,127 @@
+/* ===== Schedule List Page (Patient Facing) ===== */
+.schedule-list-page {
+    min-height: 100vh;
+    background: #f8faff;
+    font-family: inherit;
+}
+
+.schedule-list-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.schedule-list-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.schedule-list-header h2 {
+    color: #1E3A5F;
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.schedule-list-header p {
+    color: #6B7280;
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.schedules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+.patient-schedule-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border-top: 5px solid #2b4a8c;
+    transition: transform 0.3s ease, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.patient-schedule-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(43, 74, 140, 0.1);
+}
+
+.card-doc-info {
+    margin-bottom: 10px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f3f4f6;
+    
+}
+
+.card-doc-info h3 {
+    color: #1E3A5F;
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.card-doc-info .spec {
+    color: #2b4a8c;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.card-time-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #4b5563;
+    font-size: 15px;
+}
+
+.info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: #f0f4ff;
+    color: #2b4a8c;
+    border-radius: 50%;
+    font-size: 35px;
+}
+
+.book-now-btn {
+    width: 100%;
+    padding: 14px;
+    background: #2b4a8c;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.book-now-btn:hover {
+    background: #1E3A5F;
+    box-shadow: 0 8px 20px rgba(43, 74, 140, 0.2);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 16px;
+    color: #6b7280;
+    font-size: 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
