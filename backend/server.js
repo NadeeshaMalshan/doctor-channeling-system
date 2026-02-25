@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const availabilityRoutes = require('./routes/availabilityRoutes');
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/admin/doctors', require('./routes/adminDoctorRoutes'));
 app.use('/api/admin/staff', require('./routes/adminStaffRoutes'));
 app.use('/api/admin/users', require('./routes/adminUserRoutes'));
+app.use('/api/availability', availabilityRoutes);
 
 // Test Route
 app.get('/', (res) => {

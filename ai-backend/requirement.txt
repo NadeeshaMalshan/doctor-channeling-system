@@ -3,3 +3,7 @@ uvicorn[standard]
 huggingface_hub
 python-dotenv
 mysql-connector-python
+easyocr
+opencv-python-headless
+python-multipart
+requests

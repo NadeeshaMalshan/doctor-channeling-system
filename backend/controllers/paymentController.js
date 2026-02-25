@@ -2,13 +2,17 @@ const db = require('../config/db');
 const crypto = require('crypto');
 
 exports.getPaymentDetails = async (req, res) => {
-    //create URL query (?patientID=1&doctorID=2)
-    const { patientID, doctorID } = req.query;
+    //create URL query (?patientID=1&appointment_schedule_id=1)
+    const { patientID, appointment_schedule_id } = req.query;
 
     try {
         const [rows] = await db.execute(
-            'SELECT p.first_name,p.second_name, d.name as doctor_name, d.specialization FROM patients p, doctors d WHERE p.id = ? AND d.id = ?',
-            [patientID, doctorID]
+            `SELECT p.first_name, p.second_name, 
+                    d.name AS doctor_name, d.specialization, 
+                    aps.booked_count, aps.schedule_date, aps.start_time, aps.price AS channelingFee
+             FROM patients p, doctors d, appointment_schedules aps
+             WHERE p.id = ? AND aps.id = ? AND d.id = aps.doctor_id`,
+            [patientID, appointment_schedule_id]
         );
         if (rows.length === 0) {
             return res.status(404).json({ message: 'No payment details found (404)' });
@@ -26,7 +30,7 @@ exports.getPaymentDetails = async (req, res) => {
 
 exports.generateHash = async (req, res) => {
     // get payhere credentials from .env file
-    const { paymentID, amount, currency, patientID, doctorID } = req.body;
+    const { paymentID, amount, currency, patientID, appointmentScheduleId } = req.body;
     const merchantID = process.env.PAYHERE_MERCHENT_ID.trim();
     const merchentSecret = process.env.PAYHERE_SECRET_CODE.trim();
 
@@ -40,15 +44,22 @@ exports.generateHash = async (req, res) => {
         const hashRaw = merchantID + paymentID + amountFormatted + currency + hashedSecret;
         const hash = crypto.createHash('md5').update(hashRaw).digest('hex').toUpperCase();
 
+        // Fetch doctorID from schedule
+        const [scheduleRows] = await db.execute(
+            'SELECT doctor_id FROM appointment_schedules WHERE id = ?',
+            [appointmentScheduleId]
+        );
+        const doctorID = scheduleRows.length > 0 ? scheduleRows[0].doctor_id : 0;
+
         // save a PENDING record in the database
         // paymentID format: ORD{appointmentID}_{timestamp}
         const appointmentID = paymentID.split('_')[0].replace('ORD', '');
-        console.log(`Backend: paymentID Received: ${paymentID}, Calculated appointmentID: ${appointmentID}`);
+        console.log(`Backend: paymentID Received: ${paymentID}, Calculated appointmentID: ${appointmentID}, appointmentScheduleId: ${appointmentScheduleId}`);
 
         await db.execute(
-            `INSERT INTO payments (appointment_id, internal_order_id, patient_id, doctor_id, amount, payment_status) 
-             VALUES (?, ?, ?, ?, ?, 'PENDING')`,
-            [appointmentID, paymentID, patientID, doctorID, amount]
+            `INSERT INTO payments (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status) 
+             VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
+            [appointmentID, paymentID, patientID, doctorID, appointmentScheduleId, amount]
         );
 
         res.status(200).json({

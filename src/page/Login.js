@@ -52,7 +52,15 @@ const Login = () => {
                 // Store user info if neede
                 localStorage.setItem('user', JSON.stringify(data.user));
                 localStorage.setItem('userType', data.userType);
-                navigate('/eCare');
+
+                if (data.userType === 'doctor') {
+                    // Give DoctorAvailability the expected items
+                    localStorage.setItem('doctorInfo', JSON.stringify(data.user));
+                    localStorage.setItem('token', 'doctor-token'); // Set dummy token or actual token if available
+                    navigate('/doctor-availability');
+                } else {
+                    navigate('/eCare');
+                }
             } else {
                 setError(data.message || 'Login failed');
             }

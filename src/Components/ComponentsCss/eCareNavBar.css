@@ -19,19 +19,18 @@
 }
 
 .ecare-logo-icon {
-    width: 45px;
-    height: 45px;
-    background: var(--gradient-primary);
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
-.ecare-logo-icon svg {
-    width: 28px;
-    height: 28px;
-    fill: white;
+.ecare-logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .ecare-brand-text {
