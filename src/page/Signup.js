@@ -162,6 +162,7 @@ const Signup = () => {
                                         value={formData.firstName}
                                         onChange={handleChange}
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>
@@ -176,6 +177,7 @@ const Signup = () => {
                                         value={formData.secondName}
                                         onChange={handleChange}
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>
@@ -195,6 +197,7 @@ const Signup = () => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
+                                    autoComplete="off"
                                 />
                             </div>
                         </div>
@@ -214,6 +217,7 @@ const Signup = () => {
                                         value={formData.phone}
                                         onChange={handleChange}
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
                                 {errors.phone && <span className="error-message">{errors.phone}</span>}
@@ -233,6 +237,7 @@ const Signup = () => {
                                         value={formData.nic}
                                         onChange={handleChange}
                                         required
+                                        autoComplete="off"
                                     />
                                 </div>
                                 {errors.nic && <span className="error-message">{errors.nic}</span>}
