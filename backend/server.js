@@ -22,6 +22,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/admin/doctors', require('./routes/adminDoctorRoutes'));
+app.use('/api/admin/staff', require('./routes/adminStaffRoutes'));
 
 // Test Route
 app.get('/', (res) => {
