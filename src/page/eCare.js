@@ -47,7 +47,7 @@ const ECare = () => {
         const fetchDoctors = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/doctors`);
+                const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/doctors`);
                 const data = await response.json();
 
                 if (response.ok) {

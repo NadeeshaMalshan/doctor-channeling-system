@@ -22,7 +22,7 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
     const fetchProfile = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/patient/${patientId}?t=${Date.now()}`);
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/patient/${patientId}?t=${Date.now()}`);
             const data = await response.json();
 
 
@@ -61,7 +61,7 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
         console.log('Data being sent:', formData);
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/patient/${patientId}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/patient/${patientId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -115,7 +115,7 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
         setError(null);
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/patient/${patientId}/photo`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/patient/${patientId}/photo`, {
                 method: 'POST',
                 body: formDataPhoto
             });
@@ -139,7 +139,7 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
 
     const handleDeleteAccount = async () => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/patient/${patientId}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/patient/${patientId}`, {
                 method: 'DELETE'
             });
 
@@ -175,7 +175,7 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
                     <div className="profile-photo-section">
                         <div className="profile-avatar">
                             {patient?.profile_photo ? (
-                                <img src={`${process.env.REACT_APP_API_URL}${patient.profile_photo}`} alt="Profile" />
+                                <img src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${patient.profile_photo}`} alt="Profile" />
                             ) : (
                                 <div className="avatar-placeholder">
                                     <svg viewBox="0 0 24 24" fill="currentColor">
