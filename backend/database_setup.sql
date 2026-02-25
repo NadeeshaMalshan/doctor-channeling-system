@@ -12,8 +12,10 @@ CREATE TABLE IF NOT EXISTS patients (
     phone VARCHAR(20) NOT NULL,
     nic VARCHAR(20) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    profile_photo VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE TABLE IF NOT EXISTS staff (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -60,3 +62,34 @@ CREATE TABLE IF NOT EXISTS appointments (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
     FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS support_tickets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    patient_name VARCHAR(200) NOT NULL,
+    patient_email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    status ENUM('Pending', 'Resolved') DEFAULT 'Pending',
+    is_deleted TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id)
+);
+
+
+CREATE TABLE IF NOT EXISTS doc_availability_slots (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    doctor_id INT NOT NULL,
+    day_of_week VARCHAR(10),
+    start_time TIME,
+    end_time TIME,
+    capacity INT,
+    is_available BOOLEAN DEFAULT true,
+    slot_duration INT DEFAULT 10,
+    booked_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+);
+
+

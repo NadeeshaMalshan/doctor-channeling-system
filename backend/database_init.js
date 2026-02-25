@@ -8,9 +8,14 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD,
-    multipleStatements: true // Allow multiple SQL statements
+    database: process.env.DB_NAME,
+    ssl: process.env.DB_SSL === 'true' ? {
+        ca: fs.readFileSync(path.join(__dirname, 'ca.pem'))
+    } : null,
+    multipleStatements: true
 };
 
 async function initDatabase() {

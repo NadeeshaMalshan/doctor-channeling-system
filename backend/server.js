@@ -1,7 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
+const supportRoutes = require('./routes/supportRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const availabilityRoutes = require('./routes/availabilityRoutes');
 
 dotenv.config();
 
@@ -11,9 +15,15 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
@@ -21,11 +31,16 @@ app.use('/api/schedules', scheduleRoutes);
 app.use('/api/appointments', appointmentRoutes);
 
 // Test Route
-app.get('/', (req, res) => {
+app.get('/', (res) => {
     res.send('Doctor Channeling System API is running');
 });
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Start Server (only when not in Vercel)
+if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+
+// Export for Vercel
+module.exports = app;

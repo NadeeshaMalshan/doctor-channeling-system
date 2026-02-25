@@ -19,19 +19,18 @@
 }
 
 .ecare-logo-icon {
-    width: 45px;
-    height: 45px;
-    background: var(--gradient-primary);
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
-.ecare-logo-icon svg {
-    width: 28px;
-    height: 28px;
-    fill: white;
+.ecare-logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .ecare-brand-text {
@@ -106,6 +105,47 @@
 .btn-signup:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(59, 93, 176, 0.4);
+}
+
+/* Welcome greeting */
+.ecare-welcome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(59, 93, 176, 0.08) 0%, rgba(59, 93, 176, 0.15) 100%);
+    border-radius: 8px;
+    color: var(--color-primary);
+    font-size: 0.9rem;
+}
+
+.ecare-welcome svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.ecare-welcome strong {
+    font-weight: 700;
+}
+
+/* Logout button */
+.btn-logout {
+    background-color: transparent;
+    color: #e53935;
+    border: 2px solid #e53935;
+}
+
+.btn-logout:hover {
+    background-color: #e53935;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(229, 57, 53, 0.35);
+}
+
+.btn-logout svg {
+    fill: currentColor;
 }
 
 /* Responsive */

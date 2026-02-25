@@ -1,0 +1,247 @@
+.payment-container {
+    display: flex;
+    height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.payment-left {
+    flex: 1.2;
+    background: linear-gradient(135deg, #0d112b 0%, #1e3a5f 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.payment-left-content {
+    position: relative;
+    z-index: 2;
+    max-width: 500px;
+}
+
+.brand-logo-large {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 40px;
+    opacity: 0.8;
+}
+
+.brand-logo-large svg {
+    width: 40px;
+    height: 40px;
+    color: #4b6cb7;
+}
+
+.brand-logo-large span {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.payment-left h1 {
+    font-size: 3.2rem;
+    line-height: 1.1;
+    margin-bottom: 25px;
+    font-weight: 800;
+    background: linear-gradient(to right, #fff, #99aab5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.payment-left p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #cbd5e0;
+    margin-bottom: 40px;
+}
+
+.trust-badges {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+.badge svg {
+    width: 20px;
+    height: 20px;
+    color: #4cd137;
+}
+
+.badge span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.contact-info-small {
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1rem;
+    color: #a0aec0;
+}
+
+.contact-info-small strong {
+    color: white;
+}
+
+.bg-circles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+}
+
+.circle-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(75, 108, 183, 0.2);
+    top: -100px;
+    left: -100px;
+    animation: pulse 10s infinite alternate;
+}
+
+.circle-2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(29, 38, 113, 0.3);
+    bottom: -50px;
+    right: -50px;
+    animation: pulse 8s infinite alternate-reverse;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+.payment-right {
+    flex: 1;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-box {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 500px;
+}
+
+.summary-box h2 {
+    color: #1a237e;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.details p {
+    margin: 15px 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.details p span {
+    font-weight: 600;
+    color: #555;
+    margin-right: 10px;
+}
+
+.fee-row {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+
+.payhere-btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 30px;
+    border: none;
+    border-radius: 50px;
+    background-color: #0d112b;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.payhere-btn:hover {
+    transform: scale(1.02);
+}
+
+.payhere-btn span {
+    font-weight: bold;
+}
+
+/* Skeleton Loading */
+.skeleton-bar {
+    background: #e0e0e0;
+    position: relative;
+    overflow: hidden;
+}
+
+.payment-left .skeleton-bar {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.skeleton-pulse {
+    animation: skeleton-shimmer 1.5s infinite ease-in-out;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-bar.skeleton-pulse {
+    background-image: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            transparent 100%);
+    background-size: 200% 100%;
+    background-color: #ddd;
+}
+
+.payment-left .skeleton-bar.skeleton-pulse {
+    background-color: rgba(255, 255, 255, 0.08);
+    background-image: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.06) 50%,
+            transparent 100%);
+}

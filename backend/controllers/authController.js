@@ -1,13 +1,34 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
+
+const verifyRecaptcha = async (token) => {
+    if (!token) return false;
+
+    try {
+        const response = await axios.post(
+            `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`
+        );
+        return response.data.success;
+    } catch (error) {
+        console.error('reCAPTCHA verification error:', error);
+        return false;
+    }
+};
 
 exports.registerPatient = async (req, res) => {
-    const { firstName, secondName, email, phone, nic, password } = req.body;
+    const { firstName, secondName, email, phone, nic, password, recaptchaToken } = req.body;
 
     try {
         // Validation
         if (!firstName || !secondName || !email || !phone || !nic || !password) {
             return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Verify reCAPTCHA
+        const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+        if (!isRecaptchaValid) {
+            return res.status(400).json({ message: 'Invalid reCAPTCHA. Please try again.' });
         }
 
         // Check if user already exists
@@ -92,12 +113,18 @@ exports.staffLogin = async (req, res) => {
 };
 
 exports.registerDoctor = async (req, res) => {
-    const { name, specialization, slmcId, nic, email, phone, hospital, password } = req.body;
+    const { name, specialization, slmcId, nic, email, phone, hospital, password, recaptchaToken } = req.body;
 
     try {
         // Validation
         if (!name || !specialization || !slmcId || !nic || !email || !phone || !password) {
             return res.status(400).json({ message: 'Required fields are missing' });
+        }
+
+        // Verify reCAPTCHA
+        const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+        if (!isRecaptchaValid) {
+            return res.status(400).json({ message: 'Invalid reCAPTCHA. Please try again.' });
         }
 
         // Check if doctor already exists
@@ -129,12 +156,18 @@ exports.registerDoctor = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, recaptchaToken } = req.body;
 
     try {
         // Validation
         if (!email || !password) {
             return res.status(400).json({ message: 'Email and password are required' });
+        }
+
+        // Verify reCAPTCHA
+        const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+        if (!isRecaptchaValid) {
+            return res.status(400).json({ message: 'Invalid reCAPTCHA. Please try again.' });
         }
 
         // Check patients table first
@@ -202,10 +235,24 @@ exports.login = async (req, res) => {
 
 exports.getDoctors = async (req, res) => {
     try {
-        // Fetch all doctors from the database
-        const [doctors] = await db.execute(
-            'SELECT id, name, specialization, email, phone, hospital FROM doctors'
-        );
+        const { name, specialization } = req.query;
+
+        let query = 'SELECT id, name, specialization, email, phone, hospital FROM doctors WHERE 1=1';
+        const params = [];
+
+        if (name && name.trim() !== '') {
+            query += ' AND name LIKE ?';
+            params.push(`%${name.trim()}%`);
+        }
+
+        if (specialization && specialization.trim() !== '') {
+            query += ' AND specialization = ?';
+            params.push(specialization.trim());
+        }
+
+        // Use db.query (not db.execute) for dynamically built queries
+        // db.execute uses server-side prepared statement caching which breaks dynamic queries
+        const [doctors] = await db.query(query, params);
 
         res.status(200).json({
             message: 'Doctors fetched successfully',
@@ -215,5 +262,19 @@ exports.getDoctors = async (req, res) => {
     } catch (error) {
         console.error('Error fetching doctors:', error);
         res.status(500).json({ message: 'Server error while fetching doctors' });
+    }
+};
+
+
+exports.getSpecializations = async (req, res) => {
+    try {
+        const [rows] = await db.execute(
+            'SELECT DISTINCT specialization FROM doctors ORDER BY specialization ASC'
+        );
+        const specializations = rows.map(r => r.specialization);
+        res.status(200).json({ specializations });
+    } catch (error) {
+        console.error('Error fetching specializations:', error);
+        res.status(500).json({ message: 'Server error while fetching specializations' });
     }
 };

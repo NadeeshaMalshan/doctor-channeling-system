@@ -1,463 +1,539 @@
 import { useRef } from 'react';
 import NavBar from '../Components/NavBar';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { Link } from 'react-router-dom';
 import './css/landing.css';
-import { useNavigate } from 'react-router-dom';
+import heroImg from './img/hero.jpeg';
+import hospitalImg from './img/hospital1.jpeg';
 
-const Landing = () => {
+gsap.registerPlugin(ScrollTrigger);
 
-    const navigate = useNavigate();
-    const containerRef = useRef();
+const servicesData = [
+    {
+        title: "Doctor Channeling",
+        description: "Book appointments with specialist doctors easily through our modern platform",
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+            </svg>
+        ),
+    },
+    {
+        title: "Lab Reports",
+        description: "Quick and accurate laboratory testing with state-of-the-art equipment",
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+            </svg>
+        ),
+    },
+    {
+        title: "Pharmacy",
+        description: "Wide range of quality medicines at affordable prices for every patient",
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+        ),
+    },
+    {
+        title: "ECG & Scanning",
+        description: "Modern diagnostic imaging & ECG equipment for accurate clinical results",
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5" />
+            </svg>
+        ),
+    },
+];
+
+function Landing() {
+    const containerRef = useRef(null);
 
     useGSAP(() => {
-        // Set initial state and animate
-        const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+        // --- Hero Entrance Timeline ---
+        const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
 
-        // Hero content animation
-        tl.fromTo(".hero-content",
-            { x: -50, opacity: 0 },
-            { x: 0, opacity: 1, duration: 1 },
-            0.2
+        tl.fromTo('.hero-badge',
+            { y: 20, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.8 }
+        )
+            .fromTo('.hero-headline-wrapper',
+                { y: 80, opacity: 0 },
+                { y: 0, opacity: 1, duration: 1.2 },
+                '-=0.4'
+            )
+            .fromTo('.hero-content h2',
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.8 },
+                '-=0.6'
+            )
+            .fromTo('.hero-description',
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.8 },
+                '-=0.4'
+            )
+            .fromTo('.hero-buttons .btn-primary, .hero-buttons .btn-secondary',
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.6, stagger: 0.1 },
+                '-=0.4'
+            )
+            .fromTo('.hero-image-wrapper',
+                { scale: 0.9, opacity: 0, x: 50 },
+                { scale: 1, opacity: 1, x: 0, duration: 1.2, ease: "power3.out" },
+                '-=1'
+            )
+            .fromTo('.stat-item',
+                { y: 40, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.7, stagger: 0.15 },
+                '-=0.3'
+            );
+
+        // Stat counter animation
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach(num => {
+            const target = parseInt(num.getAttribute('data-target'), 10);
+            gsap.fromTo(num,
+                { innerText: 0 },
+                {
+                    innerText: target,
+                    duration: 2.5,
+                    ease: "power2.out",
+                    snap: { innerText: 1 },
+                    delay: 1.2,
+                    onUpdate: function () {
+                        const val = Math.round(gsap.getProperty(num, "innerText"));
+                        const suffix = num.getAttribute('data-suffix') || '';
+                        num.textContent = val.toLocaleString() + suffix;
+                    }
+                }
+            );
+        });
+
+        // Plus-sign grid fadeIn
+        gsap.fromTo('.plus-sign',
+            { opacity: 0 },
+            { opacity: 1, duration: 0.3, stagger: { amount: 1.5, from: "random" }, delay: 0.5 }
         );
 
-        // Stats animation
-        tl.fromTo(".stat-item",
+        // --- Big Stat Section ---
+        gsap.fromTo('.big-stat-number',
+            { y: 60, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 1.4, ease: "power3.out",
+                scrollTrigger: { trigger: '.section-big-stat', start: 'top 70%', toggleActions: 'play none none none' }
+            }
+        );
+        gsap.fromTo('.big-stat-caption',
             { y: 30, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.8, stagger: 0.15 },
-            0.5
+            {
+                y: 0, opacity: 1, duration: 0.8, delay: 0.3,
+                scrollTrigger: { trigger: '.section-big-stat', start: 'top 70%', toggleActions: 'play none none none' }
+            }
         );
-
-        // About section animation
-        tl.fromTo(".about-container",
+        gsap.fromTo('.big-stat-text h2, .big-stat-text p',
             { y: 40, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.8 },
-            0.6
+            {
+                y: 0, opacity: 1, duration: 0.8, stagger: 0.15,
+                scrollTrigger: { trigger: '.section-big-stat', start: 'top 70%', toggleActions: 'play none none none' }
+            }
         );
 
-        // Services cards stagger animation
-        tl.fromTo(".service-card",
+        // Animated counter for big stat
+        const bigStatNum = document.querySelector('.big-stat-counter');
+        if (bigStatNum) {
+            const bigTarget = parseInt(bigStatNum.getAttribute('data-target'), 10);
+            gsap.fromTo(bigStatNum,
+                { innerText: 0 },
+                {
+                    innerText: bigTarget,
+                    duration: 3,
+                    ease: "power2.out",
+                    snap: { innerText: 1 },
+                    scrollTrigger: { trigger: '.section-big-stat', start: 'top 70%', toggleActions: 'play none none none' },
+                    onUpdate: function () {
+                        const val = Math.round(gsap.getProperty(bigStatNum, "innerText"));
+                        const suffix = bigStatNum.getAttribute('data-suffix') || '';
+                        bigStatNum.textContent = val.toLocaleString() + suffix;
+                    }
+                }
+            );
+        }
+
+        // --- About Section ---
+        gsap.fromTo('.about-image',
+            { x: -60, opacity: 0 },
+            {
+                x: 0, opacity: 1, duration: 1.2, ease: "power3.out",
+                scrollTrigger: { trigger: '.section-about', start: 'top 75%', toggleActions: 'play none none none' }
+            }
+        );
+        gsap.fromTo('.about-content > *',
             { y: 40, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.6, stagger: 0.15 },
-            0.7
+            {
+                y: 0, opacity: 1, duration: 0.8, stagger: 0.12,
+                scrollTrigger: { trigger: '.section-about', start: 'top 75%', toggleActions: 'play none none none' }
+            }
         );
 
-        // Doctor cards stagger animation
-        tl.fromTo(".doctor-card",
-            { y: 40, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.6, stagger: 0.15 },
-            0.9
-        );
-
-        // Info section animation
-        tl.fromTo(".info-card",
-            { scale: 0.95, opacity: 0 },
-            { scale: 1, opacity: 1, duration: 0.8, stagger: 0.2 },
-            1.0
-        );
-
-        // Footer animation
-        tl.fromTo(".footer",
+        // --- Services Section ---
+        gsap.fromTo('.section-services .section-header > *',
             { y: 30, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.6 },
-            1.2
+            {
+                y: 0, opacity: 1, duration: 0.8, stagger: 0.1,
+                scrollTrigger: { trigger: '.section-services', start: 'top 80%', toggleActions: 'play none none none' }
+            }
+        );
+        gsap.fromTo('.service-card',
+            { y: 60, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 0.8, stagger: 0.12,
+                scrollTrigger: { trigger: '.services-grid', start: 'top 85%', toggleActions: 'play none none none' }
+            }
+        );
+
+        // --- Doctors Section ---
+        gsap.fromTo('.section-header-row > *',
+            { y: 30, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 0.8, stagger: 0.1,
+                scrollTrigger: { trigger: '.section-recommended', start: 'top 80%', toggleActions: 'play none none none' }
+            }
+        );
+        gsap.fromTo('.doctor-card',
+            { y: 50, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 0.8, stagger: 0.15,
+                scrollTrigger: { trigger: '.doctors-grid', start: 'top 85%', toggleActions: 'play none none none' }
+            }
+        );
+
+        // --- Info Section ---
+        gsap.fromTo('.info-card',
+            { y: 50, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 0.8, stagger: 0.12,
+                scrollTrigger: { trigger: '.info-grid', start: 'top 85%', toggleActions: 'play none none none' }
+            }
+        );
+
+        // --- Footer ---
+        gsap.fromTo('.footer-section',
+            { y: 40, opacity: 0 },
+            {
+                y: 0, opacity: 1, duration: 0.7, stagger: 0.1,
+                scrollTrigger: { trigger: '.footer', start: 'top 90%', toggleActions: 'play none none none' }
+            }
         );
     }, { scope: containerRef });
 
-    // Doctors available at the center
-    const doctors = [
-        {
-            id: 1,
-            name: "Dr. Priyantha Silva",
-            specialty: "General Physician",
-            experience: "15 years experience",
-            days: "Mon, Wed, Fri",
-            time: "4:00 PM - 8:00 PM",
-            fee: "Rs. 1,500",
-            tagClass: "general"
-        },
-        {
-            id: 2,
-            name: "Dr. Kumari Fernando",
-            specialty: "Cardiologist",
-            experience: "12 years experience",
-            days: "Tue, Thu",
-            time: "5:00 PM - 9:00 PM",
-            fee: "Rs. 2,500",
-            tagClass: "cardiology"
-        },
-        {
-            id: 3,
-            name: "Dr. Mahesh Perera",
-            specialty: "Pediatrician",
-            experience: "10 years experience",
-            days: "Mon, Sat",
-            time: "3:00 PM - 7:00 PM",
-            fee: "Rs. 1,800",
-            tagClass: "pediatric"
+    // Generate plus-sign rows
+    const renderPlusGrid = () => {
+        const rows = [];
+        for (let i = 0; i < 5; i++) {
+            const signs = [];
+            for (let j = 0; j < 8; j++) {
+                signs.push(<span key={j} className="plus-sign">+</span>);
+            }
+            rows.push(<div key={i} className="plus-row" style={{ marginTop: i * 20 + '%' }}>{signs}</div>);
         }
-    ];
-
-    // Services offered
-    const services = [
-        {
-            id: 1,
-            title: "Doctor Channeling",
-            description: "Book appointments with specialist doctors easily",
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" />
-                </svg>
-            )
-        },
-        {
-            id: 2,
-            title: "Lab Reports",
-            description: "Quick and accurate laboratory testing services",
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 2v2h1v14c0 2.21 1.79 4 4 4s4-1.79 4-4V4h1V2H7zm6 14c0 1.1-.9 2-2 2s-2-.9-2-2V4h4v12z" />
-                </svg>
-            )
-        },
-        {
-            id: 3,
-            title: "Pharmacy",
-            description: "Wide range of medicines at affordable prices",
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 10h-2v2c0 .55-.45 1-1 1s-1-.45-1-1v-2H9c-.55 0-1-.45-1-1s.45-1 1-1h2V9c0-.55.45-1 1-1s1 .45 1 1v2h2c.55 0 1 .45 1 1s-.45 1-1 1z" />
-                </svg>
-            )
-        },
-        {
-            id: 4,
-            title: "ECG & Scanning",
-            description: "Modern diagnostic equipment for accurate results",
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm8 8h10v-2H11v2zm0-8v2h10V9H11zm0 6h10v-2H11v2zM7 7v10h2V7H7z" />
-                </svg>
-            )
-        }
-    ];
+        return rows;
+    };
 
     return (
-        <div className="landing-page" ref={containerRef}>
+        <div ref={containerRef} className="landing-page">
             <NavBar />
-            {/* Hero Banner */}
-            <section className="hero-banner">
-                <div className="hero-content">
-                    <div className="hero-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                        </svg>
-                        Narammala, Kurunegala
-                    </div>
-                    <h1>Narammala Channeling Center</h1>
-                    <h2>Your Trusted Healthcare Partner</h2>
-                    <p className="hero-description">
-                        Quality healthcare services for you and your family. Book appointments with experienced doctors,
-                        access lab services, and get your medicines all under one roof.
-                    </p>
-                    <div className="hero-buttons">
-                        <button className="btn-primary" onClick={() => navigate("/eCare")}>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
-                            </svg>
-                            NCC eCare
 
-                        </button>
-                        <button className="btn-secondary" >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                            </svg>
-                            Call Us
-                        </button>
+            {/* ===== HERO ===== */}
+            <section className="hero-banner">
+                <div className="hero-grid-overlay">
+                    {renderPlusGrid()}
+                </div>
+                <div className="hero-orb hero-orb-1"></div>
+                <div className="hero-orb hero-orb-2"></div>
+
+                <div className="hero-main-container">
+                    <div className="hero-content">
+                        <div className="hero-badge">
+
+                            Narammala Channeling Center
+                        </div>
+                        <div className="hero-headline-wrapper">
+                            <h1>Your trusted<br /><span className="text-accent">healthcare</span> partner</h1>
+                        </div>
+                        <h2>Premier private healthcare provider in Narammala</h2>
+                        <p className="hero-description">
+                            Delivering compassionate, high-quality medical services with a team
+                            of renowned specialists from leading national hospitals.
+                        </p>
+                        <div className="hero-buttons">
+                            <Link to="/ecare" className="btn-primary">
+                                NCC eCare
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </Link>
+                            <a href="tel:+94372234567" className="btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                Call Us
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="hero-image-wrapper">
+                        <img src={heroImg} alt="NCC Healthcare" className="hero-image" />
                     </div>
                 </div>
-                <div className="hero-stats">
-                    <div className="stat-item">
-                        <span className="stat-number">15+</span>
-                        <span className="stat-label">Specialist Doctors</span>
+
+
+            </section>
+
+
+            {/* ===== BIG STAT SECTION — like Hunter's "14500" ===== */}
+            <section className="section-big-stat">
+                <div className="big-stat-container">
+                    <div className="big-stat-number-wrapper">
+                        <div className="big-stat-number big-stat-counter" data-target="1000" data-suffix="+">0</div>
+                        <p className="big-stat-caption">
+                            Since our founding, NC+ Hospital has served over 1000+ patients
+                            across Narammala and the surrounding communities.
+                        </p>
                     </div>
-                    <div className="stat-item">
-                        <span className="stat-number">10K+</span>
-                        <span className="stat-label">Happy Patients</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-number">8+</span>
-                        <span className="stat-label">Years Service</span>
+                    <div className="big-stat-divider"></div>
+                    <div className="big-stat-text">
+                        <h2>Bigger picture, better results</h2>
+                        <p>
+                            We know that a decision in one department can change an outcome in
+                            another. Our distinct vantage point helps you see the full picture
+                            of your healthcare journey.
+                        </p>
+                        <p>
+                            Positioned at the heart of Narammala, our dedicated team of specialists
+                            from leading national hospitals ensure that every patient receives
+                            personalized care built on partnership and trust.
+                        </p>
                     </div>
                 </div>
             </section>
 
-            {/* About Section */}
-            <section className="section-about" id="about">
+
+            {/* ===== ABOUT SECTION ===== */}
+            <section className="section-about">
                 <div className="about-container">
                     <div className="about-image">
-                        <div className="image-placeholder">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7l-3 3.72L9 13l-3 4h12l-4-5z" />
-                            </svg>
-                            <span>Hospital Image</span>
-                        </div>
-                        {/* Replace the above div with: <img src={hospitalImage} alt="NC+ Hospital" /> */}
+                        <img src={hospitalImg} alt="NC+ Hospital Facility" className="about-hospital-image" />
                     </div>
                     <div className="about-content">
-                        <div className="about-badge">About Us</div>
-                        <h2>NC+ Hospital</h2>
+                        <span className="about-badge">About Us</span>
+                        <h2>Narammala Channeling Center (Pvt) Ltd</h2>
                         <p>
-                            NC+ Hospital, the premier private healthcare provider in Narammala. For years, we have been dedicated to delivering compassionate, high-quality medical services to our community. Formerly known as Narammala Channel Center, we have evolved into a modern healthcare facility equipped with advanced diagnostic tools and a wide range of specialist services.
+                            Narammala Channeling Center (Pvt) Ltd, the premier private healthcare provider in Narammala.
+                            For years, we have been dedicated to delivering compassionate, high-quality
+                            medical services to our community. Formerly known as Narammala Channel Center,
+                            we have evolved into a modern healthcare facility equipped with advanced
+                            diagnostic tools and a wide range of specialist services.
                         </p>
                         <p>
-                            Our mission is to bridge the gap between quality healthcare and accessibility. With a team of renowned specialists from leading national hospitals, a fully-equipped laboratory, and an in-house pharmacy, we ensure that every patient receives personalized care under one roof. At NC+ Hospital, your health is our priority, and we are committed to serving you with excellence, integrity, and care.
+                            Our mission is to bridge the gap between quality healthcare and accessibility.
+                            With a team of renowned specialists from leading national hospitals,
+                            a fully-equipped laboratory, and an in-house pharmacy, we ensure that
+                            every patient receives personalized care under one roof.
                         </p>
                         <div className="about-features">
-                            <div className="feature-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                </svg>
-                                <span>Renowned Specialists</span>
-                            </div>
-                            <div className="feature-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                </svg>
-                                <span>Fully-Equipped Laboratory</span>
-                            </div>
-                            <div className="feature-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                </svg>
-                                <span>In-House Pharmacy</span>
-                            </div>
-                            <div className="feature-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                </svg>
-                                <span>Advanced Diagnostics</span>
-                            </div>
+                            {['Renowned Specialists', 'Fully-Equipped Laboratory', 'In-House Pharmacy', 'Advanced Diagnostics'].map((feature, i) => (
+                                <div key={i} className="feature-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                    </svg>
+                                    <span>{feature}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Services Section */}
+
+            {/* ===== SERVICES — Numbered columns like Hunter ===== */}
             <section className="section-services">
                 <div className="section-header">
                     <h2>Our Services</h2>
-                    <p>Comprehensive healthcare services to meet all your medical needs</p>
+                    <p>
+                        Comprehensive healthcare services designed to meet all your medical
+                        needs with precision and care.
+                    </p>
                 </div>
                 <div className="services-grid">
-                    {services.map((service) => (
-                        <div className="service-card" key={service.id}>
-                            <div className="service-icon">
-                                {service.icon}
-                            </div>
+                    {servicesData.map((service, index) => (
+                        <div key={index} className="service-card">
+                            <span className="service-number">{String(index + 1).padStart(2, '0')}</span>
+                            <div className="service-icon">{service.icon}</div>
                             <h3>{service.title}</h3>
                             <p>{service.description}</p>
+
                         </div>
                     ))}
                 </div>
             </section>
 
-            {/* Doctors Section */}
-            <section className="section-recommended">
-                <div className="section-header-row">
-                    <h2>Our Doctors</h2>
-                    <a href="/doctors" className="view-all-link">
-                        View All Doctors
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
-                        </svg>
-                    </a>
-                </div>
-                <div className="doctors-grid">
-                    {doctors.map((doctor) => (
-                        <div className="doctor-card" key={doctor.id}>
-                            <div className="doctor-card-header">
-                                <div className="doctor-avatar">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                    </svg>
-                                </div>
-                                <div className="doctor-details">
-                                    <h3>{doctor.name}</h3>
-                                    <p>{doctor.specialty} | {doctor.experience}</p>
-                                </div>
-                            </div>
-                            <span className={`specialty-tag ${doctor.tagClass}`}>{doctor.specialty}</span>
-                            <div className="doctor-schedule">
-                                <div className="schedule-info">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                                    </svg>
-                                    <div>
-                                        <span className="days">{doctor.days}</span>
-                                        <span className="time">{doctor.time}</span>
-                                    </div>
-                                </div>
-                                <div className="price-info">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
-                                    </svg>
-                                    <div>
-                                        <span className="price">{doctor.fee}</span>
-                                        <span className="label">Channel Fee</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button className="book-appointment-btn">Channel Now</button>
-                        </div>
-                    ))}
-                </div>
-            </section>
 
-            {/* Info Section */}
+
+
+            {/* ===== INFO SECTION ===== */}
             <section className="section-info">
+                <div className="section-header" style={{ marginBottom: '60px' }}>
+                    <h2>Visit Us</h2>
+                </div>
                 <div className="info-grid">
-                    <div className="info-card opening-hours">
+                    <div className="info-card">
                         <div className="info-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
                         </div>
                         <h3>Opening Hours</h3>
                         <ul className="hours-list">
-                            <li><span>Monday - Friday</span><span>8:00 AM - 10:00 PM</span></li>
-                            <li><span>Saturday</span><span>8:00 AM - 8:00 PM</span></li>
-                            <li><span>Sunday</span><span>9:00 AM - 6:00 PM</span></li>
-                            <li><span>Public Holidays</span><span>9:00 AM - 4:00 PM</span></li>
+                            <li><span>Monday — Friday</span><span>8:00 AM — 10:00 PM</span></li>
+                            <li><span>Saturday</span><span>8:00 AM — 8:00 PM</span></li>
+                            <li><span>Sunday</span><span>9:00 AM — 5:00 PM</span></li>
+                            <li><span>Public Holidays</span><span>9:00 AM — 2:00 PM</span></li>
                         </ul>
                     </div>
-                    <div className="info-card contact-info">
+                    <div className="info-card">
                         <div className="info-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
                             </svg>
                         </div>
-                        <h3>Contact Us</h3>
+                        <h3>Contact</h3>
                         <div className="contact-details">
                             <div className="contact-row">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
                                 </svg>
                                 <div>
-                                    <span className="label">Hotline</span>
-                                    <span className="value">037 2 264 XXX</span>
+                                    <span className="label">Phone</span>
+                                    <span className="value">0372 249 959</span>
                                 </div>
                             </div>
                             <div className="contact-row">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" />
-                                </svg>
-                                <div>
-                                    <span className="label">Mobile</span>
-                                    <span className="value">077 XXX XXXX</span>
-                                </div>
-                            </div>
-                            <div className="contact-row">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                                 </svg>
                                 <div>
                                     <span className="label">Email</span>
-                                    <span className="value">info@narammalachannel.lk</span>
+                                    <span className="value">narammalachannelcenterandhospi@gmail.com</span>
+                                </div>
+                            </div>
+                            <div className="contact-row">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                                </svg>
+                                <div>
+                                    <span className="label">Emergency</span>
+                                    <span className="value">0372 249 959</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="info-card location-info">
+                    <div className="info-card">
                         <div className="info-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                             </svg>
                         </div>
-                        <h3>Find Us</h3>
+                        <h3>Location</h3>
                         <p className="address">
-                            Narammala Channeling Center,<br />
-                            Main Street, Narammala,<br />
-                            Kurunegala District,<br />
+                            Narammala Channeling Center and Hospital<br />
+                            Negombo Road<br />
+                            Narammala<br />
+                            North Western Province<br />
                             Sri Lanka
                         </p>
                         <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="directions-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                                <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z" />
-                            </svg>
                             Get Directions
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                         </a>
                     </div>
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className='footer'>
+
+            {/* ===== FOOTER ===== */}
+            <footer className="footer">
                 <div className="footer-container">
                     <div className="footer-section footer-about">
-                        <h3>Narammala Channeling Center</h3>
-                        <p>Your trusted healthcare partner in Narammala. We provide quality medical services with experienced doctors and modern facilities.</p>
+                        <h3>NC+ Hospital</h3>
+                        <p>
+                            Narammala's premier private healthcare provider. Delivering
+                            compassionate medical services with excellence since our founding.
+                        </p>
                         <div className="social-links">
-                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="Facebook">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" />
-                                </svg>
+                            <a href="#" className="social-link" aria-label="LinkedIn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
                             </a>
-                            <a href="https://wa.me/94771234567" target="_blank" rel="noopener noreferrer" className="social-link" aria-label="WhatsApp">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                                </svg>
+                            <a href="#" className="social-link" aria-label="Facebook">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                            </a>
+                            <a href="#" className="social-link" aria-label="Email">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
                             </a>
                         </div>
                     </div>
                     <div className="footer-section">
                         <h4>Quick Links</h4>
                         <ul>
-                            <li><a href="/">Home</a></li>
-                            <li><a href="/doctors">Our Doctors</a></li>
-                            <li><a href="/#services">Services</a></li>
-                            <li><a href="/eCare">Book Appointment</a></li>
-                            <li><a href="/#contact">Contact</a></li>
+                            <li><Link to="/ecare">eCare</Link></li>
+                            <li><Link to="/login">Patient Login</Link></li>
+                            <li><Link to="/signup">Register</Link></li>
+                            <li><Link to="/smart-doctor-suggestion">Smart Doctor</Link></li>
                         </ul>
                     </div>
                     <div className="footer-section">
                         <h4>Services</h4>
                         <ul>
-                            <li><a href="/eCare">Doctor Channeling</a></li>
-                            <li><a href="/#services">Laboratory</a></li>
-                            <li><a href="/#services">Pharmacy</a></li>
-                            <li><a href="/#services">ECG & Scanning</a></li>
-                            <li><a href="/#services">Health Checkup</a></li>
+                            <li><a href="#">Doctor Channeling</a></li>
+                            <li><a href="#">Lab Reports</a></li>
+                            <li><a href="#">Pharmacy</a></li>
+                            <li><a href="#">ECG & Scanning</a></li>
                         </ul>
                     </div>
-                    <div className="footer-section footer-contact">
-                        <h4>Contact Info</h4>
+                    <div className="footer-section">
+                        <h4>Contact</h4>
                         <div className="contact-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                            </svg>
-                            <span>Main Street, Narammala, Kurunegala</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                            <span>Negombo Road,<br />Narammala, Sri Lanka</span>
                         </div>
                         <div className="contact-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                            </svg>
-                            <span>037 2 264 XXX</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                            <span>0372 249 959</span>
                         </div>
                         <div className="contact-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                            </svg>
-                            <span>info@narammalachannel.lk</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+                            <span>narammalachannelcenterandhospi@gmail.com</span>
                         </div>
                     </div>
                 </div>
                 <div className="footer-bottom">
-                    <p>&copy; 2026 Narammala Channeling Center. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} NC+ Hospital. All rights reserved.</p>
                 </div>
             </footer>
+
+            {/* Support button */}
+            <Link to="/customer-support" className="landing-support-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                </svg>
+            </Link>
         </div>
     );
-};
+}
 
 export default Landing;

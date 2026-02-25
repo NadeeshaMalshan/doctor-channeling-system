@@ -82,10 +82,14 @@
 .staff-login-form-container {
     width: 100%;
     max-width: 450px;
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
 .staff-login-header {
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     text-align: center;
 }
 
@@ -105,7 +109,7 @@
 .staff-login-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px; /* Increased spacing */
 }
 
 

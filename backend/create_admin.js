@@ -6,10 +6,12 @@ const path = require('path');
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
+    host: process.env.DB_HOST || 'mysql-for-nccecare-malshannandanayaka-3b82.a.aivencloud.com',
+    port: process.env.DB_PORT || 19185,
+    user: process.env.DB_USER || 'avnadmin',
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 };
 
 async function createAdmin() {
@@ -17,9 +19,9 @@ async function createAdmin() {
     try {
         connection = await mysql.createConnection(dbConfig);
 
-        const username = 'cashier';
+        const username = 'kavishka';
         const password = '12345';
-        const role = 'Cashier';
+        const role = 'Admin';
         const status = 'Active';
 
         const salt = await bcrypt.genSalt(10);
@@ -28,10 +30,10 @@ async function createAdmin() {
         // Check if user exists
         const [rows] = await connection.execute('SELECT * FROM staff WHERE username = ?', [username]);
         if (rows.length > 0) {
-            console.log('User "admin" already exists.');
+            console.log(`User "${username}" already exists.`);
             // Update password just in case
             await connection.execute('UPDATE staff SET password_hash = ? WHERE username = ?', [hashedPassword, username]);
-            console.log('Password updated to "password123".');
+            console.log(`Password updated for "${username}".`);
         } else {
             // Insert user
             await connection.execute(
@@ -42,11 +44,14 @@ async function createAdmin() {
         }
 
         console.log('Credentials:');
-        console.log('Username: admin');
-        console.log('Password: password123');
+        console.log(`Username: ${username}`);
+        console.log(`Password: ${password}`);
 
     } catch (error) {
-        console.error('Error creating admin:', error);
+        console.error('Error creating admin:');
+        console.error('Code:', error.code);
+        console.error('Message:', error.message);
+        console.error('Stack:', error.stack);
     } finally {
         if (connection) await connection.end();
     }

@@ -1,19 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import ECareNavBar from '../Components/eCareNavBar';
 import ChannelDoctor from '../Components/ChannelDoctor';
+import Profile from '../Components/Profile';
+
+
 import './css/eCare.css';
+import { useNavigate } from 'react-router-dom';
 
 const ECare = () => {
+
+    const navigate = useNavigate();
+
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showProfile, setShowProfile] = useState(false);
+    const [patientUser, setPatientUser] = useState(null);
+
+    // Get patient user from local storage
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setPatientUser(JSON.parse(storedUser));
+        }
+    }, []);
+
+    // Expose show profile function to window for Navbar access
+    useEffect(() => {
+        window.showPatientProfile = () => setShowProfile(true);
+        return () => { window.showPatientProfile = null; };
+    }, []);
+
+    const handleProfileUpdate = (updatedUser) => {
+        if (updatedUser) {
+            setPatientUser(updatedUser);
+        }
+        console.log('Profile updated');
+    };
+
+
+
+
 
     // Fetch doctors from the database
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5000/api/auth/doctors');
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/doctors`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -51,6 +85,15 @@ const ECare = () => {
     return (
         <div className="ecare-page">
             <ECareNavBar />
+
+            {showProfile && patientUser && (
+                <Profile
+                    patientId={patientUser.id}
+                    onClose={() => setShowProfile(false)}
+                    onUpdate={handleProfileUpdate}
+                />
+            )}
+
 
             <main className="ecare-main">
                 {/* Hero Section with Channel Doctor */}
@@ -103,7 +146,7 @@ const ECare = () => {
                                     </div>
                                 </div>
                                 <span className="ai-card-disclaimer">⚠️ This is only a suggestion tool and works for selected conditions.</span>
-                                <button className="ai-card-btn">
+                                <button className="ai-card-btn" onClick={() => navigate('/ecare/smart-doc-suggestion')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                                         <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z" />
                                     </svg>
@@ -147,7 +190,7 @@ const ECare = () => {
                                         <span>Track health trends over time</span>
                                     </div>
                                 </div>
-                                <button className="ai-card-btn ai-explainer-btn" >
+                                <button className="ai-card-btn ai-explainer-btn" onClick={() => navigate('/ecare/report-explainer')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                                         <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6z" />
                                     </svg>
@@ -216,7 +259,7 @@ const ECare = () => {
             </main>
 
             {/* Sticky Support Button */}
-            <div className="ecare-support-btn" title="Contact Support">
+            <div className="ecare-support-btn" title="Contact Support" onClick={() => navigate('/ecare/customer-support')}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 14v4h-2v-4h2M7 14v4H6c-1.1 0-2-.9-2-2v-2h3m13-3V9c0-3.31-2.69-6-6-6S6 5.69 6 9v4h12m-6-8c-2.21 0-4 1.79-4 4v3h8V9c0-2.21-1.79-4-4-4z" />
                     <path d="M19 20v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1H19z" opacity="0.3" />

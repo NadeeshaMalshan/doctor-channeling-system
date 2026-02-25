@@ -15,6 +15,15 @@ import CreateSchedule from './page/CreateSchedule';
 import ManageSchedules from './page/ManageSchedules';
 import ScheduleList from './page/ScheduleList';
 import AppointmentForm from './page/AppointmentForm';
+import CustomerSupport from './page/CustomerSupport';
+import HRCustomerSupport from './page/staff/HRCustomerSupport';
+import PaymentPortal from './page/PaymentPortal';
+import SuccessPayment from './Components/sucessPayment';
+import FailedPayment from './Components/failedPayment';
+import ReportExplainer from './page/reportExplainer';
+import SmartDocSuggestion from './page/smartDocSuggestion';
+import DoctorAvailability from './page/DoctorAvailability';
+
 
 function App() {
   return (
@@ -36,6 +45,15 @@ function App() {
           <Route path="/schedules/manage" element={<ManageSchedules />} />
           <Route path="/schedules" element={<ScheduleList />} />
           <Route path="/appointments/new/:schedule_id/:doctor_id" element={<AppointmentForm />} />
+          <Route path="/ecare/customer-support" element={<CustomerSupport />} />
+          <Route path="/ecare/staff/customer-support" element={<HRCustomerSupport />} />
+          <Route path="/ecare/payment" element={<PaymentPortal />} />
+          <Route path="/ecare/payment/success" element={<SuccessPayment />} />
+          <Route path="/ecare/payment/failed" element={<FailedPayment />} />
+          <Route path="/ecare/report-explainer" element={<ReportExplainer />} />
+          <Route path="/ecare/smart-doctor" element={<SmartDocSuggestion />} />
+          <Route path="/doctor-availability" element={<DoctorAvailability />} />
+          <Route path="/ecare/staff/HRCustomerSupport" element={<HRCustomerSupport />} />
         </Routes>
       </div>
     </>
