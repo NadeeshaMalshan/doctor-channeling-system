@@ -12,14 +12,26 @@
 
 /* ===== Hero Section ===== */
 .ecare-hero {
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8ecf8 100%);
-    padding: 50px 40px;
+    background: radial-gradient(circle at top right, #f0f4ff 0%, #ffffff 100%);
+    padding: 80px 40px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 60px;
-    flex-wrap: wrap;
+    gap: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ecare-hero::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: rgba(59, 93, 176, 0.03);
+    border-radius: 50%;
+    top: -100px;
+    left: -100px;
 }
 
 .ecare-hero-content {
@@ -29,11 +41,12 @@
 }
 
 .ecare-hero-content h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--color-secondary);
-    margin-bottom: 15px;
-    line-height: 1.2;
+    font-size: 3rem;
+    font-weight: 800;
+    color: #1a237e;
+    margin-bottom: 20px;
+    line-height: 1.1;
+    letter-spacing: -1px;
 }
 
 .ecare-hero-content p {
@@ -70,11 +83,11 @@
 }
 
 .ai-suggestion-card {
-    background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #5c6bc0 100%);
+    background: linear-gradient(135deg, #2b3a8c 0%, #3b5db0 100%);
 }
 
 .ai-explainer-card {
-    background: linear-gradient(135deg, #004d40 0%, #00695c 50%, #00897b 100%);
+    background: linear-gradient(135deg, #107c6e 0%, #17a696 100%);
 }
 
 .ai-card-glow {
@@ -274,8 +287,8 @@
 
 .doctors-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
     width: 100%;
     max-width: 1200px;
 }
@@ -296,10 +309,12 @@
 }
 
 .ecare-doctors-section .section-header h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--color-secondary);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1a237e;
+    /* Matching Hero H1 color */
     margin-bottom: 10px;
+    letter-spacing: -0.5px;
 }
 
 .ecare-doctors-section .section-header p {
@@ -308,11 +323,7 @@
 }
 
 .doctors-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 25px;
-    width: 100%;
-    max-width: 1200px;
+    grid-template-columns: repeat(2, 1fr);
 }
 
 /* ===== Doctor Card ===== */
@@ -335,9 +346,10 @@
     display: flex;
     align-items: flex-start;
     gap: 15px;
-    padding: 20px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    padding: 24px;
+    background: #ffffff;
     position: relative;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .doctor-avatar {
