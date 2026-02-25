@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../css/StaffDashboard.css';
 import '../css/CustomerSupport.css';
 
@@ -11,10 +12,23 @@ const AdminDashboard = () => {
     const [expandedId, setExpandedId] = useState(null);
 
     // Staff Form State
-    const [staffFormData, setStaffFormData] = useState({ name: '', email: '', phone: '', role: '', password: '' });
+    const [staff, setStaff] = useState([]);
     const [editingStaffId, setEditingStaffId] = useState(null);
     const [formErrors, setFormErrors] = useState({});
     const [showStaffPassword, setShowStaffPassword] = useState(false);
+    const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+
+    // Initial form state including new fields
+    const initialStaffForm = {
+        name: '', // This will be used as username in the backend match
+        email: '',
+        phone: '',
+        role: '',
+        password: '',
+        account_status: 'Active'
+    };
+
+    const [staffFormData, setStaffFormData] = useState(initialStaffForm);
 
     // Support Modal State
     const [showSupportModal, setShowSupportModal] = useState(false);
@@ -28,23 +42,90 @@ const AdminDashboard = () => {
         { id: 3, name: 'Dr. Mike Ross', email: 'mike@example.com', specialization: 'Neurology', slmc: 'SLMC/11223' }
     ]);
 
-    const [users, setUsers] = useState([
-        { id: 1, name: 'Alice Johnson', email: 'alice@example.com', phone: '0771234567', role: 'Patient', details: 'Registered since Jan 2024' },
-        { id: 2, name: 'Bob Williams', email: 'bob@example.com', phone: '0719876543', role: 'Patient', details: 'History of appointments' },
-        { id: 3, name: 'Charlie Davis', email: 'charlie@example.com', phone: '0754433221', role: 'Patient', details: 'Subscribed to newsletter' }
-    ]);
+    const [users, setUsers] = useState([]);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
-    const [staff, setStaff] = useState([
-        { id: 1, name: 'Dave Miller', email: 'dave@example.com', phone: '0781122334', role: 'Receptionist', details: 'Morning shift' },
-        { id: 2, name: 'Eve Wilson', email: 'eve@example.com', phone: '0722233445', role: 'Nurse', details: 'Emergency ward' },
-        { id: 3, name: 'Frank Moore', email: 'frank@example.com', phone: '0766655443', role: 'Manager', details: 'General admin' }
-    ]);
+    // Removed dummy staff data
 
-    const [doctors, setDoctors] = useState([
-        { id: 1, name: 'Dr. Smith', email: 'smith@example.com', phone: '0701122334', role: 'Doctor', details: 'Specialist Surgeon' },
-        { id: 2, name: 'Dr. Jones', email: 'jones@example.com', phone: '0712233445', role: 'Doctor', details: 'General Physician' },
-        { id: 3, name: 'Dr. Brown', email: 'brown@example.com', phone: '0773344556', role: 'Doctor', details: 'Consultant' }
-    ]);
+    const [doctors, setDoctors] = useState([]);
+    const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
+
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+    // Fetch staff from backend
+    const fetchStaff = async () => {
+        setIsLoadingStaff(true);
+        try {
+            const response = await axios.get(`${API_URL}/api/admin/staff`);
+            // Map backend fields to frontend fields
+            const formattedStaff = response.data.map(s => ({
+                id: s.id,
+                name: s.username, // username from DB -> name in state
+                email: s.email,
+                phone: s.phone_number,
+                role: s.role,
+                account_status: s.account_status,
+                password: '' // Don't fetch passwords
+            }));
+            setStaff(formattedStaff);
+        } catch (error) {
+            console.error('Error fetching staff:', error);
+        } finally {
+            setIsLoadingStaff(false);
+        }
+    };
+
+    // Fetch users from backend
+    const fetchUsers = async () => {
+        setIsLoadingUsers(true);
+        try {
+            const response = await axios.get(`${API_URL}/api/admin/users`);
+            // Map backend fields to frontend fields
+            const formattedUsers = response.data.map(u => ({
+                id: u.id,
+                name: `${u.first_name} ${u.second_name}`,
+                email: u.email,
+                phone: u.phone,
+                nic: u.nic,
+                role: 'Patient'
+            }));
+            setUsers(formattedUsers);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setIsLoadingUsers(false);
+        }
+    };
+
+    useEffect(() => {
+        const fetchDoctors = async () => {
+            setIsLoadingDoctors(true);
+            try {
+                const response = await axios.get(`${API_URL}/api/admin/doctors`);
+                const formattedDoctors = response.data.map(doc => ({
+                    ...doc,
+                    role: 'Doctor',
+                    details: doc.specialization + (doc.hospital ? ` - ${doc.hospital}` : '')
+                }));
+                setDoctors(formattedDoctors);
+            } catch (error) {
+                console.error('Error fetching doctors:', error);
+                // alert('Failed to fetch doctors');
+            } finally {
+                setIsLoadingDoctors(false);
+            }
+        };
+
+        if (selectedCategory === 'doctor') {
+            fetchDoctors();
+        }
+        if (selectedCategory === 'staff') {
+            fetchStaff();
+        }
+        if (selectedCategory === 'user') {
+            fetchUsers();
+        }
+    }, [selectedCategory, API_URL]);
 
     const handleLogout = () => {
         navigate('/ecare/staff-login');
@@ -100,14 +181,41 @@ const AdminDashboard = () => {
         setExpandedId(expandedId === id ? null : id);
     };
 
-    const handleDeleteRecord = (id) => {
-        if (selectedCategory === 'user') setUsers(users.filter(item => item.id !== id));
-        if (selectedCategory === 'staff') {
-            setStaff(staff.filter(item => item.id !== id));
-            alert("Staff Deleted Successfully");
+    const handleDeleteRecord = async (id) => {
+        if (selectedCategory === 'user') {
+            try {
+                const response = await axios.delete(`${API_URL}/api/admin/users/${id}`);
+                alert(response.data.message || "User Deleted Successfully");
+                fetchUsers(); // Refresh list from DB
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert(error.response?.data?.message || "Failed to delete user");
+            }
             return;
         }
-        if (selectedCategory === 'doctor') setDoctors(doctors.filter(item => item.id !== id));
+        if (selectedCategory === 'staff') {
+            try {
+                const response = await axios.delete(`${API_URL}/api/admin/staff/${id}`);
+                alert(response.data.message || "Staff Deleted Successfully");
+                fetchStaff(); // Refresh list from DB
+            } catch (error) {
+                console.error('Error deleting staff:', error);
+                alert(error.response?.data?.message || "Failed to delete staff");
+            }
+            return;
+        }
+        if (selectedCategory === 'doctor') {
+            try {
+                const response = await axios.delete(`${API_URL}/api/admin/doctors/${id}`);
+                setDoctors(doctors.filter(item => item.id !== id));
+                alert(response.data.message || "Doctor Deleted Successfully");
+            } catch (error) {
+                console.error('Error deleting doctor:', error);
+                const errorMessage = error.response?.data?.message || "Failed to delete doctor. Please try again.";
+                alert(errorMessage);
+            }
+            return;
+        }
         alert("Record Deleted Successfully");
     };
 
@@ -119,7 +227,7 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleAddOrUpdateStaff = (e) => {
+    const handleAddOrUpdateStaff = async (e) => {
         e.preventDefault();
 
         // Strict Validation
@@ -128,7 +236,7 @@ const AdminDashboard = () => {
             email: !staffFormData.email,
             phone: !staffFormData.phone,
             role: !staffFormData.role,
-            password: !staffFormData.password
+            password: !editingStaffId && !staffFormData.password // password required only for new staff
         };
 
         if (errors.name || errors.email || errors.phone || errors.role || errors.password) {
@@ -139,22 +247,33 @@ const AdminDashboard = () => {
 
         setFormErrors({});
 
-        if (editingStaffId) {
-            setStaff(staff.map(s => s.id === editingStaffId ? { ...staffFormData, id: editingStaffId, details: s.details } : s));
-            alert("Staff Updated Successfully");
-            setEditingStaffId(null);
-        } else {
-            const newStaff = {
-                ...staffFormData,
-                id: Date.now(),
-                details: 'Newly added staff member'
+        try {
+            const payload = {
+                username: staffFormData.name,
+                password: staffFormData.password,
+                role: staffFormData.role,
+                phone_number: staffFormData.phone,
+                email: staffFormData.email,
+                account_status: staffFormData.account_status
             };
-            setStaff([...staff, newStaff]);
-            alert("Staff Added Successfully");
+
+            if (editingStaffId) {
+                const response = await axios.put(`${API_URL}/api/admin/staff/${editingStaffId}`, payload);
+                alert(response.data.message || "Staff Updated Successfully");
+                setEditingStaffId(null);
+            } else {
+                const response = await axios.post(`${API_URL}/api/admin/staff`, payload);
+                alert(response.data.message || "Staff Added Successfully");
+            }
+
+            setStaffFormData(initialStaffForm);
+            setFormErrors({});
+            setShowStaffPassword(false);
+            fetchStaff(); // Refresh list from DB
+        } catch (error) {
+            console.error('Error saving staff:', error);
+            alert(error.response?.data?.message || "Error saving staff member");
         }
-        setStaffFormData({ name: '', email: '', phone: '', role: '', password: '' });
-        setFormErrors({});
-        setShowStaffPassword(false);
     };
 
     const handleEditStaff = (member) => {
@@ -163,7 +282,8 @@ const AdminDashboard = () => {
             email: member.email,
             phone: member.phone,
             role: member.role,
-            password: member.password || ''
+            password: '', // Don't pre-fill password
+            account_status: member.account_status || 'Active'
         });
         setEditingStaffId(member.id);
         setFormErrors({});
@@ -248,12 +368,33 @@ const AdminDashboard = () => {
                                         onBlur={(e) => e.target.style.border = formErrors.role ? '2px solid #dc3545' : '1px solid #ced4da'}
                                     >
                                         <option value="" disabled style={{ color: '#999', padding: '10px' }}>Select Role</option>
-                                        <option value="Receptionist" style={{ padding: '10px' }}>Admin</option>
-                                        <option value="Nurse" style={{ padding: '10px' }}>Cashier</option>
-                                        <option value="Manager" style={{ padding: '10px' }}>Booking Manager</option>
-                                        <option value="Doctor" style={{ padding: '10px' }}>HR</option>
+                                        <option value="Admin" style={{ padding: '10px' }}>Admin</option>
+                                        <option value="Cashier" style={{ padding: '10px' }}>Cashier</option>
+                                        <option value="Booking Manager" style={{ padding: '10px' }}>Booking Manager</option>
+                                        <option value="HR" style={{ padding: '10px' }}>HR</option>
                                     </select>
                                     {formErrors.role && <p style={{ color: '#dc3545', fontSize: '0.8rem', margin: '0.2rem 0 0 0' }}>Role is required</p>}
+                                </div>
+                                <div>
+                                    <select
+                                        name="account_status"
+                                        value={staffFormData.account_status}
+                                        onChange={handleStaffFormChange}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.6rem 1rem',
+                                            borderRadius: '8px',
+                                            border: '1px solid #ced4da',
+                                            backgroundColor: 'white',
+                                            transition: 'all 0.3s ease',
+                                            outline: 'none'
+                                        }}
+                                        onFocus={(e) => e.target.style.border = '2px solid #4CA1AF'}
+                                        onBlur={(e) => e.target.style.border = '1px solid #ced4da'}
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
                                 </div>
                                 <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem' }}>
                                     <button
@@ -367,10 +508,23 @@ const AdminDashboard = () => {
                                     </div>
                                     {expandedId === item.id && (
                                         <div style={{ marginTop: '1.2rem', padding: '1.2rem', backgroundColor: '#f8f9fa', borderRadius: '6px', fontSize: '0.95rem', borderLeft: '4px solid #0b154eff' }}>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Role:</strong> {item.role}</p>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Details:</strong> {item.details}</p>
+                                            <p style={{ margin: '0.4rem 0' }}><strong>Name:</strong> {item.name}</p>
+                                            {selectedCategory === 'doctor' ? (
+                                                <>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Specialization:</strong> {item.specialization}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>SLMC Number:</strong> {item.slmc_no}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>NIC:</strong> {item.nic}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Hospital:</strong> {item.hospital || 'Not Specified'}</p>
+                                                </>
+                                            ) : selectedCategory === 'user' ? (
+                                                <>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
+                                                    <p style={{ margin: '0.4rem 0' }}><strong>NIC:</strong> {item.nic}</p>
+                                                </>
+                                            ) : null}
                                         </div>
                                     )}
                                 </div>
