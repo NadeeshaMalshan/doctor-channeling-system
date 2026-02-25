@@ -7,7 +7,7 @@ exports.getPaymentDetails = async (req, res) => {
 
     try {
         const [rows] = await db.execute(
-            'SELECT p.first_name,p.second_name, d.name as doctor_name, d.specialization FROM patients p, doctors d WHERE p.id = ? AND d.id = ?',
+            'SELECT p.first_name,p.second_name, d.name as doctor_name, d.specialization a.booked_count, a.schedule_date, a.start_time, a.fee FROM patients p, doctors d WHERE p.id = ? AND d.id = ?',
             [patientID, doctorID]
         );
         if (rows.length === 0) {
@@ -42,7 +42,7 @@ exports.generateHash = async (req, res) => {
 
         // save a PENDING record in the database
         // paymentID format: ORD{appointmentID}_{timestamp}
-        const appointmentID = paymentID.split('_')[0].replace('ORD', '');
+        const appointmentID = paymentID.split('_')[0].replace('PAY', '');
         console.log(`Backend: paymentID Received: ${paymentID}, Calculated appointmentID: ${appointmentID}`);
 
         await db.execute(

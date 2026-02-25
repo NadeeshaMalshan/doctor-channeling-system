@@ -38,7 +38,7 @@ const PaymentPortal = () => {
 
         const fetchDetails = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/payment/details?patientID=${patientId}&doctorID=${doctorId}`);
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/payment/details?patientID=${patientId}&doctorID=${doctorId}&appointmentID=${appointmentId}`);
                 setDetails(response.data);
                 setLoading(false);
             } catch (err) {
@@ -143,12 +143,12 @@ const PaymentPortal = () => {
         patientName: `${details.first_name} ${details.second_name}`,
         doctorName: details.doctor_name,
         specialization: details.specialization,
-        appointmentNo: 12,
-        dateTime: "2026-10-02 07:00 PM",
-        appointmentId: "001",
-        channelingFee: 3000.00,
+        appointmentNo: details.bookedCOunt,
+        dateTime: `${details.schedule_date} ${details.start_time}`,
+        appointmentId: details.appointmentID,
+        channelingFee: details.channelingFee,
         serviceCharge: 400.00,
-        totalAmount: 3400.00
+        totalAmount: details.channelingFee + serviceCharge,
     };
 
     const handlePayHereClick = async () => {

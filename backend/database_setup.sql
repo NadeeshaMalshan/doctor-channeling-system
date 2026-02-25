@@ -69,3 +69,34 @@ CREATE TABLE IF NOT EXISTS doc_availability_slots (
 );
 
 
+CREATE TABLE IF NOT EXISTS appointment_schedules (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    doctor_id INT NOT NULL,
+    schedule_date DATE,
+    start_time TIME,
+    end_time TIME,
+    max_patients INT,
+    booked_count INT DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+);
+
+
+CREATE TABLE IF NOT EXISTS payments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    internal_order_id VARCHAR(50) NOT NULL,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    appointment_id INT NOT NULL,
+    payhere_payment_id VARCHAR(50) DEFAULT NULL,
+    amount DECIMAL (10,2) NOT NULL,
+    payment_method VARCHAR(20),
+    card_last_digits VARCHAR(4) DEFAULT NULL,
+    payment_status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id),
+    FOREIGN KEY (appointment_id) REFERENCES appointment_schedules(id)
+)
