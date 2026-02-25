@@ -128,6 +128,10 @@ const AppointmentForm = () => {
                                     <span className="label">Time</span>
                                     <span className="value">{scheduleDetails.start_time} - {scheduleDetails.end_time}</span>
                                 </div>
+                                <div className="summary-item">
+                                    <span className="label">Price</span>
+                                    <span className="value">Rs. {Number(scheduleDetails.price).toFixed(2)}</span>
+                                </div>
                             </div>
                         ) : (
                             <p>Loading schedule details...</p>

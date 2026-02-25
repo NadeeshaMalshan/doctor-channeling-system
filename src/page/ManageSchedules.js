@@ -173,6 +173,7 @@ const ManageSchedules = () => {
                                         <div className="schedule-details">
                                             <p><strong>Time:</strong> {schedule.start_time} - {schedule.end_time}</p>
                                             <p><strong>Booked:</strong> {schedule.booked_count} / {schedule.max_patients}</p>
+                                            <p><strong>Price:</strong> Rs. {Number(schedule.price).toFixed(2)}</p>
                                         </div>
 
                                         <div className="card-actions">

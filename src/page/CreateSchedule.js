@@ -10,7 +10,8 @@ const CreateSchedule = () => {
         schedule_date: '',
         start_time: '',
         end_time: '',
-        max_patients: ''
+        max_patients: '',
+        price: ''
     });
 
     // New state for dynamic dropdowns
@@ -86,7 +87,8 @@ const CreateSchedule = () => {
                     schedule_date: '',
                     start_time: '',
                     end_time: '',
-                    max_patients: ''
+                    max_patients: '',
+                    price: ''
                 });
             } else {
                 setIsError(true);
@@ -182,6 +184,18 @@ const CreateSchedule = () => {
                             value={formData.max_patients}
                             onChange={handleChange}
                             placeholder="e.g. 20"
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Price (Rs.)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleChange}
+                            placeholder="e.g. 1500.00"
                             required
                         />
                     </div>

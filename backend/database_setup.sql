@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS appointment_schedules (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     max_patients INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     booked_count INT DEFAULT 0,
     status ENUM('active','full','cancelled') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

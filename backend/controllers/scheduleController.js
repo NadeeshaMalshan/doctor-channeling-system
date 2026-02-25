@@ -1,11 +1,11 @@
 const db = require('../config/db');
 
 exports.createSchedule = async (req, res) => {
-    const { doctor_id, schedule_date, start_time, end_time, max_patients } = req.body;
+    const { doctor_id, schedule_date, start_time, end_time, max_patients, price } = req.body;
 
     try {
         // Validation
-        if (!doctor_id || !schedule_date || !start_time || !end_time || !max_patients) {
+        if (!doctor_id || !schedule_date || !start_time || !end_time || !max_patients || price === undefined) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
@@ -23,9 +23,13 @@ exports.createSchedule = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Max patients must be greater than 0' });
         }
 
+        if (price < 0) {
+            return res.status(400).json({ success: false, message: 'Price cannot be negative' });
+        }
+
         const [result] = await db.execute(
-            'INSERT INTO appointment_schedules (doctor_id, schedule_date, start_time, end_time, max_patients) VALUES (?, ?, ?, ?, ?)',
-            [doctor_id, schedule_date, start_time, end_time, max_patients]
+            'INSERT INTO appointment_schedules (doctor_id, schedule_date, start_time, end_time, max_patients, price) VALUES (?, ?, ?, ?, ?, ?)',
+            [doctor_id, schedule_date, start_time, end_time, max_patients, price]
         );
 
         res.status(201).json({ success: true, message: 'Schedule created successfully', data: { id: result.insertId } });
@@ -90,7 +94,7 @@ exports.getSchedulesByDate = async (req, res) => {
 
 exports.updateSchedule = async (req, res) => {
     const { id } = req.params;
-    const { schedule_date, start_time, end_time, max_patients, status } = req.body;
+    const { schedule_date, start_time, end_time, max_patients, status, price } = req.body;
 
     try {
         const [existing] = await db.execute('SELECT * FROM appointment_schedules WHERE id = ?', [id]);
@@ -139,6 +143,15 @@ exports.updateSchedule = async (req, res) => {
                 }
             }
         }
+
+        if (price !== undefined) {
+            if (price < 0) {
+                return res.status(400).json({ success: false, message: 'Price cannot be negative' });
+            }
+            updates.push('price = ?');
+            params.push(price);
+        }
+
         if (status) { updates.push('status = ?'); params.push(status); }
 
         if (updates.length === 0) {
