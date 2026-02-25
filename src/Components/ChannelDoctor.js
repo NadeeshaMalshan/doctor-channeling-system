@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './ComponentsCss/ChannelDoctor.css';
+import './ComponentsCss/ChannelDoctorForm.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -105,6 +106,7 @@ const ChannelDoctor = ({ onSearch }) => {
                                     value={searchData.doctorName}
                                     onChange={handleChange}
                                     className="form-input"
+                                    autoComplete="off"
                                 />
                                 <div className="input-help-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -146,6 +148,7 @@ const ChannelDoctor = ({ onSearch }) => {
                                     value={searchData.date}
                                     onChange={handleChange}
                                     className="form-input date-input"
+                                    autoComplete="off"
                                 />
                             </div>
                         </div>

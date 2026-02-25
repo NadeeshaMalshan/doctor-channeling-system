@@ -141,6 +141,7 @@ const Login = () => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
+                                    autoComplete="off"
                                 />
                             </div>
                         </div>
@@ -159,6 +160,7 @@ const Login = () => {
                                     value={formData.password}
                                     onChange={handleChange}
                                     required
+                                    autoComplete="off"
                                 />
                             </div>
                         </div>
