@@ -9,21 +9,53 @@ const ManageSchedules = () => {
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    // New state for filters
+    const [allDoctors, setAllDoctors] = useState([]);
+    const [specializations, setSpecializations] = useState([]);
+    const [selectedSpecialization, setSelectedSpecialization] = useState('');
+    const [filteredDoctors, setFilteredDoctors] = useState([]);
+    const [selectedDoctorId, setSelectedDoctorId] = useState('');
+
     // Modal state for appointments
     const [selectedScheduleId, setSelectedScheduleId] = useState(null);
     const [appointments, setAppointments] = useState([]);
     const [showModal, setShowModal] = useState(false);
 
+    // Fetch all doctors on mount for the filters
     useEffect(() => {
-        fetchSchedules(selectedDate);
-    }, [selectedDate]);
+        const fetchDoctors = async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/doctors');
+                const data = await response.json();
+                if (response.ok && data.doctors) {
+                    setAllDoctors(data.doctors);
+                    const uniqueSpecs = [...new Set(data.doctors.map(doc => doc.specialization))];
+                    setSpecializations(uniqueSpecs);
+                }
+            } catch (error) {
+                console.error("Failed to fetch doctors:", error);
+            }
+        };
+        fetchDoctors();
+    }, []);
 
-    const fetchSchedules = async (date) => {
+    useEffect(() => {
+        fetchSchedules(selectedDate, selectedSpecialization, selectedDoctorId);
+    }, [selectedDate, selectedSpecialization, selectedDoctorId]);
+
+    const fetchSchedules = async (date, spec = '', docId = '') => {
         setLoading(true);
         // Format date as YYYY-MM-DD
         const formattedDate = date.toLocaleDateString('en-CA');
         try {
-            const res = await fetch(`http://localhost:5000/api/schedules/date/${formattedDate}`);
+            // Build query params
+            const queryParams = new URLSearchParams();
+            if (spec) queryParams.append('specialization', spec);
+            if (docId) queryParams.append('doctor_id', docId);
+
+            const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+            const res = await fetch(`http://localhost:5000/api/schedules/date/${formattedDate}${queryString}`);
             const data = await res.json();
             if (data.success) {
                 setSchedules(data.data);
@@ -47,7 +79,7 @@ const ManageSchedules = () => {
                 body: JSON.stringify({ status: nextStatus })
             });
             if (res.ok) {
-                fetchSchedules(selectedDate);
+                fetchSchedules(selectedDate, selectedSpecialization, selectedDoctorId);
             }
         } catch (error) {
             console.error('Error updating status:', error);
@@ -78,13 +110,27 @@ const ManageSchedules = () => {
                 // Refresh appointments list
                 handleManageApps(selectedScheduleId);
                 // Also refresh schedule list to reflect new booked_count
-                fetchSchedules(selectedDate);
+                fetchSchedules(selectedDate, selectedSpecialization, selectedDoctorId);
             } else {
                 alert('Failed to delete appointment');
             }
         } catch (error) {
             console.error('Error deleting appointment:', error);
         }
+    };
+
+    // Filter Handlers
+    const handleSpecializationChange = (e) => {
+        const spec = e.target.value;
+        setSelectedSpecialization(spec);
+
+        const filtered = allDoctors.filter(doc => doc.specialization === spec);
+        setFilteredDoctors(filtered);
+        setSelectedDoctorId(''); // Reset doctor when specialization changes
+    };
+
+    const handleDoctorChange = (e) => {
+        setSelectedDoctorId(e.target.value);
     };
 
     // Calendar Helper functions
@@ -131,6 +177,36 @@ const ManageSchedules = () => {
             <div className="manage-schedules-container">
                 <div className="manage-header">
                     <h2>Manage Doctor Schedules</h2>
+                </div>
+
+                <div className="manage-filters">
+                    <div className="filter-group">
+                        <label>Filter by Specialization</label>
+                        <select
+                            value={selectedSpecialization}
+                            onChange={handleSpecializationChange}
+                            className="filter-select"
+                        >
+                            <option value="">All Specializations</option>
+                            {specializations.map(spec => (
+                                <option key={spec} value={spec}>{spec}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="filter-group">
+                        <label>Filter by Doctor</label>
+                        <select
+                            value={selectedDoctorId}
+                            onChange={handleDoctorChange}
+                            disabled={!selectedSpecialization}
+                            className="filter-select"
+                        >
+                            <option value="">All Doctors</option>
+                            {filteredDoctors.map(doc => (
+                                <option key={doc.id} value={doc.id}>Dr. {doc.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 <div className="calendar-layout">

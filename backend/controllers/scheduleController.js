@@ -15,9 +15,7 @@ exports.createSchedule = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Schedule date cannot be in the past' });
         }
 
-        if (start_time >= end_time) {
-            return res.status(400).json({ success: false, message: 'End time must be after start time' });
-        }
+
 
         if (max_patients <= 0) {
             return res.status(400).json({ success: false, message: 'Max patients must be greater than 0' });
@@ -77,14 +75,30 @@ exports.getScheduleById = async (req, res) => {
 
 exports.getSchedulesByDate = async (req, res) => {
     const { date } = req.params;
+    const { specialization, doctor_id } = req.query;
+
     try {
-        const [schedules] = await db.execute(`
+        let baseQuery = `
             SELECT s.*, d.name AS doctor_name, d.specialization 
             FROM appointment_schedules s
             JOIN doctors d ON s.doctor_id = d.id
             WHERE s.schedule_date = ?
-            ORDER BY d.name ASC, s.start_time ASC
-        `, [date]);
+        `;
+        const params = [date];
+
+        if (specialization) {
+            baseQuery += ' AND d.specialization = ?';
+            params.push(specialization);
+        }
+
+        if (doctor_id) {
+            baseQuery += ' AND s.doctor_id = ?';
+            params.push(doctor_id);
+        }
+
+        baseQuery += ' ORDER BY d.name ASC, s.start_time ASC';
+
+        const [schedules] = await db.execute(baseQuery, params);
         res.status(200).json({ success: true, message: 'Schedules fetched successfully', data: schedules });
     } catch (error) {
         console.error('Get schedules by date error:', error);
@@ -120,9 +134,7 @@ exports.updateSchedule = async (req, res) => {
 
         const newStartTime = start_time || schedule.start_time;
         const newEndTime = end_time || schedule.end_time;
-        if (newStartTime >= newEndTime) {
-            return res.status(400).json({ success: false, message: 'End time must be after start time' });
-        }
+
 
         if (start_time) { updates.push('start_time = ?'); params.push(start_time); }
         if (end_time) { updates.push('end_time = ?'); params.push(end_time); }

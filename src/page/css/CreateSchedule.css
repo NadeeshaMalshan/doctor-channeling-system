@@ -42,6 +42,15 @@
     gap: 8px;
 }
 
+.time-row {
+    display: flex;
+    gap: 20px;
+}
+
+.time-row .form-group {
+    flex: 1;
+}
+
 .form-group label {
     font-size: 14px;
     font-weight: 600;

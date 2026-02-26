@@ -156,25 +156,27 @@ const CreateSchedule = () => {
                             required
                         />
                     </div>
-                    <div className="form-group">
-                        <label>Start Time</label>
-                        <input
-                            type="time"
-                            name="start_time"
-                            value={formData.start_time}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>End Time</label>
-                        <input
-                            type="time"
-                            name="end_time"
-                            value={formData.end_time}
-                            onChange={handleChange}
-                            required
-                        />
+                    <div className="time-row">
+                        <div className="form-group">
+                            <label>Start Time</label>
+                            <input
+                                type="time"
+                                name="start_time"
+                                value={formData.start_time}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>End Time</label>
+                            <input
+                                type="time"
+                                name="end_time"
+                                value={formData.end_time}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
                     </div>
                     <div className="form-group">
                         <label>Max Patients</label>
