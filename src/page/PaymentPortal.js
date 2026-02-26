@@ -160,7 +160,7 @@ const PaymentPortal = () => {
 
         try {
             // get backend hash
-            const hashResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/payment/generate-hash`,
+            const hashResponse = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/generate-hash`,
                 {
                     paymentID: paymentID,
                     amount: amount,
@@ -203,7 +203,7 @@ const PaymentPortal = () => {
                     attempts++;
                     console.log(`Polling status for ${order_id}... Attempt ${attempts}`);
                     try {
-                        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/payment/status/${order_id}`);
+                        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/status/${order_id}`);
                         const status = response.data.status;
                         console.log(`Current Status from Backend: ${status}`);
 

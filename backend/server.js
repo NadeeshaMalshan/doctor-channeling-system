@@ -28,6 +28,11 @@ app.use('/api/admin/staff', require('./routes/adminStaffRoutes'));
 app.use('/api/admin/users', require('./routes/adminUserRoutes'));
 app.use('/api/availability', availabilityRoutes);
 
+const scheduleRoutes = require('./routes/scheduleRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/appointments', appointmentRoutes);
+
 // Test Route
 app.get('/', (res) => {
     res.send('Doctor Channeling System API is running');

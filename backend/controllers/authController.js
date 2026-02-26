@@ -189,9 +189,11 @@ exports.login = async (req, res) => {
                 userType: 'patient',
                 user: {
                     id: patient.id,
-                    firstName: patient.first_name,
-                    secondName: patient.second_name,
-                    email: patient.email
+                    first_name: patient.first_name,
+                    second_name: patient.second_name,
+                    email: patient.email,
+                    phone: patient.phone,
+                    nic: patient.nic
                 }
             });
         }

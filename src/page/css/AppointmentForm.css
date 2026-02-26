@@ -1,0 +1,139 @@
+/* ===== Appointment Form / Confirmation Page ===== */
+.appointment-form-page {
+    min-height: 100vh;
+    background: #f8faff;
+    font-family: inherit;
+    padding-bottom: 60px;
+}
+
+.appointment-container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.appointment-header {
+    background: linear-gradient(135deg, #3B5DB0 0%, #1E3A5F 100%);
+    padding: 30px 40px;
+    color: white;
+    text-align: center;
+}
+
+.appointment-header h2 {
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.appointment-header p {
+    opacity: 0.9;
+    font-size: 15px;
+}
+
+.appointment-content {
+    padding: 40px;
+}
+
+.summary-section {
+    background: #f8faff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.summary-section h3 {
+    color: #1E3A5F;
+    margin-bottom: 20px;
+    font-size: 20px;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 10px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.summary-item .label {
+    font-size: 13px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.summary-item .value {
+    font-size: 16px;
+    color: #1E3A5F;
+    font-weight: 500;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 40px;
+}
+
+.btn-confirm {
+    flex: 2;
+    padding: 16px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+}
+
+.btn-confirm:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    flex: 1;
+    padding: 16px;
+    background: white;
+    color: #4b5563;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn-cancel:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+@media (max-width: 600px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+}

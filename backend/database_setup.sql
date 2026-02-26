@@ -38,6 +38,31 @@ CREATE TABLE IF NOT EXISTS doctors (
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS appointment_schedules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id INT NOT NULL,
+    schedule_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    max_patients INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    booked_count INT DEFAULT 0,
+    status ENUM('active','full','cancelled') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS appointments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    schedule_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    patient_ID INT NOT NULL,
+    appointment_payment_status ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE
+);
 
 CREATE TABLE IF NOT EXISTS support_tickets (
     id INT AUTO_INCREMENT PRIMARY KEY,
