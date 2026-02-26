@@ -23,7 +23,8 @@ const PaymentPortal = () => {
     } catch (e) {
         console.error('Error parsing user from localStorage:', e);
     }
-    const doctorId = 4;
+
+    const appointmentScheduleId = 6;
 
 
 
@@ -38,7 +39,7 @@ const PaymentPortal = () => {
 
         const fetchDetails = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/details?patientID=${patientId}&doctorID=${doctorId}`);
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
                 setDetails(response.data);
                 setLoading(false);
             } catch (err) {
@@ -53,7 +54,7 @@ const PaymentPortal = () => {
         return () => {
             document.title = "Doctor Channeling System";
         };
-    }, [patientId, doctorId]);
+    }, [patientId, appointmentScheduleId]);
 
     if (loading) {
         return (
@@ -143,12 +144,12 @@ const PaymentPortal = () => {
         patientName: `${details.first_name} ${details.second_name}`,
         doctorName: details.doctor_name,
         specialization: details.specialization,
-        appointmentNo: 12,
-        dateTime: "2026-10-02 07:00 PM",
-        appointmentId: "001",
-        channelingFee: 3000.00,
-        serviceCharge: 400.00,
-        totalAmount: 3400.00
+        appointmentNo: details.bookedCOunt,
+        dateTime: `${details.schedule_date} ${details.start_time}`,
+        appointmentId: details.appointmentID,
+        channelingFee: parseFloat(details.channelingFee),
+        serviceCharge: 400,
+        totalAmount: parseFloat(details.channelingFee) + 400,
     };
 
     const handlePayHereClick = async () => {
@@ -165,7 +166,7 @@ const PaymentPortal = () => {
                     amount: amount,
                     currency: currency,
                     patientID: patientId,
-                    doctorID: doctorId
+                    appointmentScheduleId: appointmentScheduleId
                 }
             );
             const { hash, merchantID } = hashResponse.data;
@@ -303,7 +304,7 @@ const PaymentPortal = () => {
                             <p><span>Specialization:</span> {paymentData.specialization}</p>
                             <p><span>Appointment no:</span> {paymentData.appointmentNo}</p>
                             <p><span>Date/Time:</span> {paymentData.dateTime}</p>
-                            <p><span>Appointment ID:</span> {paymentData.appointmentId}</p>
+                            <p><span>Booking No:</span> {paymentData.booked_count + 1}</p>
                             <div className="fee-row">
                                 <p><span>Fee:</span> {paymentData.totalAmount} LKR</p>
                                 <small>({paymentData.serviceCharge} LKR for channeling center charges)</small>

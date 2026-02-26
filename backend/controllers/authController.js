@@ -235,23 +235,34 @@ exports.login = async (req, res) => {
 
 exports.getDoctors = async (req, res) => {
     try {
-        const { name, specialization } = req.query;
+        const { name, specialization, date } = req.query;
 
-        let query = 'SELECT id, name, specialization, email, phone, hospital FROM doctors WHERE 1=1';
+        let query = 'SELECT DISTINCT d.id, d.name, d.specialization, d.email, d.phone, d.hospital FROM doctors d';
         const params = [];
+        const whereClauses = [];
+
+        if (date && date.trim() !== '') {
+            query += ' JOIN doc_availability_slots s ON d.id = s.doctor_id';
+            whereClauses.push('s.day_of_week = DAYNAME(?)');
+            params.push(date);
+            whereClauses.push('s.is_available = 1');
+        }
 
         if (name && name.trim() !== '') {
-            query += ' AND name LIKE ?';
+            whereClauses.push('d.name LIKE ?');
             params.push(`%${name.trim()}%`);
         }
 
         if (specialization && specialization.trim() !== '') {
-            query += ' AND specialization = ?';
+            whereClauses.push('d.specialization = ?');
             params.push(specialization.trim());
         }
 
+        if (whereClauses.length > 0) {
+            query += ' WHERE ' + whereClauses.join(' AND ');
+        }
+
         // Use db.query (not db.execute) for dynamically built queries
-        // db.execute uses server-side prepared statement caching which breaks dynamic queries
         const [doctors] = await db.query(query, params);
 
         res.status(200).json({

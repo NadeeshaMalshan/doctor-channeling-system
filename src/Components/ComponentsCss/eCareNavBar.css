@@ -4,8 +4,10 @@
     justify-content: space-between;
     align-items: center;
     padding: 15px 40px;
-    background-color: var(--color-white);
+    background-color: #f8f9fa;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border-bottom: 2px solid #e0e6ed;
+    /* Added border */
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -107,7 +109,11 @@
     box-shadow: 0 4px 15px rgba(59, 93, 176, 0.4);
 }
 
-/* Welcome greeting */
+/* Welcome greeting and Dropdown */
+.ecare-user-menu {
+    position: relative;
+}
+
 .ecare-welcome {
     display: flex;
     align-items: center;
@@ -117,6 +123,14 @@
     border-radius: 8px;
     color: var(--color-primary);
     font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.ecare-welcome:hover,
+.ecare-welcome.active {
+    background: linear-gradient(135deg, rgba(59, 93, 176, 0.15) 0%, rgba(59, 93, 176, 0.25) 100%);
 }
 
 .ecare-welcome svg {
@@ -126,26 +140,96 @@
     flex-shrink: 0;
 }
 
+.dropdown-arrow {
+    width: 16px !important;
+    height: 16px !important;
+    transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
 .ecare-welcome strong {
     font-weight: 700;
 }
 
-/* Logout button */
-.btn-logout {
-    background-color: transparent;
+.ecare-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 220px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    color: #444;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.dropdown-item svg {
+    width: 18px;
+    height: 18px;
+    fill: #666;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f7fb;
+    color: var(--color-primary);
+}
+
+.dropdown-item:hover svg {
+    fill: var(--color-primary);
+}
+
+.dropdown-item.logout {
     color: #e53935;
-    border: 2px solid #e53935;
 }
 
-.btn-logout:hover {
-    background-color: #e53935;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(229, 57, 53, 0.35);
+.dropdown-item.logout svg {
+    fill: #e53935;
 }
 
-.btn-logout svg {
-    fill: currentColor;
+.dropdown-item.logout:hover {
+    background-color: #fff1f0;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #eee;
+    margin: 6px 8px;
 }
 
 /* Responsive */
