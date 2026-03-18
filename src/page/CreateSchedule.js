@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
 import './css/CreateSchedule.css';
 
+const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+
 const CreateSchedule = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -64,10 +67,42 @@ const CreateSchedule = () => {
         });
     };
 
+    const handleTimeChange = (field, type, value) => {
+        const currentTime = formData[field] || '';
+        let h = '', m = '';
+        if (currentTime) {
+            [h, m] = currentTime.split(':');
+        }
+
+        if (type === 'hour') h = value;
+        if (type === 'minute') m = value;
+
+        if (h && !m) m = '00';
+        if (!h && m) h = '00';
+
+        const newTime = h && m ? `${h}:${m}` : '';
+        setFormData(prev => ({ ...prev, [field]: newTime }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage('');
         setIsError(false);
+
+        const timeToMinutes = (timeStr) => {
+            if (!timeStr) return 0;
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        };
+
+        const start_time_minutes = timeToMinutes(formData.start_time);
+        const end_time_minutes = timeToMinutes(formData.end_time);
+
+        if (end_time_minutes <= start_time_minutes) {
+            setIsError(true);
+            setMessage("Error: End time must be after start time.");
+            return;
+        }
 
         try {
             const response = await fetch('http://localhost:5000/api/schedules', {
@@ -158,24 +193,48 @@ const CreateSchedule = () => {
                     </div>
                     <div className="time-row">
                         <div className="form-group">
-                            <label>Start Time</label>
-                            <input
-                                type="time"
-                                name="start_time"
-                                value={formData.start_time}
-                                onChange={handleChange}
-                                required
-                            />
+                            <label>Start Time (24H)</label>
+                            <div className="time-picker-container">
+                                <select
+                                    value={formData.start_time ? formData.start_time.split(':')[0] : ''}
+                                    onChange={(e) => handleTimeChange('start_time', 'hour', e.target.value)}
+                                    required
+                                >
+                                    <option value="" disabled>HH</option>
+                                    {hours.map(h => <option key={h} value={h}>{h}</option>)}
+                                </select>
+                                <span>:</span>
+                                <select
+                                    value={formData.start_time ? formData.start_time.split(':')[1] : ''}
+                                    onChange={(e) => handleTimeChange('start_time', 'minute', e.target.value)}
+                                    required
+                                >
+                                    <option value="" disabled>MM</option>
+                                    {minutes.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                            </div>
                         </div>
                         <div className="form-group">
-                            <label>End Time</label>
-                            <input
-                                type="time"
-                                name="end_time"
-                                value={formData.end_time}
-                                onChange={handleChange}
-                                required
-                            />
+                            <label>End Time (24H)</label>
+                            <div className="time-picker-container">
+                                <select
+                                    value={formData.end_time ? formData.end_time.split(':')[0] : ''}
+                                    onChange={(e) => handleTimeChange('end_time', 'hour', e.target.value)}
+                                    required
+                                >
+                                    <option value="" disabled>HH</option>
+                                    {hours.map(h => <option key={h} value={h}>{h}</option>)}
+                                </select>
+                                <span>:</span>
+                                <select
+                                    value={formData.end_time ? formData.end_time.split(':')[1] : ''}
+                                    onChange={(e) => handleTimeChange('end_time', 'minute', e.target.value)}
+                                    required
+                                >
+                                    <option value="" disabled>MM</option>
+                                    {minutes.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div className="form-group">

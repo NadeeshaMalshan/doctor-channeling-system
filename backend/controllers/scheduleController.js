@@ -1,5 +1,11 @@
 const db = require('../config/db');
 
+const timeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+};
+
 exports.createSchedule = async (req, res) => {
     const { doctor_id, schedule_date, start_time, end_time, max_patients, price } = req.body;
 
@@ -23,6 +29,10 @@ exports.createSchedule = async (req, res) => {
 
         if (price < 0) {
             return res.status(400).json({ success: false, message: 'Price cannot be negative' });
+        }
+
+        if (timeToMinutes(end_time) <= timeToMinutes(start_time)) {
+            return res.status(400).json({ success: false, message: 'End time must be after start time' });
         }
 
         const [result] = await db.execute(
@@ -135,6 +145,9 @@ exports.updateSchedule = async (req, res) => {
         const newStartTime = start_time || schedule.start_time;
         const newEndTime = end_time || schedule.end_time;
 
+        if (timeToMinutes(newEndTime) <= timeToMinutes(newStartTime)) {
+            return res.status(400).json({ success: false, message: 'End time must be after start time' });
+        }
 
         if (start_time) { updates.push('start_time = ?'); params.push(start_time); }
         if (end_time) { updates.push('end_time = ?'); params.push(end_time); }

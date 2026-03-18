@@ -57,6 +57,22 @@
     color: #1E3A5F;
 }
 
+.time-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-picker-container select {
+    flex: 1;
+}
+
+.time-picker-container span {
+    font-weight: 600;
+    color: #1E3A5F;
+    font-size: 18px;
+}
+
 .form-group input,
 .form-group select {
     width: 100%;
