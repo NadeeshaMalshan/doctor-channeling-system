@@ -203,7 +203,7 @@ const CreateSchedule = () => {
                     </div>
 
                     <button type="submit" className="submit-btn">Create Schedule</button>
-                    <button type="button" className="submit-btn" style={{ background: '#6B7280', marginTop: '10px' }} onClick={() => navigate('/ecare/staff/admin')}>Back to Dashboard</button>
+                    <button type="button" className="submit-btn" style={{ background: '#6B7280', marginTop: '10px' }} onClick={() => navigate('/schedules/manage')}>Back to Dashboard</button>
                 </form>
             </div>
         </div>
