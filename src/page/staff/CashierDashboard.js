@@ -311,7 +311,7 @@ const CashierDashboard = () => {
                                                 </td>
                                                 <td style={{ fontWeight: 500 }}>{payment.patientName}</td>
                                                 <td style={{ color: '#64748B' }}>{payment.doctorName}</td>
-                                                <td style={{ fontWeight: 600, color: '#0F172A' }}>
+                                                <td style={{ fontWeight: 600, color: '#0f172aff' }}>
                                                     LKR {payment.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                 </td>
                                                 <td>

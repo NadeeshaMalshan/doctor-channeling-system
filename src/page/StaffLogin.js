@@ -171,10 +171,12 @@ const StaffLogin = () => {
                         {/* Username */}
                         <div className="form-group" style={{ marginBottom: '5px' }}>
                             <label htmlFor="username" style={{ display: 'block', marginBottom: '8px', color: '#1E3A5F', fontWeight: '500' }}>Username</label>
-                            <div className="input-wrapper">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                                </svg>
+                            <div className="input-container" style={{ position: 'relative' }}>
+                                <span className="icon" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#6B7280', display: 'flex' }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                                    </svg>
+                                </span>
                                 <input
                                     type="text"
                                     id="username"
@@ -183,6 +185,9 @@ const StaffLogin = () => {
                                     value={formData.username}
                                     onChange={handleChange}
                                     required
+                                    style={{ width: '100%', padding: '12px 16px 12px 50px', border: '2px solid #E5E7EB', borderRadius: '8px', fontSize: '15px', outline: 'none', boxSizing: 'border-box', color: '#1E3A5F', transition: 'all 0.3s ease' }}
+                                    onFocus={(e) => e.target.style.border = '2px solid #4CA1AF'}
+                                    onBlur={(e) => e.target.style.border = '2px solid #E5E7EB'}
                                 />
                             </div>
                         </div>
@@ -190,10 +195,12 @@ const StaffLogin = () => {
                         {/* Password */}
                         <div className="form-group" style={{ marginBottom: '5px' }}>
                             <label htmlFor="password" style={{ display: 'block', marginBottom: '8px', color: '#1E3A5F', fontWeight: '500' }}>Password</label>
-                            <div className="input-wrapper">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
-                                </svg>
+                            <div className="input-container" style={{ position: 'relative' }}>
+                                <span className="icon" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#6B7280', display: 'flex' }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                                    </svg>
+                                </span>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     id="password"
@@ -202,6 +209,9 @@ const StaffLogin = () => {
                                     value={formData.password}
                                     onChange={handleChange}
                                     required
+                                    style={{ width: '100%', padding: '12px 16px 12px 50px', border: '2px solid #E5E7EB', borderRadius: '8px', fontSize: '15px', outline: 'none', boxSizing: 'border-box', color: '#1E3A5F', transition: 'all 0.3s ease' }}
+                                    onFocus={(e) => e.target.style.border = '2px solid #4CA1AF'}
+                                    onBlur={(e) => e.target.style.border = '2px solid #E5E7EB'}
                                 />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
