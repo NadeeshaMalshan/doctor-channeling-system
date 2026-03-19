@@ -12,8 +12,8 @@ import CashierDashboard from './page/staff/CashierDashboard';
 import HRDashboard from './page/staff/HRDashboard';
 import BookingManagerDashboard from './page/staff/BookingManagerDashboard';
 import StaffProtectedRoute from './Components/StaffProtectedRoute';
-import CreateSchedule from './page/CreateSchedule';
-import ManageSchedules from './page/ManageSchedules';
+import CreateSchedule from './page/staff/CreateSchedule';
+import ManageSchedules from './page/staff/ManageSchedules';
 import ScheduleList from './page/ScheduleList';
 import AppointmentForm from './page/AppointmentForm';
 import CustomerSupport from './page/CustomerSupport';
@@ -43,8 +43,8 @@ function App() {
           <Route path="/ecare/staff/cashier" element={<StaffProtectedRoute element={<CashierDashboard />} allowedRoles={['Cashier']} />} />
           <Route path="/ecare/staff/hr" element={<StaffProtectedRoute element={<HRDashboard />} allowedRoles={['HR']} />} />
           <Route path="/ecare/staff/booking" element={<StaffProtectedRoute element={<BookingManagerDashboard />} allowedRoles={['Booking Manager']} />} />
-          <Route path="/schedules/create" element={<CreateSchedule />} />
-          <Route path="/schedules/manage" element={<ManageSchedules />} />
+          <Route path="/schedules/create" element={<StaffProtectedRoute element={<CreateSchedule />} allowedRoles={['Booking Manager']} />} />
+          <Route path="/schedules/manage" element={<StaffProtectedRoute element={<ManageSchedules />} allowedRoles={['Booking Manager']} />} />
           <Route path="/schedules" element={<ScheduleList />} />
           <Route path="/appointments/new/:schedule_id/:doctor_id" element={<AppointmentForm />} />
           <Route path="/ecare/customer-support" element={<CustomerSupport />} />

@@ -25,7 +25,7 @@ const BookingManagerDashboard = () => {
                 </div>
 
                 <div className="dashboard-grid">
-                    <div className="dashboard-card">
+                    <div className="dashboard-card" onClick={() => navigate('/schedules/manage')} style={{ cursor: 'pointer' }}>
                         <h3>Manage Appointments</h3>
                         <p>View and edit bookings</p>
                     </div>
