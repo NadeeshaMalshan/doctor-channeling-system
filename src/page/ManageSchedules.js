@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
 import './css/ManageSchedules.css';
 
 const ManageSchedules = () => {
+    const navigate = useNavigate();
     // ... [existing state and effects] ...
 
     const [selectedDate, setSelectedDate] = useState(new Date());
@@ -174,9 +176,16 @@ const ManageSchedules = () => {
 
         <div className="manage-schedules-page">
             <ECareNavBar />
+
             <div className="manage-schedules-container">
                 <div className="manage-header">
                     <h2>Manage Doctor Schedules</h2>
+                    <button
+                        className="create-schedule-btn"
+                        onClick={() => navigate('/schedules/create')}
+                    >
+                        + Create Schedules
+                    </button>
                 </div>
 
                 <div className="manage-filters">

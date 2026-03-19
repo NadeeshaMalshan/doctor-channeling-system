@@ -1,7 +1,7 @@
 /* ===== Manage Schedules Page (Calendar Layout) ===== */
 .manage-schedules-page {
     min-height: 100vh;
-    background: #f8faff;
+    background: #cedee7;
     font-family: inherit;
 }
 
@@ -20,6 +20,30 @@
 .manage-header h2 {
     color: #1E3A5F;
     font-size: 32px;
+}
+
+.create-schedule-btn {
+    background-color: #3fce32;
+    color: rgb(255, 255, 255);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 19px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(74, 64, 228, 0.2);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    width: 250px;
+    height: 50px;
+}
+
+.create-schedule-btn:hover {
+    background-color: #1d3362;
+    transform: translateY(-2px);
 }
 
 .manage-filters {
