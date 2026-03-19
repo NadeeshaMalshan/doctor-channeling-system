@@ -48,7 +48,7 @@ const PaymentPortal = () => {
 
         const fetchDetails = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
+                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
                 setDetails(response.data);
                 setLoading(false);
             } catch (err) {
@@ -202,9 +202,9 @@ const PaymentPortal = () => {
             );
             const { hash, merchantID } = hashResponse.data;
 
-        // payhere payment obj
-        const payment = {
-            "sandbox": isSandbox,
+            // payhere payment obj
+            const payment = {
+                "sandbox": isSandbox,
                 "merchant_id": merchantID,
                 "return_url": "http://localhost:3000/ecare/payment",
                 "cancel_url": "http://localhost:3000/ecare/payment",
