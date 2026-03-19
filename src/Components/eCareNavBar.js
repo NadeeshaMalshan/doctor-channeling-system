@@ -8,7 +8,11 @@ const ECareNavBar = () => {
 
     const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
-    const patientName = user ? (user.firstName || user.name || user.fullName || user.email) : null;
+    const patientName = user
+        ? (user.first_name
+            ? `${user.first_name} ${user.second_name || ''}`.trim()
+            : user.name || user.fullName || user.email)
+        : null;
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
