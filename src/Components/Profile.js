@@ -25,7 +25,6 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
             const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/patient/${patientId}?t=${Date.now()}`);
             const data = await response.json();
 
-
             if (response.ok) {
                 setPatient(data.patient);
                 setFormData({
