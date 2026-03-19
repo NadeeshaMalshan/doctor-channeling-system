@@ -13,7 +13,6 @@ const AppointmentForm = () => {
     const [patient, setPatient] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
 
     useEffect(() => {
         const userStr = localStorage.getItem('user');
@@ -30,22 +29,21 @@ const AppointmentForm = () => {
             navigate('/login');
         }
 
-        if (!scheduleDetails) {
+        if (!location.state?.schedule) {
+            const fetchScheduleDetails = async () => {
+                try {
+                    const res = await fetch(`http://localhost:5000/api/schedules/${schedule_id}`);
+                    const data = await res.json();
+                    if (data.success) {
+                        setScheduleDetails(data.data);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch schedule details');
+                }
+            };
             fetchScheduleDetails();
         }
-    }, []);
-
-    const fetchScheduleDetails = async () => {
-        try {
-            const res = await fetch(`http://localhost:5000/api/schedules/${schedule_id}`);
-            const data = await res.json();
-            if (data.success) {
-                setScheduleDetails(data.data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch schedule details');
-        }
-    };
+    }, [navigate, schedule_id, location.state?.schedule]);
 
     const handleConfirm = async () => {
         setLoading(true);
@@ -65,10 +63,9 @@ const AppointmentForm = () => {
             const data = await res.json();
 
             if (res.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate('/schedules'); // Go back to schedules or patient dashboard
-                }, 3000);
+                navigate('/ecare/payment', {
+                    state: { appointmentScheduleId: schedule_id }
+                });
             } else {
                 setError(data.message || 'Failed to book appointment');
             }
@@ -78,18 +75,6 @@ const AppointmentForm = () => {
             setLoading(false);
         }
     };
-
-    if (success) {
-        return (
-            <div className="appointment-form-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ background: 'white', padding: '50px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
-                    <div style={{ fontSize: '60px', color: '#10b981', marginBottom: '20px' }}>✓</div>
-                    <h2 style={{ color: '#1E3A5F', marginBottom: '10px' }}>Appointment Confirmed!</h2>
-                    <p style={{ color: '#6b7280' }}>Your booking was successful. Redirecting...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="appointment-form-page">

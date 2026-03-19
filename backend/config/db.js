@@ -9,20 +9,18 @@ let sslConfig = false;
 if (process.env.DB_SSL === 'true') {
     const caPath = path.join(__dirname, '..', 'ca.pem');
     if (fs.existsSync(caPath)) {
-        // Use the CA certificate file if available (local development)
         sslConfig = {
             ca: fs.readFileSync(caPath),
             rejectUnauthorized: true
         };
     } else {
-        // On Vercel/cloud where ca.pem is not available
         sslConfig = {
             rejectUnauthorized: false
         };
     }
 }
 
-const pool = mysql.createPool({
+const poolConfig = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     user: process.env.DB_USER,
@@ -30,10 +28,41 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     ssl: sslConfig,
     enableKeepAlive: true,
-    keepAliveInitialDelay: 0,
+    keepAliveInitialDelay: 10000,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 30000,
+};
+
+const pool = mysql.createPool(poolConfig);
+
+// Silently handle idle connection drops (Aiven drops inactive connections)
+pool.on('connection', (connection) => {
+    connection.on('error', (err) => {
+        if (err.code !== 'ECONNRESET' && err.code !== 'PROTOCOL_CONNECTION_LOST') {
+            console.error('Unexpected DB connection error:', err);
+        }
+    });
 });
 
-module.exports = pool.promise();
+// Retry execute/query once on ECONNRESET so the pool can grab a fresh connection
+const promisePool = pool.promise();
+
+const retryOnReset = (method) => async (...args) => {
+    try {
+        return await promisePool[method](...args);
+    } catch (err) {
+        if (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST') {
+            console.log(`[DB] Connection reset, retrying ${method}...`);
+            return await promisePool[method](...args);
+        }
+        throw err;
+    }
+};
+
+module.exports = {
+    execute: retryOnReset('execute'),
+    query: retryOnReset('query'),
+    getConnection: () => promisePool.getConnection(),
+};

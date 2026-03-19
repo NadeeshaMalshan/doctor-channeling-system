@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
 import './css/StaffLogin.css';
 
 const StaffLogin = () => {
@@ -12,6 +13,7 @@ const StaffLogin = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
@@ -37,6 +39,11 @@ const StaffLogin = () => {
             return;
         }
 
+        if (!recaptchaToken) {
+            setError('Please complete the reCAPTCHA');
+            return;
+        }
+
         setIsLoading(true);
         setError('');
 
@@ -46,7 +53,7 @@ const StaffLogin = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData, recaptchaToken }),
             });
 
             const data = await response.json();
@@ -209,6 +216,14 @@ const StaffLogin = () => {
                                     {showPassword ? "Hide Password" : "Show Password"}
                                 </label>
                             </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                            <ReCAPTCHA
+                                sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                                onChange={(token) => setRecaptchaToken(token)}
+                                onExpired={() => setRecaptchaToken(null)}
+                            />
                         </div>
 
                         {error && <span className="error-message">{error}</span>}
