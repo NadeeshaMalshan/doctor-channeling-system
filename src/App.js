@@ -11,6 +11,7 @@ import AdminDashboard from './page/staff/AdminDashboard';
 import CashierDashboard from './page/staff/CashierDashboard';
 import HRDashboard from './page/staff/HRDashboard';
 import BookingManagerDashboard from './page/staff/BookingManagerDashboard';
+import StaffProtectedRoute from './Components/StaffProtectedRoute';
 import CreateSchedule from './page/CreateSchedule';
 import ManageSchedules from './page/ManageSchedules';
 import ScheduleList from './page/ScheduleList';
@@ -23,6 +24,7 @@ import FailedPayment from './Components/failedPayment';
 import ReportExplainer from './page/reportExplainer';
 import SmartDocSuggestion from './page/smartDocSuggestion';
 import DoctorAvailability from './page/DoctorAvailability';
+import DoctorSearchResults from './page/DoctorSearchResults';
 
 
 function App() {
@@ -37,23 +39,24 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/ecare/doc-signup" element={<DoctorSignup />} />
           <Route path="/ecare/staff-login" element={<StaffLogin />} />
-          <Route path="/ecare/staff/admin" element={<AdminDashboard />} />
-          <Route path="/ecare/staff/cashier" element={<CashierDashboard />} />
-          <Route path="/ecare/staff/hr" element={<HRDashboard />} />
-          <Route path="/ecare/staff/booking" element={<BookingManagerDashboard />} />
+          <Route path="/ecare/staff/admin" element={<StaffProtectedRoute element={<AdminDashboard />} allowedRoles={['Admin']} />} />
+          <Route path="/ecare/staff/cashier" element={<StaffProtectedRoute element={<CashierDashboard />} allowedRoles={['Cashier']} />} />
+          <Route path="/ecare/staff/hr" element={<StaffProtectedRoute element={<HRDashboard />} allowedRoles={['HR']} />} />
+          <Route path="/ecare/staff/booking" element={<StaffProtectedRoute element={<BookingManagerDashboard />} allowedRoles={['Booking Manager']} />} />
           <Route path="/schedules/create" element={<CreateSchedule />} />
           <Route path="/schedules/manage" element={<ManageSchedules />} />
           <Route path="/schedules" element={<ScheduleList />} />
           <Route path="/appointments/new/:schedule_id/:doctor_id" element={<AppointmentForm />} />
           <Route path="/ecare/customer-support" element={<CustomerSupport />} />
-          <Route path="/ecare/staff/customer-support" element={<HRCustomerSupport />} />
+          <Route path="/ecare/staff/customer-support" element={<StaffProtectedRoute element={<HRCustomerSupport />} allowedRoles={['HR', 'Admin']} />} />
           <Route path="/ecare/payment" element={<PaymentPortal />} />
           <Route path="/ecare/payment/success" element={<SuccessPayment />} />
           <Route path="/ecare/payment/failed" element={<FailedPayment />} />
           <Route path="/ecare/report-explainer" element={<ReportExplainer />} />
           <Route path="/ecare/smart-doctor" element={<SmartDocSuggestion />} />
           <Route path="/doctor-availability" element={<DoctorAvailability />} />
-          <Route path="/ecare/staff/HRCustomerSupport" element={<HRCustomerSupport />} />
+          <Route path="/ecare/doctors" element={<DoctorSearchResults />} />
+          <Route path="/ecare/staff/HRCustomerSupport" element={<StaffProtectedRoute element={<HRCustomerSupport />} allowedRoles={['HR', 'Admin']} />} />
         </Routes>
       </div>
     </>

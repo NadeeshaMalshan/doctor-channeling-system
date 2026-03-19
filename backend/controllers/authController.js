@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 
 const verifyRecaptcha = async (token) => {
     if (!token) return false;
@@ -60,12 +61,18 @@ exports.registerPatient = async (req, res) => {
 };
 
 exports.staffLogin = async (req, res) => {
-    const { username, password, role } = req.body;
+    const { username, password, role, recaptchaToken } = req.body;
 
     try {
         // Validation
         if (!username || !password || !role) {
             return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Verify reCAPTCHA
+        const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+        if (!isRecaptchaValid) {
+            return res.status(400).json({ message: 'Invalid reCAPTCHA. Please try again.' });
         }
 
         // Check if user exists
@@ -96,9 +103,16 @@ exports.staffLogin = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Return success (In a real app, you'd generate a JWT token here)
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: staff.id, username: staff.username, role: staff.role },
+            process.env.JWT_SECRET || 'fallback_dev_secret_change_in_production',
+            { expiresIn: '8h' }
+        );
+
         res.status(200).json({
             message: 'Login successful',
+            token,
             user: {
                 id: staff.id,
                 username: staff.username,

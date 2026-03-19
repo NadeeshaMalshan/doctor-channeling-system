@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import './css/paymentPortal.css';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
+import LogoHospital from '../images/LogoHospital.png';
 
 
 
 
 const PaymentPortal = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -24,7 +26,8 @@ const PaymentPortal = () => {
         console.error('Error parsing user from localStorage:', e);
     }
 
-    const appointmentScheduleId = 6;
+    // Read appointmentScheduleId from navigation state (passed from AppointmentForm)
+    const appointmentScheduleId = location.state?.appointmentScheduleId || null;
 
 
 
@@ -34,6 +37,12 @@ const PaymentPortal = () => {
         if (!patientId) {
             setLoading(false);
             setError('not_logged_in');
+            return;
+        }
+
+        if (!appointmentScheduleId) {
+            setLoading(false);
+            setError('no_appointment');
             return;
         }
 
@@ -121,6 +130,25 @@ const PaymentPortal = () => {
         );
     }
 
+    if (error === 'no_appointment') {
+        return (
+            <>
+                <ECareNavBar />
+                <div className="payment-container">
+                    <div className="payment-right">
+                        <div className="summary-box">
+                            <h2>No Appointment Found</h2>
+                            <p>Please book an appointment first before proceeding to payment.</p>
+                            <button className="login-btn" onClick={() => navigate('/ecare/doctors')}>
+                                Find a Doctor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     if (error === 'fetch_failed' || !details) {
         return (
             <>
@@ -158,6 +186,8 @@ const PaymentPortal = () => {
         const amount = paymentData.totalAmount;
         const currency = 'LKR';
 
+        const isSandbox = true; // change to false for live/production
+
         try {
             // get backend hash
             const hashResponse = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/generate-hash`,
@@ -166,14 +196,15 @@ const PaymentPortal = () => {
                     amount: amount,
                     currency: currency,
                     patientID: patientId,
-                    appointmentScheduleId: appointmentScheduleId
+                    appointmentScheduleId: appointmentScheduleId,
+                    sandbox: isSandbox
                 }
             );
             const { hash, merchantID } = hashResponse.data;
 
-            // payhere payment obj
-            const payment = {
-                "sandbox": true,
+        // payhere payment obj
+        const payment = {
+            "sandbox": isSandbox,
                 "merchant_id": merchantID,
                 "return_url": "http://localhost:3000/ecare/payment",
                 "cancel_url": "http://localhost:3000/ecare/payment",
@@ -263,9 +294,7 @@ const PaymentPortal = () => {
                 <div className="payment-left">
                     <div className="payment-left-content">
                         <div className="brand-logo-large">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 10h-2v2c0 .55-.45 1-1 1s-1-.45-1-1v-2H9c-.55 0-1-.45-1-1s.45-1 1-1h2V9c0-.55.45-1 1-1s1 .45 1 1v2h2c.55 0 1 .45 1 1s-.45 1-1 1z" />
-                            </svg>
+                            <img src={LogoHospital} alt="NCC Logo" />
                             <span>NCC eCare</span>
                         </div>
                         <h1>Safe & Secure Payment</h1>
@@ -273,20 +302,14 @@ const PaymentPortal = () => {
 
                         <div className="trust-badges">
                             <div className="badge">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-                                </svg>
+                                <span className="material-symbols-outlined">lock</span>
                                 <span>SSL Secured</span>
                             </div>
                             <div className="badge">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M11.8 2.1c-.5-.1-1 0-1.4.3L3.7 7.1c-.4.3-.7.7-.7 1.2v7.4c0 .5.3.9.7 1.2l6.7 4.7c.4.3.9.4 1.4.3.5-.1 1 0 1.4-.3l6.7-4.7c.4-.3.7-.7.7-1.2V8.3c0-.5-.3-.9-.7-1.2l-6.7-4.7c-.4-.3-.9-.4-1.4-.3zM12 4.1l6 4.2-2.3 1.6-6-4.2 2.3-1.6zm-7 5.3l6 4.2v7.1l-6-4.2V9.4zM13 20.7V13.6l6-4.2v7.1l-6 4.2z" />
-                                </svg>
+                                <span className="material-symbols-outlined">verified</span>
                                 <span>Verified Provider</span>
                             </div>
                         </div>
-
-
                     </div>
                     <div className="bg-circles">
                         <div className="circle circle-1"></div>
