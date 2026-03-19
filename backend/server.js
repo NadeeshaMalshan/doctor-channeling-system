@@ -33,8 +33,10 @@ app.use('/api/availability', availabilityRoutes);
 
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
+const patientRoutes = require('./routes/patientRoutes');
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/patient', patientRoutes);
 
 // Test Route
 app.get('/', (res) => {
