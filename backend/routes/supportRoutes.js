@@ -6,6 +6,8 @@ const supportController = require('../controllers/supportController');
 router.post('/tickets', supportController.createTicket);
 router.get('/tickets/patient/:patientId', supportController.getTicketsByPatient);
 router.delete('/tickets/:id', supportController.deleteTicket);
+router.get('/tickets/patient/:patientId/updates', supportController.checkUnseenUpdates);
+router.put('/tickets/patient/:patientId/seen', supportController.markTicketsAsSeen);
 
 // HR Staff routes
 router.get('/tickets', supportController.getAllTickets);

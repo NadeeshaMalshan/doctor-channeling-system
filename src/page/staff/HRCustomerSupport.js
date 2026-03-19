@@ -15,6 +15,8 @@ const HRCustomerSupport = () => {
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('Pending');
     const [notification, setNotification] = useState(null);
+    const [replyModal, setReplyModal] = useState({ show: false, ticketId: null, action: null });
+    const [replyText, setReplyText] = useState('');
 
     const showNotification = useCallback((message, type = 'success') => {
         setNotification({ message, type });
@@ -57,11 +59,12 @@ const HRCustomerSupport = () => {
     const displayName = useMemo(() => getFullName(user), [user]);
 
     const summary = useMemo(() => {
-        const solved = tickets.filter(t => t.status === 'Resolved' || t.status === 'Approved').length;
+        const solved = tickets.filter(t => t.status === 'Resolved').length;
         const pending = tickets.filter(t => t.status === 'Pending').length;
         const raised = tickets.length;
-        const deleted = tickets.filter(t => t.is_deleted).length;
-        return { solved, pending, raised, deleted };
+        const deleted = tickets.filter(t => t.status === 'Rejected').length; // Kept 'deleted' var name but use Rejected tickets as equivalent or update label. Actually let's count deleted properly if they exist. Wait, tickets.filter(t => t.is_deleted).length was used previously.
+        const deletedCount = tickets.filter(t => t.is_deleted).length;
+        return { solved, pending, raised, deleted: deletedCount };
     }, [tickets]);
 
     const filteredTickets = useMemo(() => {
@@ -86,15 +89,27 @@ const HRCustomerSupport = () => {
         }
     };
 
-    const handleUpdateStatus = async (ticketId, newStatus) => {
+    const submitStatusUpdate = async () => {
+        const { ticketId, action } = replyModal;
+        if (!replyText.trim() && action === 'Rejected') {
+            showNotification('Please provide a reason for rejection', 'error');
+            return;
+        }
+        if (!replyText.trim() && action === 'Resolved') {
+            showNotification('Please provide a solution', 'error');
+            return;
+        }
+
         try {
             const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ status: action, hr_reply: replyText }),
             });
             if (response.ok) {
-                showNotification(`Ticket updated to ${newStatus}!`);
+                showNotification(`Ticket updated to ${action}!`);
+                setReplyModal({ show: false, ticketId: null, action: null });
+                setReplyText('');
                 fetchTickets();
             } else {
                 const data = await response.json();
@@ -103,6 +118,11 @@ const HRCustomerSupport = () => {
         } catch (error) {
             showNotification('Failed to connect to the server', 'error');
         }
+    };
+
+    const handleUpdateStatus = (ticketId, newStatus) => {
+        setReplyModal({ show: true, ticketId, action: newStatus });
+        setReplyText('');
     };
 
     const formatDate = (dateString) => {
@@ -160,7 +180,7 @@ const HRCustomerSupport = () => {
                 <div className="cs-hr-filters">
                     <button className={`cs-filter-btn ${statusFilter === 'Pending' ? 'active' : ''}`} onClick={() => setStatusFilter('Pending')}>Pending</button>
                     <button className={`cs-filter-btn ${statusFilter === 'Rejected' ? 'active' : ''}`} onClick={() => setStatusFilter('Rejected')}>Rejected</button>
-                    <button className={`cs-filter-btn ${statusFilter === 'Approved' ? 'active' : ''}`} onClick={() => setStatusFilter('Approved')}>Approved</button>
+                    <button className={`cs-filter-btn ${statusFilter === 'Resolved' ? 'active' : ''}`} onClick={() => setStatusFilter('Resolved')}>Resolved</button>
                 </div>
 
                 <div className="cs-topic-header" style={{ borderBottom: 'none' }}>
@@ -184,15 +204,19 @@ const HRCustomerSupport = () => {
                                     </div>
                                 </div>
                                 <div className="cs-ticket-actions">
-                                    <span className={`cs-status-badge ${ticket.status === 'Approved' || ticket.status === 'Resolved' ? 'cs-status-resolved' : ticket.status === 'Rejected' ? 'cs-status-deleted' : 'cs-status-pending'}`}>
+                                    <span className={`cs-status-badge ${ticket.status === 'Resolved' ? 'cs-status-resolved' : ticket.status === 'Rejected' ? 'cs-status-deleted' : 'cs-status-pending'}`}>
                                         {ticket.status}
                                     </span>
-                                    <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Approved')} title="Approve" style={{ color: '#2e7d32' }}>
-                                        <span className="material-symbols-outlined">check_circle</span>
-                                    </button>
-                                    <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Rejected')} title="Reject" style={{ color: '#c2185b' }}>
-                                        <span className="material-symbols-outlined">cancel</span>
-                                    </button>
+                                    {ticket.status === 'Pending' && (
+                                        <>
+                                            <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Resolved')} title="Resolve" style={{ color: '#2e7d32' }}>
+                                                <span className="material-symbols-outlined">check_circle</span>
+                                            </button>
+                                            <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Rejected')} title="Reject" style={{ color: '#c2185b' }}>
+                                                <span className="material-symbols-outlined">cancel</span>
+                                            </button>
+                                        </>
+                                    )}
                                     <button className="cs-delete-btn" onClick={() => handleDeleteTicket(ticket.id)} title="Delete">
                                         <span className="material-symbols-outlined">delete</span>
                                     </button>
@@ -202,6 +226,35 @@ const HRCustomerSupport = () => {
                     )}
                 </div>
             </main>
+
+            {replyModal.show && (
+                <div className="cs-modal-overlay" onClick={() => setReplyModal({ show: false, ticketId: null, action: null })}>
+                    <div className="cs-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="cs-modal-header">
+                            <h2>{replyModal.action === 'Resolved' ? 'Provide Solution' : 'Reason for Rejection'}</h2>
+                            <button className="cs-modal-close" onClick={() => setReplyModal({ show: false, ticketId: null, action: null })}>
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="cs-modal-body">
+                            <div className="cs-form-group">
+                                <label>{replyModal.action === 'Resolved' ? 'Solution' : 'Reason'}</label>
+                                <textarea 
+                                    value={replyText} 
+                                    onChange={(e) => setReplyText(e.target.value)} 
+                                    rows={6} 
+                                    required 
+                                    placeholder={`Enter your ${replyModal.action === 'Resolved' ? 'solution' : 'reason'} here...`}
+                                />
+                            </div>
+                            <div className="cs-modal-footer">
+                                <button type="button" className="cs-btn-cancel" onClick={() => setReplyModal({ show: false, ticketId: null, action: null })}>Cancel</button>
+                                <button type="button" className="cs-btn-submit" onClick={submitStatusUpdate}>Submit & {replyModal.action}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
