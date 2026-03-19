@@ -62,8 +62,8 @@ const CustomerSupport = () => {
     const getFullName = (userData) => {
         if (!userData) return "User";
         if (userData.name) return userData.name;
-        const first = userData.firstName || "";
-        const last = userData.lastName || "";
+        const first = userData.first_name || userData.firstName || "";
+        const last = userData.second_name || userData.lastName || "";
         const full = `${first} ${last}`.trim();
         return full || userData.username || "User";
     };
