@@ -54,10 +54,19 @@ const Login = () => {
                 localStorage.setItem('userType', data.userType);
 
                 if (data.userType === 'doctor') {
-                    // Give DoctorAvailability the expected items
-                    localStorage.setItem('doctorInfo', JSON.stringify(data.user));
-                    localStorage.setItem('token', 'doctor-token'); // Set dummy token or actual token if available
-                    navigate('/doctor-availability');
+                    if (data.user.status === 'pending') {
+                        navigate('/doctorpending');
+                    } else if (data.user.status === 'rejected') {
+                        alert('Rejected by admin');
+                        setError('Your account has been rejected by admin. Please contact support.');
+                    } else if (data.user.status === 'canceled') {
+                        setError('Your account has been canceled. Please contact support.');
+                    } else {
+                        // Give DoctorAvailability the expected items
+                        localStorage.setItem('doctorInfo', JSON.stringify(data.user));
+                        localStorage.setItem('token', 'doctor-token'); // Set dummy token or actual token if available
+                        navigate('/doctor-availability');
+                    }
                 } else {
                     navigate('/eCare');
                 }

@@ -233,7 +233,8 @@ exports.login = async (req, res) => {
                     id: doctor.id,
                     name: doctor.name,
                     email: doctor.email,
-                    specialization: doctor.specialization
+                    specialization: doctor.specialization,
+                    status: doctor.status
                 }
             });
         }

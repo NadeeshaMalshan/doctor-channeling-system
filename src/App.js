@@ -25,6 +25,7 @@ import ReportExplainer from './page/reportExplainer';
 import SmartDocSuggestion from './page/smartDocSuggestion';
 import DoctorAvailability from './page/DoctorAvailability';
 import DoctorSearchResults from './page/DoctorSearchResults';
+import DoctorPending from './page/staff/DoctorPending';
 
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
           <Route path="/doctor-availability" element={<DoctorAvailability />} />
           <Route path="/ecare/doctors" element={<DoctorSearchResults />} />
           <Route path="/ecare/staff/HRCustomerSupport" element={<StaffProtectedRoute element={<HRCustomerSupport />} allowedRoles={['HR', 'Admin']} />} />
+          <Route path="/doctorpending" element={<DoctorPending />} />
         </Routes>
       </div>
     </>

@@ -110,7 +110,7 @@ const DoctorSignup = () => {
 
             if (response.ok) {
                 alert('Doctor Account created successfully!');
-                navigate('/login');
+                navigate('/doctorpending');
             } else {
                 setErrors(prev => ({
                     ...prev,
