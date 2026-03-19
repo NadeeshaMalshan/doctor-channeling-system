@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FaUserMd, FaUsers, FaUserTie, FaStethoscope, FaClipboardList } from 'react-icons/fa';
+import LogoHospital from '../../images/LogoHospital.png';
+import '../css/CashierDashboard.css';
 import '../css/StaffDashboard.css';
 import '../css/CustomerSupport.css';
 
@@ -35,6 +38,9 @@ const AdminDashboard = () => {
     const [ticketTitle, setTicketTitle] = useState('');
     const [ticketDescription, setTicketDescription] = useState('');
     const [creating, setCreating] = useState(false);
+
+    // Registration Requests State
+    const [activeSection, setActiveSection] = useState("dashboard");
 
     const [requests, setRequests] = useState([
         { id: 1, name: 'Dr. John Doe', email: 'john@example.com', specialization: 'Cardiology', slmc: 'SLMC/12345' },
@@ -123,6 +129,12 @@ const AdminDashboard = () => {
             fetchStaff();
         }
         if (selectedCategory === 'user') {
+            fetchUsers();
+        }
+
+        if (!selectedCategory) {
+            fetchDoctors();
+            fetchStaff();
             fetchUsers();
         }
     }, [selectedCategory, API_URL]);
@@ -324,89 +336,99 @@ const AdminDashboard = () => {
                     <span>←</span> Back to Dashboard
                 </button>
                 <div className="management-section" style={{ padding: '2rem', border: '1px solid #ced4da', borderRadius: '10px', backgroundColor: '#fff' }}>
-                    <h2 style={{ color: '#1a3464ff', marginBottom: '2rem', marginTop: 0 }}>{title}</h2>
+                    <h2 style={{ color: '#1E3A5F', marginBottom: '2rem', marginTop: 0 }}>{title}</h2>
 
                     {selectedCategory === 'staff' && (
-                        <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }}>
-                            <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>{editingStaffId ? 'Update Staff Member' : 'Add New Staff Member'}</h3>
-                            <form onSubmit={handleAddOrUpdateStaff} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <input type="text" name="name" placeholder="Name" value={staffFormData.name} onChange={handleStaffFormChange} style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.name ? '1px solid #dc3545' : '1px solid #ccc' }} />
-                                <input type="email" name="email" placeholder="Email" value={staffFormData.email} onChange={handleStaffFormChange} style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.email ? '1px solid #dc3545' : '1px solid #ccc' }} />
-                                <input type="text" name="phone" placeholder="Phone" value={staffFormData.phone} onChange={handleStaffFormChange} style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.phone ? '1px solid #dc3545' : '1px solid #ccc' }} />
-                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <div style={{ marginBottom: '2.5rem', padding: '2rem', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+                            <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: '#1E3A5F', fontSize: '1.4rem' }}>{editingStaffId ? 'Update Staff Member' : 'Add New Staff Member'}</h3>
+                            <form onSubmit={handleAddOrUpdateStaff} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <input type="text" name="name" placeholder="Name" autoComplete="off" value={staffFormData.name} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.name ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.name ? '#dc3545' : '#d1d5db'} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <input type="email" name="email" placeholder="Email" autoComplete="off" value={staffFormData.email} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.email ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.email ? '#dc3545' : '#d1d5db'} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <input type="text" name="phone" placeholder="Phone" autoComplete="off" value={staffFormData.phone} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.phone ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.phone ? '#dc3545' : '#d1d5db'} />
+                                </div>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
                                     <input
                                         type={showStaffPassword ? "text" : "password"}
                                         name="password"
                                         placeholder="Password"
+                                        autoComplete="new-password"
                                         value={staffFormData.password}
                                         onChange={handleStaffFormChange}
-                                        style={{ padding: '0.6rem', borderRadius: '4px', border: formErrors.password ? '1px solid #dc3545' : '1px solid #ccc', width: '100%', paddingRight: '3.5rem' }}
+                                        style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.password ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', paddingRight: '4rem' }}
+                                        onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.password ? '#dc3545' : '#d1d5db'}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowStaffPassword(!showStaffPassword)}
-                                        style={{ position: 'absolute', right: '5px', background: 'none', border: 'none', color: '#4CA1AF', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '600' }}
+                                        style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#0ea5e9', fontSize: '0.9rem', cursor: 'pointer', fontWeight: 'bold' }}
                                     >
                                         {showStaffPassword ? 'Hide' : 'Show'}
                                     </button>
                                 </div>
-                                <div>
+                                <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '12px' }}>
                                     <select
                                         name="role"
                                         value={staffFormData.role}
                                         onChange={handleStaffFormChange}
                                         style={{
                                             width: '100%',
-                                            padding: '0.6rem 1rem',
+                                            padding: '12px 15px',
                                             borderRadius: '8px',
-                                            border: formErrors.role ? '2px solid #dc3545' : '1px solid #ced4da',
+                                            border: formErrors.role ? '1px solid #dc3545' : '1px solid #d1d5db',
                                             backgroundColor: 'white',
-                                            transition: 'all 0.3s ease',
-                                            outline: 'none'
+                                            transition: '0.3s ease',
+                                            outline: 'none',
+                                            color: staffFormData.role ? '#374151' : '#9ca3af'
                                         }}
-                                        onFocus={(e) => e.target.style.border = '2px solid #4CA1AF'}
-                                        onBlur={(e) => e.target.style.border = formErrors.role ? '2px solid #dc3545' : '1px solid #ced4da'}
+                                        onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                                        onBlur={(e) => e.target.style.borderColor = formErrors.role ? '#dc3545' : '#d1d5db'}
                                     >
-                                        <option value="" disabled style={{ color: '#999', padding: '10px' }}>Select Role</option>
-                                        <option value="Admin" style={{ padding: '10px' }}>Admin</option>
-                                        <option value="Cashier" style={{ padding: '10px' }}>Cashier</option>
-                                        <option value="Booking Manager" style={{ padding: '10px' }}>Booking Manager</option>
-                                        <option value="HR" style={{ padding: '10px' }}>HR</option>
+                                        <option value="" disabled>Select Role</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Cashier">Cashier</option>
+                                        <option value="Booking Manager">Booking Manager</option>
+                                        <option value="HR">HR</option>
                                     </select>
-                                    {formErrors.role && <p style={{ color: '#dc3545', fontSize: '0.8rem', margin: '0.2rem 0 0 0' }}>Role is required</p>}
+                                    {formErrors.role && <p style={{ color: '#dc3545', fontSize: '0.8rem', margin: '4px 0 0 4px' }}>Role is required</p>}
                                 </div>
-                                <div>
+                                <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '12px' }}>
                                     <select
                                         name="account_status"
                                         value={staffFormData.account_status}
                                         onChange={handleStaffFormChange}
                                         style={{
                                             width: '100%',
-                                            padding: '0.6rem 1rem',
+                                            padding: '12px 15px',
                                             borderRadius: '8px',
-                                            border: '1px solid #ced4da',
+                                            border: '1px solid #d1d5db',
                                             backgroundColor: 'white',
-                                            transition: 'all 0.3s ease',
-                                            outline: 'none'
+                                            transition: '0.3s ease',
+                                            outline: 'none',
+                                            color: '#374151'
                                         }}
-                                        onFocus={(e) => e.target.style.border = '2px solid #4CA1AF'}
-                                        onBlur={(e) => e.target.style.border = '1px solid #ced4da'}
+                                        onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                                        onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                                     >
                                         <option value="Active">Active</option>
                                         <option value="Inactive">Inactive</option>
                                     </select>
                                 </div>
-                                <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem' }}>
+                                <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                                     <button
                                         type="submit"
-                                        style={{ flex: 1, background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.7rem', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease' }}
-                                        onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                        onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                        style={{ flex: 1, backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontSize: '1.05rem', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 4px 6px rgba(14,165,233,0.3)' }}
+                                        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#0284c7'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)'; }}
                                     >
                                         {editingStaffId ? 'Update Staff' : 'Add Staff'}
                                     </button>
                                     {editingStaffId && (
-                                        <button type="button" onClick={() => { setEditingStaffId(null); setStaffFormData({ name: '', email: '', phone: '', role: '', password: '' }); setFormErrors({}); setShowStaffPassword(false); }} style={{ backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '0.7rem', borderRadius: '4px', cursor: 'pointer' }}>
+                                        <button type="button" onClick={() => { setEditingStaffId(null); setStaffFormData({ name: '', email: '', phone: '', role: '', password: '' }); setFormErrors({}); setShowStaffPassword(false); }} style={{ backgroundColor: '#6b7280', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s ease' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}>
                                             Cancel
                                         </button>
                                     )}
@@ -415,120 +437,111 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowX: 'auto' }}>
                         {currentList.length > 0 ? (
-                            currentList.map(item => (
-                                <div key={item.id} style={{ border: '1px solid #eee', padding: '1.2rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div>
-                                            <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{item.name}</h4>
-                                            <p style={{ margin: '0.2rem 0', color: '#666', fontSize: '0.9rem' }}>{item.role}</p>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            {selectedCategory === 'staff' ? (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleEditStaff(item)}
-                                                        style={{ background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', transition: 'all 0.3s ease' }}
-                                                        onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                                        onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteRecord(item.id)}
-                                                        style={{
-                                                            backgroundColor: '#ef4444',
-                                                            color: 'white',
-                                                            border: 'none',
-                                                            padding: '0.5rem 1rem',
-                                                            borderRadius: '8px',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.3s ease',
-                                                            fontWeight: '500',
-                                                            boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
-                                                        }}
-                                                        onMouseOver={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#dc2626';
-                                                            e.currentTarget.style.transform = 'translateY(-1px)';
-                                                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
-                                                        }}
-                                                        onMouseOut={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ef4444';
-                                                            e.currentTarget.style.transform = 'translateY(0)';
-                                                            e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
-                                                        }}
-                                                        onMouseDown={(e) => e.currentTarget.style.backgroundColor = '#991b1b'}
-                                                        onMouseUp={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleToggleInfo(item.id)}
-                                                        style={{ background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', transition: 'all 0.3s ease' }}
-                                                        onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                                        onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                                                    >
-                                                        {expandedId === item.id ? 'Hide Details' : 'View Info'}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteRecord(item.id)}
-                                                        style={{
-                                                            backgroundColor: '#ef4444',
-                                                            color: 'white',
-                                                            border: 'none',
-                                                            padding: '0.5rem 1rem',
-                                                            borderRadius: '8px',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.3s ease',
-                                                            fontWeight: '500',
-                                                            boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
-                                                        }}
-                                                        onMouseOver={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#dc2626';
-                                                            e.currentTarget.style.transform = 'translateY(-1px)';
-                                                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
-                                                        }}
-                                                        onMouseOut={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ef4444';
-                                                            e.currentTarget.style.transform = 'translateY(0)';
-                                                            e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
-                                                        }}
-                                                        onMouseDown={(e) => e.currentTarget.style.backgroundColor = '#991b1b'}
-                                                        onMouseUp={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                    {expandedId === item.id && (
-                                        <div style={{ marginTop: '1.2rem', padding: '1.2rem', backgroundColor: '#f8f9fa', borderRadius: '6px', fontSize: '0.95rem', borderLeft: '4px solid #0b154eff' }}>
-                                            <p style={{ margin: '0.4rem 0' }}><strong>Name:</strong> {item.name}</p>
-                                            {selectedCategory === 'doctor' ? (
-                                                <>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>Specialization:</strong> {item.specialization}</p>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>SLMC Number:</strong> {item.slmc_no}</p>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>NIC:</strong> {item.nic}</p>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>Hospital:</strong> {item.hospital || 'Not Specified'}</p>
-                                                </>
-                                            ) : selectedCategory === 'user' ? (
-                                                <>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {item.email}</p>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>Phone:</strong> {item.phone}</p>
-                                                    <p style={{ margin: '0.4rem 0' }}><strong>NIC:</strong> {item.nic}</p>
-                                                </>
-                                            ) : null}
-                                        </div>
-                                    )}
-                                </div>
-                            ))
+                            selectedCategory === 'staff' ? (
+                                <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                                    <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #e5e7eb' }}>
+                                        <tr>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Username</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Email</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Role</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Status</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600', textAlign: 'center' }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentList.map((item, index) => (
+                                            <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: 'white', transition: 'background-color 0.2s ease' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f0f9ff'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}>
+                                                <td style={{ padding: '16px 20px', fontWeight: '600', color: '#1E3A5F' }}>{item.name}</td>
+                                                <td style={{ padding: '16px 20px', color: '#6b7280' }}>{item.email}</td>
+                                                <td style={{ padding: '16px 20px' }}>
+                                                    <span style={{ padding: '6px 12px', borderRadius: '20px', backgroundColor: '#e0f2fe', color: '#0284c7', fontSize: '0.85rem', fontWeight: 'bold' }}>{item.role}</span>
+                                                </td>
+                                                <td style={{ padding: '16px 20px' }}>
+                                                    <span style={{ padding: '6px 12px', borderRadius: '20px', backgroundColor: item.account_status === 'Active' ? '#dcfce7' : '#fee2e2', color: item.account_status === 'Active' ? '#166534' : '#991b1b', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                                        {item.account_status || 'Active'}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '16px 20px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                                    <button onClick={() => handleEditStaff(item)} style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', fontWeight: '500', boxShadow: '0 2px 4px rgba(14, 165, 233, 0.2)' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#0284c7'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)' }}>Edit</button>
+                                                    <button onClick={() => handleDeleteRecord(item.id)} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', fontWeight: '500', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.transform = 'translateY(0)' }}>Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : selectedCategory === 'user' ? (
+                                <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                                    <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #e5e7eb' }}>
+                                        <tr>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Username</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Email</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Phone</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>NIC</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600', textAlign: 'center' }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentList.map((item, index) => (
+                                            <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: 'white', transition: 'background-color 0.2s ease' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f0f9ff'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}>
+                                                <td style={{ padding: '16px 20px', fontWeight: '600', color: '#1E3A5F' }}>{item.name}</td>
+                                                <td style={{ padding: '16px 20px', color: '#6b7280' }}>{item.email}</td>
+                                                <td style={{ padding: '16px 20px', color: '#6b7280' }}>{item.phone}</td>
+                                                <td style={{ padding: '16px 20px', color: '#6b7280' }}>{item.nic}</td>
+                                                <td style={{ padding: '16px 20px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                                    <button onClick={() => handleDeleteRecord(item.id)} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', fontWeight: '500', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.transform = 'translateY(0)' }}>Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : selectedCategory === 'doctor' ? (
+                                <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                                    <thead style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #e5e7eb' }}>
+                                        <tr>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Full Name</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Specialization</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>SLMC No</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Email</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Phone</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Hospital</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600', textAlign: 'center' }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentList.map((item, index) => (
+                                            <React.Fragment key={item.id}>
+                                                <tr style={{ borderBottom: expandedId === item.id ? 'none' : '1px solid #f3f4f6', backgroundColor: 'white', transition: 'background-color 0.2s ease', cursor: 'pointer' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f0f9ff'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'} onClick={() => handleToggleInfo(item.id)}>
+                                                    <td style={{ padding: '16px 20px', fontWeight: '600', color: '#1E3A5F' }}>{item.name}</td>
+                                                    <td style={{ padding: '16px 20px' }}>
+                                                        <span style={{ padding: '6px 12px', borderRadius: '20px', backgroundColor: '#e0f2fe', color: '#0284c7', fontSize: '0.85rem', fontWeight: 'bold' }}>{item.specialization}</span>
+                                                    </td>
+                                                    <td style={{ padding: '16px 20px', color: '#6b7280', fontWeight: '500' }}>{item.slmc_no}</td>
+                                                    <td style={{ padding: '16px 20px', color: '#6b7280' }}>{item.email}</td>
+                                                    <td style={{ padding: '16px 20px', color: '#6b7280' }}>{item.phone}</td>
+                                                    <td style={{ padding: '16px 20px', color: '#6b7280' }}>{item.hospital || 'Not Specified'}</td>
+                                                    <td style={{ padding: '16px 20px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteRecord(item.id); }} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', fontWeight: '500', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.transform = 'translateY(0)' }}>Delete</button>
+                                                    </td>
+                                                </tr>
+                                                {expandedId === item.id && (
+                                                    <tr style={{ borderBottom: '1px solid #f3f4f6', backgroundColor: '#f8f9fa' }}>
+                                                        <td colSpan="6" style={{ padding: '16px 20px' }}>
+                                                            <div style={{ padding: '12px', borderLeft: '4px solid #0ea5e9', display: 'flex', gap: '3rem' }}>
+                                                                <div>
+                                                                    <p style={{ margin: '0.4rem 0', color: '#6b7280' }}><strong>SLMC Number:</strong> {item.slmc_no}</p>
+                                                                    <p style={{ margin: '0.4rem 0', color: '#6b7280' }}><strong>NIC Number:</strong> {item.nic}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : null
                         ) : (
                             <p>No records found.</p>
                         )}
@@ -540,77 +553,169 @@ const AdminDashboard = () => {
 
     return (
         <div className="staff-dashboard">
-            <header className="dashboard-header">
-                <h1>
-                    <span>🛡️</span> Admin dashboard
-                </h1>
-                <button className="logout-btn" onClick={handleLogout}>Logout</button>
-            </header>
+            <nav className="cashier-navbar">
+                <div className="cashier-navbar-brand">
+                    <div className="cashier-logo-icon">
+                        <img src={LogoHospital} alt="NCC Logo" />
+                    </div>
+                    <div className="cashier-brand-text">
+                        <span className="brand-name">NCC eCare</span>
+                        <span className="brand-tagline">Admin Portal</span>
+                    </div>
+                </div>
+
+                <div className="cashier-navbar-actions">
+                    <div className="cashier-staff-badge">
+                        <span className="material-symbols-outlined">admin_panel_settings</span>
+                        <span>Role: <strong>Admin</strong></span>
+                    </div>
+
+                    <button
+                        className="cashier-nav-btn btn-logout"
+                        onClick={handleLogout}
+                    >
+                        <span className="material-symbols-outlined">logout</span>
+                        Logout
+                    </button>
+                </div>
+            </nav>
 
             <main className="dashboard-content">
                 {!selectedCategory ? (
-                    <>
-                        <div className="dashboard-welcome-card">
-                            <h2>Welcome, Administrator</h2>
-                            <p>Manage system users and view system-wide reports.</p>
-                        </div>
+                    activeSection === "dashboard" ? (
+                        <>
+                            <div className="cashier-hero" style={{ padding: '24px 32px' }}>
+                                <div className="cashier-hero-content">
+                                    <h1 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Welcome, Administrator</h1>
+                                    <p>Manage system users.</p>
+                                </div>
+                                <div className="bg-circles">
+                                    <div className="circle circle-1"></div>
+                                    <div className="circle circle-2"></div>
+                                </div>
+                            </div>
 
-                        <div className="registration-requests-section" style={{
-                            marginTop: '2rem',
-                            padding: '1.5rem',
-                            border: '1px solid #ced4da',
-                            borderRadius: '10px',
-                            backgroundColor: '#fff'
-                        }}>
-                            <h2 style={{ marginBottom: '1.5rem', color: '#1a3464ff', textAlign: 'left' }}>Doctor Registration Requests</h2>
+                            <style>{`
+                                .dashboard-grid-2x2 {
+                                    margin-top: 2rem;
+                                    display: grid;
+                                    grid-template-columns: repeat(2, 1fr);
+                                    gap: 25px;
+                                    max-width: 1250px;
+                                    margin-left: auto;
+                                    margin-right: auto;
+                                }
+                                @media (max-width: 768px) {
+                                    .dashboard-grid-2x2 {
+                                        grid-template-columns: 1fr;
+                                    }
+                                }
+                                .dashboard-card-2x2 {
+                                    cursor: pointer;
+                                    background: white;
+                                    border-radius: 16px;
+                                    padding: 25px;
+                                    height: 180px;
+                                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                                    transition: 0.3s ease;
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    justify-content: center;
+                                    text-align: center;
+                                    border: none;
+                                }
+                                .dashboard-card-2x2:hover {
+                                    transform: translateY(-5px);
+                                    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+                                }
+                            `}</style>
+                            <div className="dashboard-grid-2x2">
+                                <div className="dashboard-card-2x2" onClick={() => handleCategoryClick('staff')}>
+                                    <FaUserTie size={40} color="#1E3A5F" style={{ marginBottom: '16px' }} />
+                                    <h3 style={{ margin: '0 0 10px 0', color: '#1E3A5F', fontSize: '20px', fontWeight: 'bold' }}>Staff Management</h3>
+                                    <p style={{ margin: 0, color: '#6b7280', fontSize: '15px' }}>Total Staff: {staff.length}</p>
+                                </div>
+                                <div className="dashboard-card-2x2" onClick={() => handleCategoryClick('user')}>
+                                    <FaUsers size={40} color="#1E3A5F" style={{ marginBottom: '16px' }} />
+                                    <h3 style={{ margin: '0 0 10px 0', color: '#1E3A5F', fontSize: '20px', fontWeight: 'bold' }}>User Management</h3>
+                                    <p style={{ margin: 0, color: '#6b7280', fontSize: '15px' }}>Total Users: {users.length}</p>
+                                </div>
+                                <div className="dashboard-card-2x2" onClick={() => setActiveSection("doctorRequests")}>
+                                    <FaClipboardList size={40} color="#1E3A5F" style={{ marginBottom: '16px' }} />
+                                    <h3 style={{ margin: '0 0 10px 0', color: '#1E3A5F', fontSize: '20px', fontWeight: 'bold' }}>Doctor Registration Requests</h3>
+                                    <p style={{ margin: 0, color: '#6b7280', fontSize: '15px' }}>Pending Requests: {requests.length}</p>
+                                </div>
+                                <div className="dashboard-card-2x2" onClick={() => handleCategoryClick('doctor')}>
+                                    <FaStethoscope size={40} color="#1E3A5F" style={{ marginBottom: '16px' }} />
+                                    <h3 style={{ margin: '0 0 10px 0', color: '#1E3A5F', fontSize: '20px', fontWeight: 'bold' }}>Doctor Management</h3>
+                                    <p style={{ margin: 0, color: '#6b7280', fontSize: '15px' }}>Total Doctors: {doctors.length}</p>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="registration-requests-section" style={{ marginTop: '2rem' }}>
+                            <button
+                                onClick={() => setActiveSection("dashboard")}
+                                style={{
+                                    padding: '0.6rem 1.2rem',
+                                    cursor: 'pointer',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ccc',
+                                    backgroundColor: '#f8f9fa',
+                                    marginBottom: '2rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                <span>←</span> Back to Dashboard
+                            </button>
+                            <h2 style={{ marginBottom: '1.5rem', color: '#1E3A5F', textAlign: 'left' }}>Doctor Registration Requests</h2>
                             <div className="requests-grid" style={{
                                 display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                                gap: '1.5rem',
-                                justifyContent: 'start'
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                                gap: '20px',
+                                padding: '20px 0'
                             }}>
                                 {requests.length > 0 ? (
                                     requests.map(request => (
-                                        <div key={request.id} className="dashboard-card" style={{ padding: '1.5rem', border: '1px solid #eee', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                                            <h4 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>{request.name}</h4>
-                                            <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}><strong>Email:</strong> {request.email}</p>
-                                            <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}><strong>Specialization:</strong> {request.specialization}</p>
-                                            <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}><strong>SLMC Number:</strong> {request.slmc}</p>
-                                            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                                        <div key={request.id} className="dashboard-card" style={{
+                                            background: 'white',
+                                            borderRadius: '16px',
+                                            padding: '24px',
+                                            boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                                            transition: '0.3s ease',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            textAlign: 'center',
+                                            border: '1px solid #f3f4f6'
+                                        }}
+                                            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.05)'; }}>
+                                            <FaStethoscope size={40} color="#1E3A5F" style={{ marginBottom: '12px' }} />
+                                            <h4 style={{ margin: '0 0 1rem 0', color: '#1E3A5F', fontSize: '1.2rem', fontWeight: 'bold' }}>{request.name}</h4>
+                                            <div style={{ backgroundColor: '#f8f9fa', padding: '12px', borderRadius: '8px', width: '100%', textAlign: 'left', marginBottom: '1rem' }}>
+                                                <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>Email:</strong> {request.email}</p>
+                                                <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>Specialty:</strong> {request.specialization}</p>
+                                                <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>SLMC No:</strong> {request.slmc}</p>
+                                            </div>
+                                            <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', width: '100%' }}>
                                                 <button
                                                     onClick={() => handleApprove(request.id)}
-                                                    style={{ background: 'linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', flex: 1, fontWeight: '500', transition: 'all 0.3s ease' }}
-                                                    onMouseOver={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                                    onMouseOut={(e) => { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                                    style={{ flex: 1, backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 4px rgba(14,165,233,0.2)' }}
+                                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#0284c7'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)'; }}
                                                 >
                                                     Approve
                                                 </button>
                                                 <button
                                                     onClick={() => handleReject(request.id)}
-                                                    style={{
-                                                        backgroundColor: '#ef4444',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        padding: '0.5rem 1rem',
-                                                        borderRadius: '8px',
-                                                        cursor: 'pointer',
-                                                        flex: 1,
-                                                        transition: 'all 0.3s ease',
-                                                        fontWeight: '500',
-                                                        boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
-                                                    }}
-                                                    onMouseOver={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#dc2626';
-                                                        e.currentTarget.style.transform = 'translateY(-1px)';
-                                                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
-                                                    }}
-                                                    onMouseOut={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#ef4444';
-                                                        e.currentTarget.style.transform = 'translateY(0)';
-                                                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
-                                                    }}
-                                                    onMouseDown={(e) => e.currentTarget.style.backgroundColor = '#991b1b'}
-                                                    onMouseUp={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                                                    style={{ flex: 1, backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 4px rgba(239,68,68,0.2)' }}
+                                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.transform = 'translateY(0)'; }}
                                                 >
                                                     Reject
                                                 </button>
@@ -622,78 +727,16 @@ const AdminDashboard = () => {
                                 )}
                             </div>
                         </div>
-
-                        <div className="dashboard-grid" style={{ marginTop: '2rem' }}>
-                            <div className="dashboard-card" onClick={() => handleCategoryClick('staff')} style={{ cursor: 'pointer' }}>
-                                <h3>Staff Management</h3>
-                                <p>Add, edit, or remove staff accounts</p>
-                            </div>
-                            <div className="dashboard-card" onClick={() => handleCategoryClick('user')} style={{ cursor: 'pointer' }}>
-                                <h3>User Management</h3>
-                                <p>Add, edit, or remove users accounts</p>
-                            </div>
-                            <div className="dashboard-card" onClick={() => handleCategoryClick('doctor')} style={{ cursor: 'pointer' }}>
-                                <h3>Doctor Management</h3>
-                                <p>Add, edit, or remove doctor accounts</p>
-                            </div>
-                        </div>
-                    </>
+                    )
                 ) : (
                     renderList()
                 )}
             </main>
 
-            <div className="cs-sticky-support">
-                <div className="cs-tooltip">
-                    <h5>Customer Support</h5>
-                    <p>How can we help you today? Click or create a ticket.</p>
-                </div>
-                <button className="cs-sticky-btn" onClick={() => setShowSupportModal(true)}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>support_agent</span>
-                </button>
-            </div>
-
-            {showSupportModal && (
-                <div className="cs-modal-overlay" onClick={() => setShowSupportModal(false)}>
-                    <div className="cs-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="cs-modal-header">
-                            <h2>Create Support Ticket</h2>
-                            <button className="cs-modal-close" onClick={() => setShowSupportModal(false)}>
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
-                        </div>
-                        <form className="cs-modal-body" onSubmit={handleCreateSupportTicket}>
-                            <div className="cs-form-group" style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Title</label>
-                                <input
-                                    type="text"
-                                    value={ticketTitle}
-                                    onChange={(e) => setTicketTitle(e.target.value)}
-                                    required
-                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                                />
-                            </div>
-                            <div className="cs-form-group" style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Description</label>
-                                <textarea
-                                    value={ticketDescription}
-                                    onChange={(e) => setTicketDescription(e.target.value)}
-                                    rows={6}
-                                    required
-                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', resize: 'vertical' }}
-                                />
-                            </div>
-                            <p className="cs-modal-promise" style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Your problem will be solved within two working days</p>
-                            <div className="cs-modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button type="button" className="cs-btn-cancel" onClick={() => setShowSupportModal(false)} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', border: '1px solid #ddd', backgroundColor: '#f5f5f5', cursor: 'pointer' }}>Cancel</button>
-                                <button type="submit" className="cs-btn-submit" disabled={creating} style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#004085', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
-                                    {creating ? 'Creating...' : 'Create'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <footer style={{ marginTop: 'auto', padding: '2rem 1rem 1rem', textAlign: 'center' }}>
+                <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', marginBottom: '1rem', width: '100%' }} />
+                <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>© 2026 NC+ Hospital. All rights reserved.</p>
+            </footer>
         </div>
     );
 };
