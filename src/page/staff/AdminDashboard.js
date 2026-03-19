@@ -343,13 +343,13 @@ const AdminDashboard = () => {
                             <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: '#1E3A5F', fontSize: '1.4rem' }}>{editingStaffId ? 'Update Staff Member' : 'Add New Staff Member'}</h3>
                             <form onSubmit={handleAddOrUpdateStaff} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <input type="text" name="name" placeholder="Name" autoComplete="off" value={staffFormData.name} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.name ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.name ? '#dc3545' : '#d1d5db'} />
+                                    <input type="text" name="name" placeholder="Name" autoComplete="off" value={staffFormData.name} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.name ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.name ? '#dc3545' : '#d1d5db'} />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <input type="email" name="email" placeholder="Email" autoComplete="off" value={staffFormData.email} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.email ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.email ? '#dc3545' : '#d1d5db'} />
+                                    <input type="email" name="email" placeholder="Email" autoComplete="off" value={staffFormData.email} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.email ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.email ? '#dc3545' : '#d1d5db'} />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <input type="text" name="phone" placeholder="Phone" autoComplete="off" value={staffFormData.phone} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.phone ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.phone ? '#dc3545' : '#d1d5db'} />
+                                    <input type="text" name="phone" placeholder="Phone" autoComplete="off" value={staffFormData.phone} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.phone ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.phone ? '#dc3545' : '#d1d5db'} />
                                 </div>
                                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
                                     <input
@@ -360,12 +360,12 @@ const AdminDashboard = () => {
                                         value={staffFormData.password}
                                         onChange={handleStaffFormChange}
                                         style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.password ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', paddingRight: '4rem' }}
-                                        onFocus={(e) => e.target.style.borderColor = '#0ea5e9'} onBlur={(e) => e.target.style.borderColor = formErrors.password ? '#dc3545' : '#d1d5db'}
+                                        onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.password ? '#dc3545' : '#d1d5db'}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowStaffPassword(!showStaffPassword)}
-                                        style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#0ea5e9', fontSize: '0.9rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                        style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#1E3A5F', fontSize: '0.9rem', cursor: 'pointer', fontWeight: 'bold' }}
                                     >
                                         {showStaffPassword ? 'Hide' : 'Show'}
                                     </button>
@@ -383,9 +383,9 @@ const AdminDashboard = () => {
                                             backgroundColor: 'white',
                                             transition: '0.3s ease',
                                             outline: 'none',
-                                            color: staffFormData.role ? '#374151' : '#9ca3af'
+                                            color: staffFormData.role ? '#1E3A5F' : '#9ca3af'
                                         }}
-                                        onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                                        onFocus={(e) => e.target.style.borderColor = '#1E3A5F'}
                                         onBlur={(e) => e.target.style.borderColor = formErrors.role ? '#dc3545' : '#d1d5db'}
                                     >
                                         <option value="" disabled>Select Role</option>
@@ -409,9 +409,9 @@ const AdminDashboard = () => {
                                             backgroundColor: 'white',
                                             transition: '0.3s ease',
                                             outline: 'none',
-                                            color: '#374151'
+                                            color: '#1E3A5F'
                                         }}
-                                        onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+                                        onFocus={(e) => e.target.style.borderColor = '#1E3A5F'}
                                         onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                                     >
                                         <option value="Active">Active</option>
