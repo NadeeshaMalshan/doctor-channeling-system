@@ -299,31 +299,36 @@ const ManageSchedules = () => {
 
                             <div className="appointment-list">
                                 {appointments.length === 0 ? (
-                                    <p>No appointments booked yet.</p>
-                                ) : (
-                                    appointments.map(app => (
-                                        <div className="appointment-item" key={app.id}>
-                                            <div className="app-info">
-                                                <h4>{app.first_name} {app.second_name}</h4>
-                                                <p>Phone: {app.customer_phone}</p>
-                                                <p>Booked on: {new Date(app.created_at).toLocaleString()}</p>
-                                            </div>
-                                            <div className="app-actions">
-                                                <span id='payment'>Payment Status :</span>
-                                                <span className={`status ${app.appointment_payment_status}`}>
-                                                    {app.appointment_payment_status}
-                                                </span>
+                                        <p>No appointments booked yet.</p>
+                                    ) : (
+                                        /* Notice the 'index' added here next to 'app' */
+                                        appointments.map((app, index) => (
+                                            <div className="appointment-item" key={app.id}>
+                                                <div className="app-No">
+                                                    {/* Use index + 1 to show 1, 2, 3... */}
+                                                    <p>No. {index + 1}</p>
+                                                </div>
+                                                <div className="app-info">
+                                                    <h4>{app.first_name} {app.second_name}</h4>
+                                                    <p>Phone: {app.customer_phone}</p>
+                                                    <p>Booked on: {new Date(app.created_at).toLocaleString()}</p>
+                                                </div>
+                                                <div className="app-actions">
+                                                    <span id='payment'>Payment Status :</span>
+                                                    <span className={`status ${app.appointment_payment_status}`}>
+                                                        {app.appointment_payment_status}
+                                                    </span>
 
-                                                <button
-                                                    className="btn-danger"
-                                                    onClick={() => handleDeleteAppointment(app.id)}
-                                                >
-                                                    Delete
-                                                </button>
+                                                    <button
+                                                        className="btn-danger"
+                                                        onClick={() => handleDeleteAppointment(app.id)}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
-                                )}
+                                        ))
+                                    )}
                             </div>
                         </div>
                     </div>
