@@ -6,12 +6,20 @@ import LogoHospital from '../images/LogoHospital.png';
 const ECareNavBar = () => {
     const navigate = useNavigate();
 
-    const storedUser = localStorage.getItem('user');
+    const isStaffRoute = window.location.pathname.toLowerCase().includes('staff') || window.location.pathname.toLowerCase().includes('hr');
+    const authStaffUser = localStorage.getItem('staffUser');
+    const authPatientUser = localStorage.getItem('user');
+    
+    // Priority depends on the route
+    const storedUser = isStaffRoute 
+        ? (authStaffUser || authPatientUser) 
+        : (authPatientUser || authStaffUser);
+
     const user = storedUser ? JSON.parse(storedUser) : null;
     const patientName = user
         ? (user.first_name
             ? `${user.first_name} ${user.second_name || ''}`.trim()
-            : user.name || user.fullName || user.email)
+            : user.name || user.fullName || user.username || user.email)
         : null;
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
