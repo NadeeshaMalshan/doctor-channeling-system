@@ -13,15 +13,7 @@
     --gradient-primary: linear-gradient(135deg, #3B5DB0 0%, #1E3A5F 100%);
 }
 
-/* ===== General Styles ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--color-background);
 }
 

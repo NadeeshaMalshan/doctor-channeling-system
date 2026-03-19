@@ -1,16 +1,18 @@
-/* ===== eCare NavBar Styles ===== */
+/* fonts loaded via public/index.html */
+
+/* ── NavBar ── */
 .ecare-navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 40px;
-    background-color: #f8f9fa;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    border-bottom: 2px solid #e0e6ed;
-    /* Added border */
+    padding: 0 40px;
+    height: 60px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
     position: sticky;
     top: 0;
     z-index: 1000;
+    font-family: 'Inter', sans-serif;
 }
 
 .ecare-navbar-brand {
@@ -21,12 +23,13 @@
 }
 
 .ecare-logo-icon {
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .ecare-logo-icon img {
@@ -38,78 +41,93 @@
 .ecare-brand-text {
     display: flex;
     flex-direction: column;
+    line-height: 1.25;
 }
 
 .ecare-brand-text .brand-name {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--color-primary);
-    letter-spacing: -0.5px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E3A5F;
 }
 
 .ecare-brand-text .brand-tagline {
-    font-size: 0.75rem;
-    color: var(--color-tertiary);
-    margin-top: -2px;
+    font-size: 11px;
+    color: #94A3B8;
 }
 
 .ecare-navbar-actions {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 8px;
 }
 
+/* ── Base button ── */
 .ecare-btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.15s, color 0.15s;
     display: flex;
     align-items: center;
-    gap: 8px;
-    border: none;
+    gap: 6px;
+    border: 1px solid transparent;
+    font-family: 'Inter', sans-serif;
     text-decoration: none;
 }
 
-.ecare-btn svg {
-    width: 18px;
-    height: 18px;
+.ecare-btn .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 17px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
 }
 
 .btn-channeling-center {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    background: #1E3A5F;
     color: white;
+    border-color: #1E3A5F;
 }
 
 .btn-channeling-center:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(59, 93, 176, 0.4);
+    background: #2D4E7A;
+    border-color: #2D4E7A;
 }
 
 .btn-login {
-    background-color: transparent;
-    color: var(--color-primary);
-    border: 2px solid var(--color-primary);
+    background: transparent;
+    color: #475569;
+    border-color: #E2E8F0;
 }
 
 .btn-login:hover {
-    background-color: var(--color-primary);
-    color: white;
+    background: #F8FAFC;
+    color: #1E293B;
 }
 
 .btn-signup {
-    background: var(--gradient-primary);
+    background: #2563EB;
     color: white;
+    border-color: #2563EB;
 }
 
 .btn-signup:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(59, 93, 176, 0.4);
+    background: #1D4ED8;
+    border-color: #1D4ED8;
 }
 
-/* Welcome greeting and Dropdown */
+/* ── User dropdown ── */
 .ecare-user-menu {
     position: relative;
 }
@@ -117,33 +135,45 @@
 .ecare-welcome {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: linear-gradient(135deg, rgba(59, 93, 176, 0.08) 0%, rgba(59, 93, 176, 0.15) 100%);
-    border-radius: 8px;
-    color: var(--color-primary);
-    font-size: 0.9rem;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #F1F5F9;
+    border-radius: 7px;
+    color: #1E3A5F;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.15s;
     user-select: none;
+    border: 1px solid transparent;
 }
 
 .ecare-welcome:hover,
 .ecare-welcome.active {
-    background: linear-gradient(135deg, rgba(59, 93, 176, 0.15) 0%, rgba(59, 93, 176, 0.25) 100%);
+    background: #E2E8F0;
 }
 
-.ecare-welcome svg {
-    width: 20px;
-    height: 20px;
-    fill: var(--color-primary);
-    flex-shrink: 0;
+.ecare-welcome .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    color: #1E3A5F;
 }
 
 .dropdown-arrow {
-    width: 16px !important;
-    height: 16px !important;
-    transition: transform 0.3s ease;
+    font-size: 18px !important;
+    transition: transform 0.2s ease;
 }
 
 .dropdown-arrow.open {
@@ -151,103 +181,106 @@
 }
 
 .ecare-welcome strong {
-    font-weight: 700;
+    font-weight: 600;
 }
 
+/* ── Dropdown menu ── */
 .ecare-dropdown-menu {
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 8px);
     right: 0;
-    min-width: 220px;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    padding: 8px;
+    min-width: 200px;
+    background: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    padding: 6px;
     display: flex;
     flex-direction: column;
     z-index: 1001;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    animation: dropdownFadeIn 0.2s ease-out;
+    border: 1px solid #E2E8F0;
+    animation: dropdownFadeIn 0.15s ease-out;
 }
 
 @keyframes dropdownFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .dropdown-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: 10px;
+    padding: 9px 12px;
     border: none;
     background: transparent;
-    color: #444;
-    font-size: 0.9rem;
+    color: #334155;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    border-radius: 7px;
+    transition: background 0.12s;
     text-align: left;
     width: 100%;
+    font-family: 'Inter', sans-serif;
 }
 
-.dropdown-item svg {
-    width: 18px;
-    height: 18px;
-    fill: #666;
+.dropdown-item .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 17px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    color: #64748B;
 }
 
 .dropdown-item:hover {
-    background-color: #f5f7fb;
-    color: var(--color-primary);
+    background: #F8FAFC;
+    color: #1E3A5F;
 }
 
-.dropdown-item:hover svg {
-    fill: var(--color-primary);
+.dropdown-item:hover .material-symbols-outlined {
+    color: #1E3A5F;
 }
 
 .dropdown-item.logout {
-    color: #e53935;
+    color: #B91C1C;
 }
 
-.dropdown-item.logout svg {
-    fill: #e53935;
+.dropdown-item.logout .material-symbols-outlined {
+    color: #B91C1C;
 }
 
 .dropdown-item.logout:hover {
-    background-color: #fff1f0;
+    background: #FEF2F2;
 }
 
 .dropdown-divider {
     height: 1px;
-    background-color: #eee;
-    margin: 6px 8px;
+    background: #F1F5F9;
+    margin: 4px 4px;
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
     .ecare-navbar {
         padding: 12px 20px;
+        height: auto;
         flex-wrap: wrap;
-        gap: 15px;
+        gap: 12px;
     }
 
     .ecare-navbar-actions {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-end;
         flex-wrap: wrap;
-    }
-
-    .ecare-btn {
-        padding: 8px 15px;
-        font-size: 0.85rem;
     }
 }
