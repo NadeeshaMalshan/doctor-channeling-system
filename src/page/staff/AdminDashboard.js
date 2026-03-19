@@ -421,9 +421,9 @@ const AdminDashboard = () => {
                                 <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                                     <button
                                         type="submit"
-                                        style={{ flex: 1, backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontSize: '1.05rem', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 4px 6px rgba(14,165,233,0.3)' }}
-                                        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#0284c7'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                                        onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                        style={{ flex: 1, backgroundColor: '#1E3A5F', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontSize: '1.05rem', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 4px 6px rgba(30,58,95,0.3)' }}
+                                        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#2D4E7A'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#1E3A5F'; e.currentTarget.style.transform = 'translateY(0)'; }}
                                     >
                                         {editingStaffId ? 'Update Staff' : 'Add Staff'}
                                     </button>
@@ -464,7 +464,7 @@ const AdminDashboard = () => {
                                                     </span>
                                                 </td>
                                                 <td style={{ padding: '16px 20px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                                    <button onClick={() => handleEditStaff(item)} style={{ backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', fontWeight: '500', boxShadow: '0 2px 4px rgba(14, 165, 233, 0.2)' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#0284c7'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)' }}>Edit</button>
+                                                    <button onClick={() => handleEditStaff(item)} style={{ backgroundColor: '#1E3A5F', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', fontWeight: '500', boxShadow: '0 2px 4px rgba(30, 58, 95, 0.2)' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#2D4E7A'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#1E3A5F'; e.currentTarget.style.transform = 'translateY(0)' }}>Edit</button>
                                                     <button onClick={() => handleDeleteRecord(item.id)} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', fontWeight: '500', boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.transform = 'translateY(0)' }}>Delete</button>
                                                 </td>
                                             </tr>
@@ -705,9 +705,9 @@ const AdminDashboard = () => {
                                             <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', width: '100%' }}>
                                                 <button
                                                     onClick={() => handleApprove(request.id)}
-                                                    style={{ flex: 1, backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 4px rgba(14,165,233,0.2)' }}
-                                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#0284c7'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0ea5e9'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                                    style={{ flex: 1, backgroundColor: '#1E3A5F', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 2px 4px rgba(30,58,95,0.2)' }}
+                                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#2D4E7A'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#1E3A5F'; e.currentTarget.style.transform = 'translateY(0)'; }}
                                                 >
                                                     Approve
                                                 </button>
