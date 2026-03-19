@@ -82,7 +82,7 @@ const AppointmentForm = () => {
 
             <div className="appointment-container">
                 <div className="appointment-header">
-                    <h2>Confirm Appointment</h2>
+                    <h2>Appointment Details</h2>
                     <p>Review your booking details before confirmation</p>
                 </div>
 
@@ -116,6 +116,10 @@ const AppointmentForm = () => {
                                 <div className="summary-item">
                                     <span className="label">Price</span>
                                     <span className="value">Rs. {Number(scheduleDetails.price).toFixed(2)}</span>
+                                </div>
+                                <div className="summary-item">
+                                    <span className="label">Appointment NO</span>
+                                    <span className="value">No. {Number(scheduleDetails.booked_count) + 1}</span>
                                 </div>
                             </div>
                         ) : (
@@ -158,7 +162,7 @@ const AppointmentForm = () => {
                             onClick={handleConfirm}
                             disabled={loading || !scheduleDetails || !patient}
                         >
-                            {loading ? 'Processing...' : 'Confirm & proceed to payment'}
+                            {loading ? 'Processing...' : 'Proceed to Payment'}
                         </button>
                     </div>
                 </div>
