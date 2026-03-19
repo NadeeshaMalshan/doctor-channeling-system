@@ -7,7 +7,10 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 const HRCustomerSupport = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem('staffUser') || localStorage.getItem('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('Pending');
