@@ -138,6 +138,26 @@ CREATE TABLE IF NOT EXISTS payments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id),
     FOREIGN KEY (doctor_id) REFERENCES doctors(id),
-    FOREIGN KEY (appointment_id) REFERENCES appointment_schedules(id)
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id),
     FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id)
-)
+);
+
+-- Trigger to synchronize payment_status in payments with appointment_payment_status in appointments
+DELIMITER //
+
+CREATE TRIGGER after_payment_update
+AFTER UPDATE ON payments
+FOR EACH ROW
+BEGIN
+    IF NEW.payment_status = 'SUCCESS' AND OLD.payment_status != 'SUCCESS' THEN
+        UPDATE appointments
+        SET appointment_payment_status = 'paid'
+        WHERE id = NEW.appointment_id;
+    ELSEIF NEW.payment_status = 'FAILED' AND OLD.payment_status != 'FAILED' THEN
+        UPDATE appointments
+        SET appointment_payment_status = 'failed'
+        WHERE id = NEW.appointment_id;
+    END IF;
+END //
+
+DELIMITER ;
