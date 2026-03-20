@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ECareNavBar from '../Components/eCareNavBar';
-import './css/CreateSchedule.css';
+import ECareNavBar from '../../Components/eCareNavBar';
+import '../css/CreateSchedule.css';
 
 const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
 const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
