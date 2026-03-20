@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import ECareNavBar from '../../Components/eCareNavBar';
 import '../css/CustomerSupport.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const HRCustomerSupport = () => {
-    const navigate = useNavigate();
-    const [user, setUser] = useState(() => {
+    const [user] = useState(() => {
         const storedUser = localStorage.getItem('staffUser') || localStorage.getItem('user');
         return storedUser ? JSON.parse(storedUser) : null;
     });
@@ -62,7 +60,6 @@ const HRCustomerSupport = () => {
         const solved = tickets.filter(t => t.status === 'Resolved').length;
         const pending = tickets.filter(t => t.status === 'Pending').length;
         const raised = tickets.length;
-        const deleted = tickets.filter(t => t.status === 'Rejected').length; // Kept 'deleted' var name but use Rejected tickets as equivalent or update label. Actually let's count deleted properly if they exist. Wait, tickets.filter(t => t.is_deleted).length was used previously.
         const deletedCount = tickets.filter(t => t.is_deleted).length;
         return { solved, pending, raised, deleted: deletedCount };
     }, [tickets]);
