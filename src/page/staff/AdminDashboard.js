@@ -41,12 +41,8 @@ const AdminDashboard = () => {
 
     // Registration Requests State
     const [activeSection, setActiveSection] = useState("dashboard");
-
-    const [requests, setRequests] = useState([
-        { id: 1, name: 'Dr. John Doe', email: 'john@example.com', specialization: 'Cardiology', slmc: 'SLMC/12345' },
-        { id: 2, name: 'Dr. Jane Smith', email: 'jane@example.com', specialization: 'Pediatrics', slmc: 'SLMC/67890' },
-        { id: 3, name: 'Dr. Mike Ross', email: 'mike@example.com', specialization: 'Neurology', slmc: 'SLMC/11223' }
-    ]);
+    const [requests, setRequests] = useState([]);
+    const [isLoadingRequests, setIsLoadingRequests] = useState(false);
 
     const [users, setUsers] = useState([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -174,14 +170,43 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleApprove = (id) => {
-        alert("Doctor Approved Successfully");
-        setRequests(requests.filter(req => req.id !== id));
+    // Fetch pending doctor requests from the database
+    const fetchPendingDoctors = async () => {
+        setIsLoadingRequests(true);
+        try {
+            const response = await axios.get(`${API_URL}/api/admin/doctor-requests`);
+            setRequests(response.data);
+        } catch (error) {
+            console.error('Error fetching pending doctors:', error);
+        } finally {
+            setIsLoadingRequests(false);
+        }
     };
 
-    const handleReject = (id) => {
-        alert("Doctor Rejected");
-        setRequests(requests.filter(req => req.id !== id));
+    useEffect(() => {
+        fetchPendingDoctors();
+    }, []);
+
+    const handleApprove = async (id) => {
+        try {
+            await axios.put(`${API_URL}/api/admin/doctor-requests/${id}/approve`);
+            alert("Doctor Approved Successfully");
+            fetchPendingDoctors();
+        } catch (error) {
+            console.error('Error approving doctor:', error);
+            alert(error.response?.data?.message || "Failed to approve doctor");
+        }
+    };
+
+    const handleReject = async (id) => {
+        try {
+            await axios.put(`${API_URL}/api/admin/doctor-requests/${id}/reject`);
+            alert("Doctor Rejected");
+            fetchPendingDoctors();
+        } catch (error) {
+            console.error('Error rejecting doctor:', error);
+            alert(error.response?.data?.message || "Failed to reject doctor");
+        }
     };
 
     const handleCategoryClick = (category) => {
@@ -502,7 +527,7 @@ const AdminDashboard = () => {
                                         <tr>
                                             <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Full Name</th>
                                             <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Specialization</th>
-                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>SLMC No</th>
+                                            <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>SLMC ID</th>
                                             <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Email</th>
                                             <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Phone</th>
                                             <th style={{ padding: '16px 20px', color: '#4b5563', fontWeight: '600' }}>Hospital</th>
@@ -679,7 +704,9 @@ const AdminDashboard = () => {
                                 gap: '20px',
                                 padding: '20px 0'
                             }}>
-                                {requests.length > 0 ? (
+                                {isLoadingRequests ? (
+                                    <p style={{ color: '#6b7280' }}>Loading requests...</p>
+                                ) : requests.length > 0 ? (
                                     requests.map(request => (
                                         <div key={request.id} className="dashboard-card" style={{
                                             background: 'white',
@@ -699,8 +726,10 @@ const AdminDashboard = () => {
                                             <h4 style={{ margin: '0 0 1rem 0', color: '#1E3A5F', fontSize: '1.2rem', fontWeight: 'bold' }}>{request.name}</h4>
                                             <div style={{ backgroundColor: '#f8f9fa', padding: '12px', borderRadius: '8px', width: '100%', textAlign: 'left', marginBottom: '1rem' }}>
                                                 <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>Email:</strong> {request.email}</p>
+                                                <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>SLMC ID:</strong> {request.slmc_id}</p>
+                                                <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>NIC:</strong> {request.nic}</p>
                                                 <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>Specialty:</strong> {request.specialization}</p>
-                                                <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>SLMC No:</strong> {request.slmc}</p>
+                                                <p style={{ margin: '0.3rem 0', fontSize: '14px', color: '#4b5563' }}><strong style={{ color: '#1E3A5F' }}>Hospital:</strong> {request.hospital || 'Not Specified'}</p>
                                             </div>
                                             <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', width: '100%' }}>
                                                 <button

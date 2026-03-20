@@ -29,6 +29,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/admin/doctors', require('./routes/adminDoctorRoutes'));
 app.use('/api/admin/staff', require('./routes/adminStaffRoutes'));
 app.use('/api/admin/users', require('./routes/adminUserRoutes'));
+app.use("/api/admin/doctor-requests", require("./routes/adminDoctorApprovalRoutes"));
 app.use('/api/availability', availabilityRoutes);
 
 const scheduleRoutes = require('./routes/scheduleRoutes');
