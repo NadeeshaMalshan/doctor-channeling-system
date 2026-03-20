@@ -56,7 +56,11 @@ const CustomerSupport = () => {
 
     useEffect(() => {
         fetchTickets();
-    }, [fetchTickets]);
+        if (user) {
+            fetch(`${API_URL}/api/support/tickets/patient/${user.id}/seen`, { method: 'PUT' })
+                .catch(err => console.error('Failed to mark tickets as seen', err));
+        }
+    }, [fetchTickets, user]);
 
     // Name logic fix
     const getFullName = (userData) => {
@@ -72,7 +76,7 @@ const CustomerSupport = () => {
 
     // Ticket Summary
     const summary = useMemo(() => {
-        const solved = tickets.filter(t => t.status === 'Resolved' || t.status === 'Approved').length;
+        const solved = tickets.filter(t => t.status === 'Resolved').length;
         const pending = tickets.filter(t => t.status === 'Pending').length;
         const raised = tickets.length;
         return { solved, pending, raised };
@@ -201,13 +205,19 @@ const CustomerSupport = () => {
                                 <div className="cs-ticket-content">
                                     <h3 className="cs-ticket-title">{ticket.subject}</h3>
                                     <p className="cs-ticket-desc">{ticket.description}</p>
-                                    <div className="cs-ticket-meta">
+                                    {ticket.hr_reply && (ticket.status === 'Resolved' || ticket.status === 'Rejected') && (
+                                        <div className="cs-ticket-reply" style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f5f7fa', borderLeft: ticket.status === 'Resolved' ? '4px solid #2e7d32' : '4px solid #c2185b', borderRadius: '4px' }}>
+                                            <h4 style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#333' }}>{ticket.status === 'Resolved' ? 'Solution' : 'Reason for Rejection'}:</h4>
+                                            <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>{ticket.hr_reply}</p>
+                                        </div>
+                                    )}
+                                    <div className="cs-ticket-meta" style={{ marginTop: '10px' }}>
                                         <span className="cs-ticket-meta-item">{ticket.patient_name}</span>
                                         <span className="cs-ticket-meta-item">{formatDate(ticket.created_at)}</span>
                                     </div>
                                 </div>
                                 <div className="cs-ticket-actions">
-                                    <span className={`cs-status-badge ${ticket.status === 'Approved' || ticket.status === 'Resolved' ? 'cs-status-resolved' : ticket.status === 'Rejected' ? 'cs-status-deleted' : 'cs-status-pending'}`}>
+                                    <span className={`cs-status-badge ${ticket.status === 'Resolved' ? 'cs-status-resolved' : ticket.status === 'Rejected' ? 'cs-status-deleted' : 'cs-status-pending'}`}>
                                         {ticket.status}
                                     </span>
                                     {ticket.status === 'Pending' && (

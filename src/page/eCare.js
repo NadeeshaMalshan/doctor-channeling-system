@@ -16,6 +16,7 @@ const ECare = () => {
     const [error, setError] = useState(null);
     const [showProfile, setShowProfile] = useState(false);
     const [patientUser, setPatientUser] = useState(null);
+    const [hasSupportUpdates, setHasSupportUpdates] = useState(false);
 
     // Get patient user from local storage
     useEffect(() => {
@@ -37,6 +38,24 @@ const ECare = () => {
         }
         console.log('Profile updated');
     };
+
+    // Check for support updates
+    useEffect(() => {
+        if (patientUser) {
+            const checkUpdates = async () => {
+                try {
+                    const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/support/tickets/patient/${patientUser.id}/updates`);
+                    const data = await response.json();
+                    if (response.ok) {
+                        setHasSupportUpdates(data.hasUpdates);
+                    }
+                } catch (error) {
+                    console.error('Error checking support updates:', error);
+                }
+            };
+            checkUpdates();
+        }
+    }, [patientUser]);
 
 
 
@@ -242,6 +261,22 @@ const ECare = () => {
             {/* Sticky Support Button */}
             <div className="ecare-support-btn" title="Contact Support" onClick={() => navigate('/ecare/customer-support')}>
                 <span className="material-symbols-outlined">support_agent</span>
+                {hasSupportUpdates && (
+                    <span 
+                        className="support-update-dot" 
+                        style={{ 
+                            position: 'absolute', 
+                            top: '-2px', 
+                            right: '-2px', 
+                            width: '12px', 
+                            height: '12px', 
+                            backgroundColor: '#ff3b30', 
+                            borderRadius: '50%', 
+                            border: '2px solid white',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                    ></span>
+                )}
             </div>
 
             {/* Footer */}
