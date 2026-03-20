@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import axios from 'axios';
-import NavBar from '../Components/NavBar';
+import ECareNavBar from '../Components/eCareNavBar';
 import './css/DoctorAvailability.css';
 
 const DoctorAvailability = () => {
@@ -231,7 +231,7 @@ const DoctorAvailability = () => {
 
     return (
         <div className="doctor-availability-page" ref={containerRef}>
-            <NavBar />
+            <ECareNavBar />
 
             <div className="availability-dashboard">
                 {/* Header */}
