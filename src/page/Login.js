@@ -49,25 +49,27 @@ const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Store user info if neede
-                localStorage.setItem('user', JSON.stringify(data.user));
-                localStorage.setItem('userType', data.userType);
-
                 if (data.userType === 'doctor') {
+                    // The API allows 'pending', 'approved', or 'rejected' statuses
                     if (data.user.status === 'pending') {
-                        navigate('/doctorpending');
-                    } else if (data.user.status === 'rejected') {
-                        alert('Rejected by admin');
-                        setError('Your account has been rejected by admin. Please contact support.');
-                    } else if (data.user.status === 'canceled') {
-                        setError('Your account has been canceled. Please contact support.');
-                    } else {
-                        // Give DoctorAvailability the expected items
+                        alert('Your account is pending admin approval.');
+                        navigate('/doctorpending', { state: { doctorId: data.user.id } });
+                    } else if (data.user.status === 'approved') {
+                        // Store user info
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        localStorage.setItem('userType', data.userType);
                         localStorage.setItem('doctorInfo', JSON.stringify(data.user));
                         localStorage.setItem('token', 'doctor-token'); // Set dummy token or actual token if available
                         navigate('/doctor-availability');
+                    } else if (data.user.status === 'rejected') {
+                        navigate('/doctorreject', { state: { doctorId: data.user.id } });
+                    } else {
+                        setError('Account access restricted.');
                     }
                 } else {
+                    // Store patient info
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('userType', data.userType);
                     navigate('/eCare');
                 }
             } else {
