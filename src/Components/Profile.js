@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './ComponentsCss/Profile.css';
 
 const Profile = ({ patientId, onClose, onUpdate }) => {
@@ -15,11 +15,7 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    useEffect(() => {
-        fetchProfile();
-    }, [patientId]);
-
-    const fetchProfile = async () => {
+    const fetchProfile = useCallback(async () => {
         try {
             setLoading(true);
             const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/patient/${patientId}?t=${Date.now()}`);
@@ -41,7 +37,11 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [patientId]);
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;

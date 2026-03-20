@@ -46,10 +46,6 @@ const SmartDocSuggestion = () => {
                 .filter(q => answers[q.id] === 'yes')
                 .map(q => q.label.replace(/Do you have |Do you experience |Do you feel /g, '').replace('?', ''));
 
-            const symptomText = selectedSymptoms.length > 0
-                ? selectedSymptoms.join(', ')
-                : 'general health checkup';
-
             // Call doctor suggestion API
             const specialization = detectSpecialization(selectedSymptoms);
             const response = await fetch(`http://localhost:8000/api/suggest-doctor?specialization=${specialization}`);

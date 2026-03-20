@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUserMd, FaUsers, FaUserTie, FaStethoscope, FaClipboardList } from 'react-icons/fa';
+import { FaUsers, FaUserTie, FaStethoscope, FaClipboardList } from 'react-icons/fa';
 import LogoHospital from '../../images/LogoHospital.png';
 import '../css/CashierDashboard.css';
 import '../css/StaffDashboard.css';
@@ -19,7 +19,7 @@ const AdminDashboard = () => {
     const [editingStaffId, setEditingStaffId] = useState(null);
     const [formErrors, setFormErrors] = useState({});
     const [showStaffPassword, setShowStaffPassword] = useState(false);
-    const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+    const [, setIsLoadingStaff] = useState(false);
 
     // Initial form state including new fields
     const initialStaffForm = {
@@ -33,29 +33,23 @@ const AdminDashboard = () => {
 
     const [staffFormData, setStaffFormData] = useState(initialStaffForm);
 
-    // Support Modal State
-    const [showSupportModal, setShowSupportModal] = useState(false);
-    const [ticketTitle, setTicketTitle] = useState('');
-    const [ticketDescription, setTicketDescription] = useState('');
-    const [creating, setCreating] = useState(false);
-
     // Registration Requests State
     const [activeSection, setActiveSection] = useState("dashboard");
     const [requests, setRequests] = useState([]);
     const [isLoadingRequests, setIsLoadingRequests] = useState(false);
 
     const [users, setUsers] = useState([]);
-    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+    const [, setIsLoadingUsers] = useState(false);
 
     // Removed dummy staff data
 
     const [doctors, setDoctors] = useState([]);
-    const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
+    const [, setIsLoadingDoctors] = useState(false);
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
     // Fetch staff from backend
-    const fetchStaff = async () => {
+    const fetchStaff = useCallback(async () => {
         setIsLoadingStaff(true);
         try {
             const response = await axios.get(`${API_URL}/api/admin/staff`);
@@ -75,10 +69,10 @@ const AdminDashboard = () => {
         } finally {
             setIsLoadingStaff(false);
         }
-    };
+    }, [API_URL]);
 
     // Fetch users from backend
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         setIsLoadingUsers(true);
         try {
             const response = await axios.get(`${API_URL}/api/admin/users`);
@@ -97,7 +91,7 @@ const AdminDashboard = () => {
         } finally {
             setIsLoadingUsers(false);
         }
-    };
+    }, [API_URL]);
 
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -133,45 +127,14 @@ const AdminDashboard = () => {
             fetchStaff();
             fetchUsers();
         }
-    }, [selectedCategory, API_URL]);
+    }, [selectedCategory, API_URL, fetchStaff, fetchUsers]);
 
     const handleLogout = () => {
         navigate('/ecare/staff-login');
     };
 
-    const handleCreateSupportTicket = async (e) => {
-        e.preventDefault();
-        setCreating(true);
-        try {
-            const API_URL = process.env.REACT_APP_API_URL;
-            const response = await fetch(`${API_URL}/api/support/tickets`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    patientId: 0, // Staff-raised ticket
-                    subject: ticketTitle,
-                    description: ticketDescription
-                }),
-            });
-
-            if (response.ok) {
-                alert('Support ticket created successfully!');
-                setShowSupportModal(false);
-                setTicketTitle('');
-                setTicketDescription('');
-            } else {
-                alert('Failed to create support ticket');
-            }
-        } catch (error) {
-            console.error('Error creating ticket:', error);
-            alert('Failed to connect to the server');
-        } finally {
-            setCreating(false);
-        }
-    };
-
     // Fetch pending doctor requests from the database
-    const fetchPendingDoctors = async () => {
+    const fetchPendingDoctors = useCallback(async () => {
         setIsLoadingRequests(true);
         try {
             const response = await axios.get(`${API_URL}/api/admin/doctor-requests`);
@@ -181,11 +144,11 @@ const AdminDashboard = () => {
         } finally {
             setIsLoadingRequests(false);
         }
-    };
+    }, [API_URL]);
 
     useEffect(() => {
         fetchPendingDoctors();
-    }, []);
+    }, [fetchPendingDoctors]);
 
     const handleApprove = async (id) => {
         try {
