@@ -1,16 +1,29 @@
 import { useEffect, useState } from 'react';
 import './css/paymentPortal.css';
 import axios from 'axios';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
 import LogoHospital from '../images/LogoHospital.png';
 
 
 
 
+const PAYMENT_CONTEXT_KEY = 'paymentContext';
+
+const readStoredPaymentContext = () => {
+    try {
+        const raw = sessionStorage.getItem(PAYMENT_CONTEXT_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+};
+
 const PaymentPortal = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -22,12 +35,29 @@ const PaymentPortal = () => {
     try {
         user = storedUser ? JSON.parse(storedUser) : null;
         patientId = user ? user.id : null;
-    } catch (e) {
-        console.error('Error parsing user from localStorage:', e);
+    } catch {
+        /* invalid stored user */
     }
 
-    // Read appointmentScheduleId from navigation state (passed from AppointmentForm)
-    const appointmentScheduleId = location.state?.appointmentScheduleId || null;
+    const scheduleFromUrl = searchParams.get('appointment_schedule_id');
+    const appointmentFromUrl = searchParams.get('appointment_id');
+    const storedCtx = readStoredPaymentContext();
+
+    const appointmentScheduleId =
+        scheduleFromUrl ||
+        (location.state?.appointmentScheduleId != null ? String(location.state.appointmentScheduleId) : null) ||
+        (storedCtx?.appointmentScheduleId != null ? String(storedCtx.appointmentScheduleId) : null);
+
+    const idFromUrl = appointmentFromUrl && String(appointmentFromUrl).trim() !== ''
+        ? String(appointmentFromUrl).trim()
+        : null;
+    const idFromState = location.state?.appointmentId != null && location.state.appointmentId !== ''
+        ? String(location.state.appointmentId)
+        : null;
+    const idFromStorage = storedCtx?.appointmentId != null && storedCtx.appointmentId !== ''
+        ? String(storedCtx.appointmentId)
+        : null;
+    const appointmentIdFromBooking = idFromUrl || idFromState || idFromStorage;
 
 
 
@@ -51,8 +81,7 @@ const PaymentPortal = () => {
                 const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
                 setDetails(response.data);
                 setLoading(false);
-            } catch (err) {
-                console.error('Error fetching payment details', err);
+            } catch {
                 setError('fetch_failed');
                 setLoading(false);
             }
@@ -63,7 +92,7 @@ const PaymentPortal = () => {
         return () => {
             document.title = "Doctor Channeling System";
         };
-    }, [patientId, appointmentScheduleId]);
+    }, [patientId, appointmentScheduleId, searchParams]);
 
     if (loading) {
         return (
@@ -168,27 +197,68 @@ const PaymentPortal = () => {
         );
     }
 
+    const formatScheduleDateTime = (scheduleDate, startTime) => {
+        try {
+            const raw = scheduleDate ? String(scheduleDate).split('T')[0] : '';
+            const datePart = raw ? new Date(raw + 'T12:00:00') : null;
+            const dateStr = datePart && !Number.isNaN(datePart.getTime())
+                ? datePart.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
+                : String(scheduleDate || '');
+            return startTime ? `${dateStr} · ${startTime}` : dateStr;
+        } catch {
+            return `${scheduleDate} ${startTime || ''}`;
+        }
+    };
+
+    const apiApptId = details.appointment_id;
+    const resolvedAppointmentId =
+        (apiApptId != null && apiApptId !== '' ? apiApptId : null) ?? appointmentIdFromBooking;
+    const queueNo = details.appointment_queue_no;
+    const displayAppointmentNo =
+        queueNo != null && queueNo !== '' ? queueNo : null;
+
+    const channelingFeeNum = parseFloat(details.channelingFee);
+    const channelingFee = Number.isFinite(channelingFeeNum) ? channelingFeeNum : 0;
+
     const paymentData = {
         patientName: `${details.first_name} ${details.second_name}`,
         doctorName: details.doctor_name,
         specialization: details.specialization,
-        appointmentNo: details.bookedCOunt,
-        dateTime: `${details.schedule_date} ${details.start_time}`,
-        appointmentId: details.appointmentID,
-        channelingFee: parseFloat(details.channelingFee),
+        appointmentScheduleNo: appointmentScheduleId,
+        appointmentNo: displayAppointmentNo,
+        appointmentId: resolvedAppointmentId,
+        dateTime: formatScheduleDateTime(details.schedule_date, details.start_time),
+        channelingFee,
         serviceCharge: 400,
-        totalAmount: parseFloat(details.channelingFee) + 400,
+        totalAmount: channelingFee + 400,
     };
 
     const handlePayHereClick = async () => {
-        const appointmentID = details.appointmentId || "1";
+        const appointmentID = paymentData.appointmentId;
+        if (appointmentID == null || appointmentID === '') {
+            alert('Appointment number is missing. Please complete your booking again from the appointment page.');
+            return;
+        }
         const paymentID = 'ORD' + appointmentID + '_' + Date.now();
         const amount = paymentData.totalAmount;
         const currency = 'LKR';
 
         const isSandbox = true; // change to false for live/production
 
+        if (typeof window.payhere === 'undefined' || !window.payhere.startPayment) {
+            alert('PayHere script failed to load. Refresh the page or check your internet connection.');
+            return;
+        }
+
         try {
+            const payQs = new URLSearchParams();
+            if (appointmentScheduleId) payQs.set('appointment_schedule_id', String(appointmentScheduleId));
+            if (paymentData.appointmentId != null && paymentData.appointmentId !== '') {
+                payQs.set('appointment_id', String(paymentData.appointmentId));
+            }
+            const payReturnBase = `${window.location.origin}/ecare/payment`;
+            const payReturnUrl = payQs.toString() ? `${payReturnBase}?${payQs.toString()}` : payReturnBase;
+
             // get backend hash
             const hashResponse = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/generate-hash`,
                 {
@@ -206,8 +276,8 @@ const PaymentPortal = () => {
             const payment = {
                 "sandbox": isSandbox,
                 "merchant_id": merchantID,
-                "return_url": "http://localhost:3000/ecare/payment",
-                "cancel_url": "http://localhost:3000/ecare/payment",
+                "return_url": payReturnUrl,
+                "cancel_url": payReturnUrl,
                 "notify_url": "https://unboldly-nonpantheistic-dwight.ngrok-free.dev/api/payment/notify",
                 "order_id": paymentID,
                 "items": "Doctor Appointment",
@@ -225,39 +295,33 @@ const PaymentPortal = () => {
 
             // PayHere Callbacks - Register BEFORE starting payment
             window.payhere.onCompleted = async function onCompleted(order_id) {
-                console.log("--- PayHere onCompleted Triggered --- for OrderID:", order_id);
-
                 let attempts = 0;
-                const maxAttempts = 15; // Increased attempts
+                const maxAttempts = 15;
 
                 const checkStatus = async () => {
                     attempts++;
-                    console.log(`Polling status for ${order_id}... Attempt ${attempts}`);
                     try {
                         const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/status/${order_id}`);
                         const status = response.data.status;
-                        console.log(`Current Status from Backend: ${status}`);
 
                         if (status === 'SUCCESS') {
-                            console.log("Payment SUCCESS detected. Navigating...");
                             navigate('/ecare/payment/success', {
                                 state: { ...paymentData, paymentID: order_id }
                             });
                             return;
-                        } else if (['FAILED', 'CANCELED', 'CHARGEDBACK'].includes(status)) {
-                            console.log("Payment FAILURE detected. Navigating...");
+                        }
+                        if (['FAILED', 'CANCELED', 'CHARGEDBACK'].includes(status)) {
                             navigate('/ecare/payment/failed');
                             return;
                         }
-                    } catch (error) {
-                        console.error("Status check error:", error);
+                    } catch {
+                        /* retry poll */
                     }
 
                     if (attempts < maxAttempts) {
                         setTimeout(checkStatus, 2000);
                     } else {
-                        console.log("Max attempts reached. No status update found.");
-                        alert("Payment verification is taking longer than expected. Please check your appointments later.");
+                        alert('Payment verification is taking longer than expected. Please check your appointments later.');
                     }
                 };
 
@@ -265,21 +329,21 @@ const PaymentPortal = () => {
             };
 
             window.payhere.onDismissed = function onDismissed() {
-                console.log("--- PayHere onDismissed Triggered ---");
+                /* user closed PayHere */
             };
 
-            window.payhere.onError = function onError(error) {
-                console.error("--- PayHere onError Triggered ---", error);
-                alert("Payment Error: " + error);
+            window.payhere.onError = function onError() {
+                alert('Payment could not complete. Please try again.');
             };
 
-            //starting payment
-            console.log("Starting PayHere payment...");
             window.payhere.startPayment(payment);
         }
         catch (error) {
-            console.error("Error", error);
-            alert("Error");
+            const apiMsg = error?.response?.data?.message;
+            const msg =
+                (typeof apiMsg === 'string' && apiMsg.trim()) ||
+                'Unable to start payment. Please try again.';
+            alert(msg);
         }
 
     }
@@ -325,9 +389,9 @@ const PaymentPortal = () => {
                             <p><span>Patient name:</span> {paymentData.patientName}</p>
                             <p><span>Doctor name:</span> {paymentData.doctorName}</p>
                             <p><span>Specialization:</span> {paymentData.specialization}</p>
-                            <p><span>Appointment no:</span> {paymentData.appointmentNo}</p>
+                            <p><span>Appointment schedule no:</span> {paymentData.appointmentScheduleNo ?? '—'}</p>
                             <p><span>Date/Time:</span> {paymentData.dateTime}</p>
-                            <p><span>Booking No:</span> {paymentData.booked_count + 1}</p>
+                            <p><span>Appointment no:</span> {paymentData.appointmentNo != null && paymentData.appointmentNo !== '' ? paymentData.appointmentNo : '—'}</p>
                             <div className="fee-row">
                                 <p><span>Fee:</span> {paymentData.totalAmount} LKR</p>
                                 <small>({paymentData.serviceCharge} LKR for channeling center charges)</small>

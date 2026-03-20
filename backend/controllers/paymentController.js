@@ -6,13 +6,35 @@ exports.getPaymentDetails = async (req, res) => {
     const { patientID, appointment_schedule_id } = req.query;
 
     try {
+        // appointment_id = DB PK (payments / PayHere). appointment_queue_no = position in this
+        // schedule (1st, 2nd, …) — matches "No. booked_count+1" on the confirm-appointment page.
         const [rows] = await db.execute(
-            `SELECT p.first_name, p.second_name, 
-                    d.name AS doctor_name, d.specialization, 
-                    aps.booked_count, aps.schedule_date, aps.start_time, aps.price AS channelingFee
-             FROM patients p, doctors d, appointment_schedules aps
-             WHERE p.id = ? AND aps.id = ? AND d.id = aps.doctor_id`,
-            [patientID, appointment_schedule_id]
+            `SELECT p.first_name, p.second_name,
+                    d.name AS doctor_name, d.specialization,
+                    aps.booked_count, aps.schedule_date, aps.start_time, aps.price AS channelingFee,
+                    aps.id AS appointment_schedule_id,
+                    appt.id AS appointment_id,
+                    (
+                        SELECT COUNT(*)
+                        FROM appointments x
+                        WHERE x.schedule_id = appt.schedule_id
+                          AND (
+                            x.created_at < appt.created_at
+                            OR (x.created_at = appt.created_at AND x.id <= appt.id)
+                          )
+                    ) AS appointment_queue_no
+             FROM patients p
+             INNER JOIN appointment_schedules aps ON aps.id = ?
+             INNER JOIN doctors d ON d.id = aps.doctor_id
+             INNER JOIN appointments appt ON appt.id = (
+                 SELECT a.id
+                 FROM appointments a
+                 WHERE a.patient_ID = p.id AND a.schedule_id = aps.id
+                 ORDER BY a.created_at DESC, a.id DESC
+                 LIMIT 1
+             )
+             WHERE p.id = ?`,
+            [appointment_schedule_id, patientID]
         );
         if (rows.length === 0) {
             return res.status(404).json({ message: 'No payment details found (404)' });
@@ -55,7 +77,6 @@ exports.generateHash = async (req, res) => {
         // paymentID format: ORD{appointmentID}_{timestamp}
         const appointmentID = paymentID.split('_')[0].replace('ORD', '');
         const paymentEnvironment = sandbox === false ? 'LIVE' : 'SANDBOX';
-        console.log(`Backend: paymentID Received: ${paymentID}, Calculated appointmentID: ${appointmentID}, appointmentScheduleId: ${appointmentScheduleId}, environment: ${paymentEnvironment}`);
 
         await db.execute(
             `INSERT INTO payments (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status, payment_environment) 
@@ -69,7 +90,7 @@ exports.generateHash = async (req, res) => {
         });
     } catch (error) {
         console.error('Error in generateHash:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Could not initialize payment. Please try again later.' });
     }
 };
 
@@ -86,9 +107,6 @@ exports.handleNotification = async (req, res) => {
         card_last_digits
     } = req.body;
 
-    console.log('--- PayHere Notification Received ---');
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-
     // For our internal logic, we'll use paymentID to refer to our order_id
     const internalPaymentID = order_id;
 
@@ -102,11 +120,6 @@ exports.handleNotification = async (req, res) => {
         .update(hashString)
         .digest('hex')
         .toUpperCase();
-
-    console.log('Hash String:', hashString);
-    console.log('Local Sig:', localMd5sig);
-    console.log('Recv Sig:', md5sig);
-    console.log('Status Code:', status_code);
 
     const isTestMode = process.env.PAYHERE_TEST_MODE === 'true' && md5sig === 'TEST_MODE';
 
@@ -135,9 +148,8 @@ exports.handleNotification = async (req, res) => {
             const final_method = method || 'N/A';
 
             const notifyEnvironment = isTestMode ? 'SANDBOX' : 'LIVE';
-            console.log(`Updating DB: OrderID=${internalPaymentID}, Status=${paymentStatus}, PayID=${final_payment_id}, Environment=${notifyEnvironment}`);
 
-            const [result] = await db.execute(
+            await db.execute(
                 `UPDATE payments 
                  SET payment_status = ?, 
                      payhere_payment_id = ?, 
@@ -148,18 +160,12 @@ exports.handleNotification = async (req, res) => {
                 [paymentStatus, final_payment_id, final_method, final_card_digits, notifyEnvironment, internalPaymentID]
             );
 
-            if (result.affectedRows === 0) {
-                console.warn('No record found to update with OrderID:', internalPaymentID);
-            } else {
-                console.log(`Database updated to ${paymentStatus} for order:`, internalPaymentID);
-            }
             res.status(200).send('OK');
         } catch (error) {
             console.error('Database update error:', error);
             res.status(500).send('DB Error');
         }
     } else {
-        console.log('Invalid signature');
         res.status(400).send('Invalid signature');
     }
 }

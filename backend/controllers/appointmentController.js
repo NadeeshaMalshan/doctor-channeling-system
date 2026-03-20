@@ -65,7 +65,12 @@ exports.createAppointment = async (req, res) => {
         await connection.execute(updateScheduleQuery, updateParams);
 
         await connection.commit();
-        res.status(201).json({ success: true, message: 'Appointment booked successfully', data: { id: result.insertId } });
+        const newAppointmentId = Number(result.insertId);
+        res.status(201).json({
+            success: true,
+            message: 'Appointment booked successfully',
+            data: { id: newAppointmentId }
+        });
 
     } catch (error) {
         if (connection) {

@@ -325,6 +325,28 @@
 .modal-header h3 {
     font-size: 24px;
     color: #1E3A5F;
+    margin: 0 0 6px 0;
+}
+
+.modal-header-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-schedule-no {
+    margin: 0;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.modal-schedule-no strong {
+    color: #1E3A5F;
+}
+
+.app-schedule-no {
+    font-size: 13px;
+    color: #2563eb !important;
+    margin-bottom: 4px !important;
 }
 
 .close-btn {

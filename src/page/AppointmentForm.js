@@ -63,8 +63,34 @@ const AppointmentForm = () => {
             const data = await res.json();
 
             if (res.ok) {
-                navigate('/ecare/payment', {
-                    state: { appointmentScheduleId: schedule_id }
+                const appointmentId =
+                    data?.data?.id ??
+                    data?.data?.insertId ??
+                    data?.id ??
+                    null;
+                const scheduleIdStr = String(schedule_id);
+
+                if (appointmentId != null && appointmentId !== '') {
+                    try {
+                        sessionStorage.setItem('paymentContext', JSON.stringify({
+                            appointmentId: Number(appointmentId),
+                            appointmentScheduleId: scheduleIdStr
+                        }));
+                    } catch (_) { /* ignore */ }
+                }
+
+                const qs = new URLSearchParams();
+                qs.set('appointment_schedule_id', scheduleIdStr);
+                if (appointmentId != null && appointmentId !== '') {
+                    qs.set('appointment_id', String(appointmentId));
+                }
+
+                navigate(`/ecare/payment?${qs.toString()}`, {
+                    replace: true,
+                    state: {
+                        appointmentScheduleId: schedule_id,
+                        appointmentId: appointmentId != null ? Number(appointmentId) : null
+                    }
                 });
             } else {
                 setError(data.message || 'Failed to book appointment');
@@ -97,6 +123,10 @@ const AppointmentForm = () => {
                         <h3>Schedule Information</h3>
                         {scheduleDetails ? (
                             <div className="summary-grid">
+                                <div className="summary-item">
+                                    <span className="label">Appointment schedule No</span>
+                                    <span className="value">{schedule_id}</span>
+                                </div>
                                 <div className="summary-item">
                                     <span className="label">Doctor</span>
                                     <span className="value">Dr. {scheduleDetails.doctor_name}</span>

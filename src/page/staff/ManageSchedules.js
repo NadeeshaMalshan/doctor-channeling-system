@@ -256,6 +256,7 @@ const ManageSchedules = () => {
                                         </span>
 
                                         <div className="schedule-details">
+                                            <p><strong>Schedule No:</strong> {schedule.id}</p>
                                             <p><strong>Time:</strong> {schedule.start_time} - {schedule.end_time}</p>
                                             <p><strong>Booked:</strong> {schedule.booked_count} / {schedule.max_patients}</p>
                                             <p><strong>Price:</strong> Rs. {Number(schedule.price).toFixed(2)}</p>
@@ -287,14 +288,27 @@ const ManageSchedules = () => {
                     <div className="appointments-modal-overlay">
                         <div className="appointments-modal">
                             <div className="modal-header">
-                                <h3> {schedules
-                                    .filter(schedule => schedule.id === selectedScheduleId)
-                                    .map(schedule => (
-                                        <h3 key={schedule.id}>Appointments for Dr. {schedule.doctor_name}</h3>
-                                    ))
-                                }</h3>
+                                <div className="modal-header-text">
+                                    {schedules
+                                        .filter((s) => s.id === selectedScheduleId)
+                                        .map((schedule) => (
+                                            <div key={schedule.id}>
+                                                <h3>Appointments — Dr. {schedule.doctor_name}</h3>
+                                                <p className="modal-schedule-no">
+                                                    <strong>Appointment schedule No:</strong> {schedule.id}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    {schedules.every((s) => s.id !== selectedScheduleId) && selectedScheduleId != null && (
+                                        <div>
+                                            <h3>Appointments</h3>
+                                            <p className="modal-schedule-no">
+                                                <strong>Appointment schedule No:</strong> {selectedScheduleId}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                                 <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
-
                             </div>
 
                             <div className="appointment-list">
@@ -310,6 +324,9 @@ const ManageSchedules = () => {
                                             </div>
                                             <div className="app-info">
                                                 <h4>{app.first_name} {app.second_name}</h4>
+                                                <p className="app-schedule-no">
+                                                    <strong>Schedule No:</strong> {app.schedule_id ?? selectedScheduleId}
+                                                </p>
                                                 <p>Phone: {app.customer_phone}</p>
                                                 <p>Booked on: {new Date(app.created_at).toLocaleString()}</p>
                                             </div>
