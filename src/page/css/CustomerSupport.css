@@ -5,8 +5,8 @@
 /* Page Background */
 .cs-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
-    font-family: 'Lato', sans-serif;
+    background: #F1F5F9;
+    font-family: 'Inter', sans-serif;
 }
 
 /* ===========================
@@ -22,22 +22,22 @@
     padding: 14px 22px;
     border-radius: 12px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     z-index: 1000;
     animation: csSlideIn 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: none;
 }
 
 .cs-notification.success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background: #EFF6FF;
+    color: #1E3A5F;
+    border: 1px solid #BFDBFE;
 }
 
 .cs-notification.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background: #F8FAFC;
+    color: #475569;
+    border: 1px solid #E2E8F0;
 }
 
 @keyframes csSlideIn {
@@ -66,7 +66,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
 }
 
 .cs-navbar-brand {
@@ -78,7 +78,7 @@
 .cs-brand-icon {
     width: 42px;
     height: 42px;
-    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    background: #1E3A5F;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -94,7 +94,7 @@
 
 .cs-brand-text h1 {
     font-size: 17px;
-    font-weight: 700;
+    font-weight: 500;
     color: #1a1a2e;
     margin: 0;
     line-height: 1.2;
@@ -114,7 +114,7 @@
 
 .cs-navbar-links a {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     color: #475569;
     text-decoration: none;
     letter-spacing: 0.5px;
@@ -122,7 +122,7 @@
 }
 
 .cs-navbar-links a:hover {
-    color: #4361ee;
+    color: #1E3A5F;
 }
 
 .cs-navbar-roles {
@@ -138,7 +138,7 @@
     padding: 8px 18px;
     border-radius: 24px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.25s ease;
     border: 2px solid transparent;
@@ -151,10 +151,10 @@
 }
 
 .cs-role-patient.active {
-    background: #4361ee;
+    background: #1E3A5F;
     color: white;
-    border-color: #4361ee;
-    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    border-color: #1E3A5F;
+    box-shadow: none;
 }
 
 .cs-role-hr {
@@ -164,10 +164,10 @@
 }
 
 .cs-role-hr.active {
-    background: #7c3aed;
+    background: #1E3A5F;
     color: white;
-    border-color: #7c3aed;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    border-color: #1E3A5F;
+    box-shadow: none;
 }
 
 .cs-role-btn svg {
@@ -196,7 +196,7 @@
     padding: 22px 28px;
     margin-bottom: 24px;
     border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
 }
 
 .cs-user-info {
@@ -209,7 +209,7 @@
     width: 52px;
     height: 52px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    background: #1E3A5F;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -222,7 +222,7 @@
 }
 
 .cs-avatar-hr {
-    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    background: #1E3A5F;
 }
 
 .cs-user-details {
@@ -234,12 +234,12 @@
 .cs-user-label {
     font-size: 12px;
     color: #94a3b8;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .cs-user-name {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 500;
     color: #1a1a2e;
     margin: 0;
 }
@@ -248,7 +248,7 @@
     display: inline-block;
     width: fit-content;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     padding: 3px 10px;
     border-radius: 6px;
     background: #dbeafe;
@@ -257,8 +257,8 @@
 }
 
 .cs-badge-hr {
-    background: #ede9fe;
-    color: #7c3aed;
+    background: #EFF6FF;
+    color: #1E3A5F;
 }
 
 .cs-create-btn {
@@ -266,21 +266,21 @@
     align-items: center;
     gap: 8px;
     padding: 10px 22px;
-    background: #4cc9f0;
+    background: #2563EB;
     color: white;
     border: none;
     border-radius: 12px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.25s ease;
-    box-shadow: 0 4px 14px rgba(76, 201, 240, 0.3);
+    box-shadow: none;
 }
 
 .cs-create-btn:hover {
     transform: translateY(-1px);
-    background: #4895ef;
-    box-shadow: 0 6px 20px rgba(76, 201, 240, 0.4);
+    background: #1d4ed8;
+    box-shadow: none;
 }
 
 .cs-create-btn svg {
@@ -295,7 +295,7 @@
     backdrop-filter: blur(10px);
     border-radius: 18px;
     border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
     overflow: hidden;
 }
 
@@ -309,7 +309,7 @@
 
 .cs-tickets-header h2 {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 500;
     color: #1a1a2e;
     margin: 0;
 }
@@ -317,7 +317,7 @@
 .cs-tickets-count {
     font-size: 13px;
     color: #94a3b8;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .cs-tickets-icon {
@@ -383,24 +383,24 @@
 .cs-empty p {
     color: #94a3b8;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .cs-create-btn-sm {
     padding: 8px 20px;
-    background: #4361ee;
+    background: #2563EB;
     color: white;
     border: none;
     border-radius: 10px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     margin-top: 8px;
     transition: background 0.2s;
 }
 
 .cs-create-btn-sm:hover {
-    background: #3a0ca3;
+    background: #1D4ED8;
 }
 
 /* ===========================
@@ -434,8 +434,8 @@
 
 .cs-ticket-title {
     font-size: 15px;
-    font-weight: 700;
-    color: #4361ee;
+    font-weight: 500;
+    color: #1E3A5F;
     margin: 0 0 6px;
 }
 
@@ -462,7 +462,7 @@
     gap: 5px;
     font-size: 12px;
     color: #94a3b8;
-    font-weight: 500;
+    font-weight: 400;
     background: #f1f5f9;
     padding: 4px 10px;
     border-radius: 6px;
@@ -489,30 +489,30 @@
     align-items: center;
     gap: 5px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     padding: 6px 14px;
     border-radius: 20px;
     white-space: nowrap;
 }
 
 .cs-status-pending {
-    background: #fef3c7;
-    color: #d97706;
-    border: 1px solid #fde68a;
+    background: #F8FAFC;
+    color: #475569;
+    border: 1px solid #E2E8F0;
 }
 
 .cs-status-pending svg {
-    fill: #d97706;
+    fill: #475569;
 }
 
 .cs-status-resolved {
-    background: #d1fae5;
-    color: #059669;
-    border: 1px solid #a7f3d0;
+    background: #EFF6FF;
+    color: #1E3A5F;
+    border: 1px solid #BFDBFE;
 }
 
 .cs-status-resolved svg {
-    fill: #059669;
+    fill: #1E3A5F;
 }
 
 /* HR Action Buttons */
@@ -521,7 +521,7 @@
     align-items: center;
     gap: 4px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;
     padding: 5px 12px;
     border-radius: 18px;
     cursor: pointer;
@@ -537,19 +537,19 @@
 }
 
 .cs-action-pending svg {
-    fill: #94a3b8;
+    fill: #475569;
 }
 
 .cs-action-pending:hover,
 .cs-action-pending.cs-action-active {
-    background: #fef3c7;
-    color: #d97706;
-    border-color: #fde68a;
+    background: #F8FAFC;
+    color: #475569;
+    border-color: #E2E8F0;
 }
 
 .cs-action-pending:hover svg,
 .cs-action-pending.cs-action-active svg {
-    fill: #d97706;
+    fill: #475569;
 }
 
 .cs-action-resolved {
@@ -563,14 +563,14 @@
 
 .cs-action-resolved:hover,
 .cs-action-resolved.cs-action-active {
-    background: #d1fae5;
-    color: #059669;
-    border-color: #a7f3d0;
+    background: #EFF6FF;
+    color: #1E3A5F;
+    border-color: #BFDBFE;
 }
 
 .cs-action-resolved:hover svg,
 .cs-action-resolved.cs-action-active svg {
-    fill: #059669;
+    fill: #1E3A5F;
 }
 
 .cs-delete-btn {
@@ -584,12 +584,12 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    color: #ef4444;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: #475569;
+    box-shadow: none;
 }
 
 .cs-delete-btn:hover {
-    background: #fee2e2;
+    background: #E2E8F0;
     transform: scale(1.05);
 }
 
@@ -606,10 +606,10 @@
 /* Modal Promise Message */
 .cs-modal-promise {
     font-size: 13px;
-    color: #4895ef;
+    color: #2563EB;
     text-align: center;
     margin-top: 15px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* HR Filter Tabs */
@@ -630,7 +630,7 @@
     background: transparent;
     color: #64748b;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -641,8 +641,8 @@
 
 .cs-filter-btn.active {
     background: #fff;
-    color: #4cc9f0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    color: #2563EB;
+    box-shadow: none;
 }
 
 /* ===========================
@@ -675,7 +675,8 @@
     border-radius: 18px;
     width: 100%;
     max-width: 520px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    border: 1px solid #E2E8F0;
+    box-shadow: none;
     animation: csModalSlide 0.3s ease;
     overflow: hidden;
 }
@@ -725,7 +726,7 @@
 
 .cs-modal-header-left h2 {
     font-size: 17px;
-    font-weight: 700;
+    font-weight: 500;
     color: #1a1a2e;
     margin: 0;
 }
@@ -769,13 +770,13 @@
 .cs-form-group label {
     display: block;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     color: #1a1a2e;
     margin-bottom: 8px;
 }
 
 .cs-required {
-    color: #ef4444;
+    color: #1E3A5F;
 }
 
 .cs-form-group input,
@@ -847,7 +848,7 @@
     color: #475569;
     border-radius: 10px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -859,20 +860,20 @@
 
 .cs-btn-submit {
     padding: 10px 24px;
-    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    background: #2563EB;
     color: white;
     border: none;
     border-radius: 10px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.25s ease;
-    box-shadow: 0 4px 14px rgba(67, 97, 238, 0.3);
+    box-shadow: none;
 }
 
 .cs-btn-submit:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+    box-shadow: none;
 }
 
 .cs-btn-submit:disabled {
@@ -942,7 +943,8 @@
     padding: 20px;
     border-radius: 16px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    border: 1px solid #E2E8F0;
     transition: transform 0.2s;
 }
 
@@ -953,34 +955,34 @@
 .cs-summary-card h4 {
     margin: 0;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     color: #475569;
     margin-bottom: 8px;
 }
 
 .cs-summary-card .cs-summary-value {
     font-size: 28px;
-    font-weight: 800;
+    font-weight: 500;
 }
 
 .cs-summary-solved {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: #EFF6FF;
+    color: #1E3A5F;
 }
 
 .cs-summary-raised {
-    background-color: #e3f2fd;
-    color: #1565c0;
+    background-color: #E2E8F0;
+    color: #1E3A5F;
 }
 
 .cs-summary-pending {
-    background-color: #fff3e0;
-    color: #ef6c00;
+    background-color: #F8FAFC;
+    color: #475569;
 }
 
 .cs-summary-deleted {
-    background-color: #fce4ec;
-    color: #c2185b;
+    background-color: #F1F5F9;
+    color: #64748B;
 }
 
 /* Sticky Button & Tooltip */
@@ -995,20 +997,20 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: #4cc9f0;
+    background: #2563EB;
     color: white;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(76, 201, 240, 0.4);
+    box-shadow: none;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .cs-sticky-btn:hover {
     transform: scale(1.1) rotate(5deg);
-    background: #4895ef;
+    background: #1D4ED8;
 }
 
 .cs-sticky-btn svg {
@@ -1024,7 +1026,8 @@
     padding: 12px 20px;
     border-radius: 12px;
     width: 200px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: none;
+    border: 1px solid #E2E8F0;
     opacity: 0;
     visibility: hidden;
     transform: translateY(10px);
@@ -1060,7 +1063,7 @@
 
 .cs-topic-header h2 {
     font-size: 22px;
-    font-weight: 700;
+    font-weight: 500;
     color: #1a1a2e;
     margin: 0;
 }

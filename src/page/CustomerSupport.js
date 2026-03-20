@@ -206,7 +206,7 @@ const CustomerSupport = () => {
                                     <h3 className="cs-ticket-title">{ticket.subject}</h3>
                                     <p className="cs-ticket-desc">{ticket.description}</p>
                                     {ticket.hr_reply && (ticket.status === 'Resolved' || ticket.status === 'Rejected') && (
-                                        <div className="cs-ticket-reply" style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f5f7fa', borderLeft: ticket.status === 'Resolved' ? '4px solid #2e7d32' : '4px solid #c2185b', borderRadius: '4px' }}>
+                                        <div className="cs-ticket-reply" style={{ marginTop: '10px', padding: '10px', backgroundColor: '#F8FAFC', borderRadius: '4px', border: '1px solid #E2E8F0' }}>
                                             <h4 style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#333' }}>{ticket.status === 'Resolved' ? 'Solution' : 'Reason for Rejection'}:</h4>
                                             <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>{ticket.hr_reply}</p>
                                         </div>

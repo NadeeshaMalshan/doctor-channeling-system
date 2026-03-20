@@ -209,10 +209,10 @@ const HRCustomerSupport = () => {
                                     </span>
                                     {ticket.status === 'Pending' && (
                                         <>
-                                            <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Resolved')} title="Resolve" style={{ color: '#2e7d32' }}>
+                                            <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Resolved')} title="Resolve" style={{ color: '#1E3A5F' }}>
                                                 <span className="material-symbols-outlined">check_circle</span>
                                             </button>
-                                            <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Rejected')} title="Reject" style={{ color: '#c2185b' }}>
+                                            <button className="cs-delete-btn" onClick={() => handleUpdateStatus(ticket.id, 'Rejected')} title="Reject" style={{ color: '#475569' }}>
                                                 <span className="material-symbols-outlined">cancel</span>
                                             </button>
                                         </>
