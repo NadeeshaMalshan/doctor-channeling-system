@@ -6,33 +6,37 @@ import { useNavigate } from 'react-router-dom';
 const NavBar = () => {
     const navigate = useNavigate();
     return (
-        <nav className="navbar">
-            <Link to="/" className="navbar-brand">
-                <div className="brand-logo">
+        <nav className="ecare-navbar">
+            <Link to="/" className="ecare-navbar-brand">
+                <div className="ecare-logo-icon">
                     <img src="/favicon.png" alt="NCC Logo" />
                 </div>
-                <div className="brand-text-container">
-                    <span className="brand-text">Narammala</span>
-                    <span className="brand-subtitle">Channeling Center</span>
+                <div className="ecare-brand-text">
+                    <span className="brand-name">Narammala</span>
+                    <span className="brand-tagline">Channeling Center</span>
                 </div>
             </Link>
-            <ul className="navbar-links">
-                <li>
-                    <Link to="/" className="nav-link">Home</Link>
-                </li>
-                <li>
-                    <Link to="/doctors" className="nav-link">Doctors</Link>
-                </li>
-                <li>
-                    <Link to="/services" className="nav-link">Services</Link>
-                </li>
-                <li>
-                    <Link to="/contact" className="nav-link">Contact</Link>
-                </li>
-                <li>
-                    <button className="nav-book-btn" onClick={() => navigate("/eCare")}>NCC eCare</button>
-                </li>
-            </ul>
+
+            <div className="ecare-navbar-actions">
+                <Link to="/#about" className="ecare-btn btn-login">
+                    About
+                </Link>
+                <Link to="/#services" className="ecare-btn btn-login">
+                    Services
+                </Link>
+                <Link to="/#contact" className="ecare-btn btn-login">
+                    Contact
+                </Link>
+                <Link to="/ecare/doctors" className="ecare-btn btn-login">
+                    Doctors
+                </Link>
+                <button
+                    className="ecare-btn btn-channeling-center"
+                    onClick={() => navigate("/eCare")}
+                >
+                    NCC eCare
+                </button>
+            </div>
         </nav>
     );
 };
