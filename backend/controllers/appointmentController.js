@@ -105,6 +105,35 @@ exports.getAppointmentsBySchedule = async (req, res) => {
     }
 };
 
+exports.getPatientAppointments = async (req, res) => {
+    const { patient_id } = req.params;
+    try {
+        const [appointments] = await db.execute(`
+            SELECT 
+                a.id as appointment_id,
+                a.appointment_payment_status,
+                a.created_at as booking_date,
+                s.schedule_date,
+                s.start_time,
+                s.end_time,
+                s.price,
+                d.name as doctor_name,
+                d.specialization as doctor_specialization,
+                d.hospital as doctor_hospital
+            FROM appointments a
+            JOIN appointment_schedules s ON a.schedule_id = s.id
+            JOIN doctors d ON a.doctor_id = d.id
+            WHERE a.patient_ID = ?
+            ORDER BY s.schedule_date DESC, s.start_time DESC
+        `, [patient_id]);
+
+        res.status(200).json({ success: true, message: 'Patient appointments fetched successfully', data: appointments });
+    } catch (error) {
+        console.error('Get patient appointments error:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching appointments' });
+    }
+};
+
 exports.updateAppointment = async (req, res) => {
     const { id } = req.params;
     const { appointment_status } = req.body;

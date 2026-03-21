@@ -5,6 +5,7 @@ const appointmentController = require('../controllers/appointmentController');
 router.post('/', appointmentController.createAppointment);
 
 router.get('/schedule/:schedule_id', appointmentController.getAppointmentsBySchedule);
+router.get('/patient/:patient_id', appointmentController.getPatientAppointments);
 router.put('/:id', appointmentController.updateAppointment);
 router.delete('/:id', appointmentController.deleteAppointment);
 

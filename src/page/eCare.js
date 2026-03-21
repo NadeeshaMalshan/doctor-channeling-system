@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ECareNavBar from '../Components/eCareNavBar';
 import ChannelDoctor from '../Components/ChannelDoctor';
 import Profile from '../Components/Profile';
+import AppointmentHistory from '../Components/AppointmentHistory';
 
 
 import './css/eCare.css';
@@ -15,6 +16,7 @@ const ECare = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showProfile, setShowProfile] = useState(false);
+    const [showAppointmentHistory, setShowAppointmentHistory] = useState(false);
     const [patientUser, setPatientUser] = useState(null);
     const [hasSupportUpdates, setHasSupportUpdates] = useState(false);
 
@@ -29,7 +31,11 @@ const ECare = () => {
     // Expose show profile function to window for Navbar access
     useEffect(() => {
         window.showPatientProfile = () => setShowProfile(true);
-        return () => { window.showPatientProfile = null; };
+        window.showAppointmentHistory = () => setShowAppointmentHistory(true);
+        return () => { 
+            window.showPatientProfile = null; 
+            window.showAppointmentHistory = null;
+        };
     }, []);
 
     const handleProfileUpdate = (updatedUser) => {
@@ -110,6 +116,13 @@ const ECare = () => {
                     patientId={patientUser.id}
                     onClose={() => setShowProfile(false)}
                     onUpdate={handleProfileUpdate}
+                />
+            )}
+
+            {showAppointmentHistory && patientUser && (
+                <AppointmentHistory
+                    patientId={patientUser.id}
+                    onClose={() => setShowAppointmentHistory(false)}
                 />
             )}
 
