@@ -66,24 +66,6 @@ exports.generateHash = async (req, res) => {
         const hashRaw = merchantID + paymentID + amountFormatted + currency + hashedSecret;
         const hash = crypto.createHash('md5').update(hashRaw).digest('hex').toUpperCase();
 
-        // Fetch doctorID from schedule
-        const [scheduleRows] = await db.execute(
-            'SELECT doctor_id FROM appointment_schedules WHERE id = ?',
-            [appointmentScheduleId]
-        );
-        const doctorID = scheduleRows.length > 0 ? scheduleRows[0].doctor_id : 0;
-
-        // save a PENDING record in the database
-        // paymentID format: ORD{appointmentID}_{timestamp}
-        const appointmentID = paymentID.split('_')[0].replace('ORD', '');
-        const paymentEnvironment = sandbox === false ? 'LIVE' : 'SANDBOX';
-
-        await db.execute(
-            `INSERT INTO payments (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status, payment_environment) 
-             VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
-            [appointmentID, paymentID, patientID, doctorID, appointmentScheduleId, amount, paymentEnvironment]
-        );
-
         res.status(200).json({
             hash,
             merchantID: merchantID.trim()
@@ -189,9 +171,9 @@ exports.getPaymentStatus = async (req, res) => {
     }
 };
 
-exports.getAllPaymentsForCashier = async (req, res)=>{
-    try{
-        const [rows]= await db.execute(`
+exports.getAllPaymentsForCashier = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
             SELECT 
                 p.appointment_id,
                 CONCAT(pt.first_name, ' ', pt.second_name) AS patient_name,
@@ -213,7 +195,7 @@ exports.getAllPaymentsForCashier = async (req, res)=>{
                 ORDER BY 
                 p.created_at DESC -- Show newest transactions first
             `);
-            res.status(200).json(rows);
+        res.status(200).json(rows);
     } catch (error) {
         console.error('Error fetching all payments:', error);
         res.status(500).json({ message: 'Internal server error' });

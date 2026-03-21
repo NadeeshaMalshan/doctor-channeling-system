@@ -1,5 +1,82 @@
 const db = require('../config/db');
 
+exports.finalizeAppointment = async (req, res) => {
+    const { pending_appointment, payhere_order_id, amount } = req.body;
+
+    if (!pending_appointment || !payhere_order_id) {
+        return res.status(400).json({ success: false, message: 'Missing required data' });
+    }
+
+    const { schedule_id, doctor_id, patient_ID, appointment_No } = pending_appointment;
+
+    let connection;
+    try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        // 1. Insert Appointment
+        const [appointmentResult] = await connection.execute(
+            `INSERT INTO appointments 
+            (schedule_id, doctor_id, patient_ID, appointment_No, appointment_payment_status) 
+            VALUES (?, ?, ?, ?, 'paid')`,
+            [schedule_id, doctor_id, patient_ID, appointment_No]
+        );
+
+        const newAppointmentId = appointmentResult.insertId;
+
+        // 2. Insert Payment
+        const paymentEnvironment = process.env.PAYHERE_TEST_MODE === 'true' ? 'SANDBOX' : 'LIVE';
+
+        await connection.execute(
+            `INSERT INTO payments 
+             (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status, payment_environment) 
+             VALUES (?, ?, ?, ?, ?, ?, 'SUCCESS', ?)`,
+            [newAppointmentId, payhere_order_id, patient_ID, doctor_id, schedule_id, amount || pending_appointment.channelingFee, paymentEnvironment]
+        );
+
+        // 3. Update Schedule booked_count
+        const [schedules] = await connection.execute(
+            'SELECT * FROM appointment_schedules WHERE id = ? FOR UPDATE',
+            [schedule_id]
+        );
+
+        if (schedules.length > 0) {
+            const schedule = schedules[0];
+            const newBookedCount = schedule.booked_count + 1;
+            let updateScheduleQuery = 'UPDATE appointment_schedules SET booked_count = ?';
+            const updateParams = [newBookedCount];
+
+            if (newBookedCount >= schedule.max_patients) {
+                updateScheduleQuery += ', status = ?';
+                updateParams.push('full');
+            }
+
+            updateScheduleQuery += ' WHERE id = ?';
+            updateParams.push(schedule_id);
+
+            await connection.execute(updateScheduleQuery, updateParams);
+        }
+
+        await connection.commit();
+        res.status(200).json({
+            success: true,
+            message: 'Appointment finalized successfully',
+            data: { id: newAppointmentId }
+        });
+
+    } catch (error) {
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error('Finalize appointment error:', error);
+        res.status(500).json({ success: false, message: 'Server error while finalizing appointment' });
+    } finally {
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+
 exports.createAppointment = async (req, res) => {
     const {
         schedule_id,

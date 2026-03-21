@@ -76,18 +76,35 @@ const PaymentPortal = () => {
             return;
         }
 
-        const fetchDetails = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
-                setDetails(response.data);
-                setLoading(false);
-            } catch {
-                setError('fetch_failed');
-                setLoading(false);
-            }
-        };
-
-        fetchDetails();
+        const pendingItem = sessionStorage.getItem('pending_appointment');
+        if (pendingItem) {
+            const pendingData = JSON.parse(pendingItem);
+            const mappedDetails = {
+                first_name: pendingData.patientName.split(' ')[0],
+                second_name: pendingData.patientName.split(' ').slice(1).join(' ') || '',
+                doctor_name: pendingData.doctorName,
+                specialization: pendingData.specialization,
+                schedule_date: pendingData.schedule_date,
+                start_time: pendingData.start_time,
+                channelingFee: pendingData.channelingFee,
+                appointment_schedule_id: pendingData.schedule_id,
+                appointment_queue_no: pendingData.appointment_No,
+            };
+            setDetails(mappedDetails);
+            setLoading(false);
+        } else {
+            const fetchDetails = async () => {
+                try {
+                    const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
+                    setDetails(response.data);
+                    setLoading(false);
+                } catch {
+                    setError('fetch_failed');
+                    setLoading(false);
+                }
+            };
+            fetchDetails();
+        }
 
         return () => {
             document.title = "Doctor Channeling System";
@@ -234,12 +251,18 @@ const PaymentPortal = () => {
     };
 
     const handlePayHereClick = async () => {
-        const appointmentID = paymentData.appointmentId;
-        if (appointmentID == null || appointmentID === '') {
-            alert('Appointment number is missing. Please complete your booking again from the appointment page.');
-            return;
+        let paymentID = '';
+        const pendingItem = sessionStorage.getItem('pending_appointment');
+        if (pendingItem) {
+            paymentID = 'ORD' + appointmentScheduleId + '_' + patientId + '_' + Date.now();
+        } else {
+            const appointmentID = paymentData.appointmentId;
+            if (appointmentID == null || appointmentID === '') {
+                alert('Appointment number is missing. Please complete your booking again from the appointment page.');
+                return;
+            }
+            paymentID = 'ORD' + appointmentID + '_' + Date.now();
         }
-        const paymentID = 'ORD' + appointmentID + '_' + Date.now();
         const amount = paymentData.totalAmount;
         const currency = 'LKR';
 
@@ -295,6 +318,33 @@ const PaymentPortal = () => {
 
             // PayHere Callbacks - Register BEFORE starting payment
             window.payhere.onCompleted = async function onCompleted(order_id) {
+                const pendingItemStr = sessionStorage.getItem('pending_appointment');
+                if (pendingItemStr) {
+                    try {
+                        const pendingData = JSON.parse(pendingItemStr);
+                        const finalizeRes = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/appointments/finalize`, {
+                            pending_appointment: pendingData,
+                            payhere_order_id: order_id,
+                            amount: amount
+                        });
+
+                        sessionStorage.removeItem('pending_appointment');
+
+                        if (finalizeRes.data.success) {
+                            navigate('/ecare/payment/success', {
+                                state: { ...paymentData, paymentID: order_id, appointment_No: pendingData.appointment_No }
+                            });
+                        } else {
+                            navigate('/ecare/payment/failed');
+                        }
+                    } catch (e) {
+                        console.error('Finalize error', e);
+                        sessionStorage.removeItem('pending_appointment');
+                        navigate('/ecare/payment/failed');
+                    }
+                    return;
+                }
+
                 let attempts = 0;
                 const maxAttempts = 15;
 
@@ -391,7 +441,6 @@ const PaymentPortal = () => {
                             <p><span>Specialization:</span> {paymentData.specialization}</p>
                             <p><span>Appointment schedule no:</span> {paymentData.appointmentScheduleNo ?? '—'}</p>
                             <p><span>Date/Time:</span> {paymentData.dateTime}</p>
-                            <p><span>Appointment no:</span> {paymentData.appointmentNo != null && paymentData.appointmentNo !== '' ? paymentData.appointmentNo : '—'}</p>
                             <div className="fee-row">
                                 <p><span>Fee:</span> {paymentData.totalAmount} LKR</p>
                                 <small>({paymentData.serviceCharge} LKR for channeling center charges)</small>

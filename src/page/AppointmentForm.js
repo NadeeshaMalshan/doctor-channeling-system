@@ -50,53 +50,43 @@ const AppointmentForm = () => {
         setError('');
 
         try {
-            const res = await fetch('http://localhost:5000/api/appointments', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    schedule_id,
-                    doctor_id,
-                    patient_ID: patient.id
-                })
-            });
-
+            // Fetch current schedule details to get up-to-date booked_count
+            const res = await fetch(`http://localhost:5000/api/schedules/${schedule_id}`);
             const data = await res.json();
 
-            if (res.ok) {
-                const appointmentId =
-                    data?.data?.id ??
-                    data?.data?.insertId ??
-                    data?.id ??
-                    null;
-                const scheduleIdStr = String(schedule_id);
+            if (res.ok && data.success) {
+                const currentSchedule = data.data;
+                const appointment_No = currentSchedule.booked_count + 1;
 
-                if (appointmentId != null && appointmentId !== '') {
-                    try {
-                        sessionStorage.setItem('paymentContext', JSON.stringify({
-                            appointmentId: Number(appointmentId),
-                            appointmentScheduleId: scheduleIdStr
-                        }));
-                    } catch (_) { /* ignore */ }
-                }
+                const pending_appointment = {
+                    schedule_id,
+                    doctor_id,
+                    patient_ID: patient.id,
+                    appointment_No,
+                    patientName: `${patient.first_name} ${patient.second_name}`,
+                    doctorName: currentSchedule.doctor_name,
+                    specialization: currentSchedule.specialization,
+                    schedule_date: currentSchedule.schedule_date,
+                    start_time: currentSchedule.start_time,
+                    channelingFee: Number(currentSchedule.price)
+                };
+
+                sessionStorage.setItem('pending_appointment', JSON.stringify(pending_appointment));
 
                 const qs = new URLSearchParams();
-                qs.set('appointment_schedule_id', scheduleIdStr);
-                if (appointmentId != null && appointmentId !== '') {
-                    qs.set('appointment_id', String(appointmentId));
-                }
+                qs.set('appointment_schedule_id', String(schedule_id));
 
                 navigate(`/ecare/payment?${qs.toString()}`, {
                     replace: true,
                     state: {
-                        appointmentScheduleId: schedule_id,
-                        appointmentId: appointmentId != null ? Number(appointmentId) : null
+                        appointmentScheduleId: schedule_id
                     }
                 });
             } else {
-                setError(data.message || 'Failed to book appointment');
+                setError(data?.message || 'Failed to fetch schedule details');
             }
         } catch (err) {
-            setError('Network error occurred while booking');
+            setError('Network error occurred before payment');
         } finally {
             setLoading(false);
         }
@@ -183,10 +173,6 @@ const AppointmentForm = () => {
                                     <div className="summary-item">
                                         <span className="label">Price</span>
                                         <span className="value">Rs. {Number(scheduleDetails.price).toFixed(2)}</span>
-                                    </div>
-                                    <div className="summary-item">
-                                        <span className="label">Appointment NO</span>
-                                        <span className="value">No. {Number(scheduleDetails.booked_count) + 1}</span>
                                     </div>
                                 </div>
                             ) : (
