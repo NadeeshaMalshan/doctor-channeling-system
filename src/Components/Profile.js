@@ -80,10 +80,13 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
                 const updatedUser = {
                     ...storedUser,
                     firstName: formData.firstName,
-                    secondName: formData.secondName
+                    secondName: formData.secondName,
+                    first_name: formData.firstName,
+                    second_name: formData.secondName
                 };
                 localStorage.setItem('user', JSON.stringify(updatedUser));
                 console.log('Stored user after update:', updatedUser);
+                window.dispatchEvent(new Event('profileUpdated'));
 
                 setSuccess('Profile updated successfully!');
                 setEditMode(false);
