@@ -3,6 +3,12 @@ const db = require('../config/db');
 // Patient: Create a new support ticket
 exports.createTicket = async (req, res) => {
     const { patientId, patientName, patientEmail, subject, description } = req.body;
+    let attachmentPath = null;
+    
+    // multer stores the file in req.file
+    if (req.file) {
+        attachmentPath = req.file.path.replace(/\\/g, '/'); // Normalize path
+    }
 
     try {
         if (!patientId || !patientName || !patientEmail || !subject || !description) {
@@ -10,8 +16,8 @@ exports.createTicket = async (req, res) => {
         }
 
         const [result] = await db.execute(
-            'INSERT INTO support_tickets (patient_id, patient_name, patient_email, subject, description) VALUES (?, ?, ?, ?, ?)',
-            [patientId, patientName, patientEmail, subject, description]
+            'INSERT INTO support_tickets (patient_id, patient_name, patient_email, subject, description, attachment_path) VALUES (?, ?, ?, ?, ?, ?)',
+            [patientId, patientName, patientEmail, subject, description, attachmentPath]
         );
 
         res.status(201).json({ message: 'Ticket created successfully', ticketId: result.insertId });
