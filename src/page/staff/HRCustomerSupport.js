@@ -35,7 +35,7 @@ const HRCustomerSupport = () => {
             }
         } catch (error) {
             console.error('Error fetching tickets:', error);
-            showNotification('Failed to connect to the server', 'error');
+            showNotification('Check your connection and try again.', 'error');
         } finally {
             setLoading(false);
         }
@@ -82,18 +82,30 @@ const HRCustomerSupport = () => {
                 showNotification(data.message || 'Failed to delete ticket', 'error');
             }
         } catch (error) {
-            showNotification('Failed to connect to the server', 'error');
+            showNotification('Check your connection and try again.', 'error');
         }
     };
 
     const submitStatusUpdate = async () => {
         const { ticketId, action } = replyModal;
+        
+        // Prevent replying if the ticket is already updated from 'Pending'
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (ticket && ticket.status !== 'Pending') {
+            showNotification(`already ${ticket.status.toLowerCase()}`, 'error');
+            setReplyModal({ show: false, ticketId: null, action: null });
+            return;
+        }
         if (!replyText.trim() && action === 'Rejected') {
             showNotification('Please provide a reason for rejection', 'error');
             return;
         }
         if (!replyText.trim() && action === 'Resolved') {
             showNotification('Please provide a solution', 'error');
+            return;
+        }
+        if (replyText.trim().length < 10 && (action === 'Resolved' || action === 'Rejected')) {
+            showNotification('Reply must be at least 10 characters long', 'error');
             return;
         }
 
@@ -113,11 +125,17 @@ const HRCustomerSupport = () => {
                 showNotification(data.message || 'Failed to update status', 'error');
             }
         } catch (error) {
-            showNotification('Failed to connect to the server', 'error');
+            showNotification('Check your connection and try again.', 'error');
         }
     };
 
     const handleUpdateStatus = (ticketId, newStatus) => {
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (ticket && ticket.status !== 'Pending') {
+            showNotification(`already ${ticket.status.toLowerCase()}`, 'error');
+            return;
+        }
+
         setReplyModal({ show: true, ticketId, action: newStatus });
         setReplyText('');
     };
@@ -198,6 +216,11 @@ const HRCustomerSupport = () => {
                                     <div className="cs-ticket-meta">
                                         <span className="cs-ticket-meta-item">Patient: {ticket.patient_name}</span>
                                         <span className="cs-ticket-meta-item">{formatDate(ticket.created_at)}</span>
+                                        {ticket.attachment_path && (
+                                            <a href={`${API_URL}/${ticket.attachment_path}`} target="_blank" rel="noopener noreferrer" className="cs-ticket-meta-item" style={{ color: '#2563EB', textDecoration: 'none' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>attach_file</span> View Attachment
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="cs-ticket-actions">
