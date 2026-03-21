@@ -109,8 +109,8 @@ const DoctorSignup = () => {
             const data = await response.json();
 
             if (response.ok) {
-                alert('Doctor Account created successfully!');
-                navigate('/login');
+                alert('Registration Submitted\n\nYour account is pending admin approval. You will be able to log in once your SLMC number is verified.');
+                navigate('/doctorpending', { state: { doctorId: data.doctorId } });
             } else {
                 setErrors(prev => ({
                     ...prev,

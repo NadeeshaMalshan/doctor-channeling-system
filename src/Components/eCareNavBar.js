@@ -15,12 +15,35 @@ const ECareNavBar = () => {
         ? (authStaffUser || authPatientUser) 
         : (authPatientUser || authStaffUser);
 
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    const patientName = user
-        ? (user.first_name
-            ? `${user.first_name} ${user.second_name || ''}`.trim()
-            : user.name || user.fullName || user.username || user.email)
-        : null;
+    const [user, setUser] = useState(storedUser ? JSON.parse(storedUser) : null);
+
+    const getPatientName = (u) => {
+        return u
+            ? (u.first_name
+                ? `${u.first_name} ${u.second_name || ''}`.trim()
+                : u.name || u.fullName || u.username || u.email)
+            : null;
+    };
+
+    const [patientName, setPatientName] = useState(getPatientName(user));
+
+    useEffect(() => {
+        const handleProfileUpdate = () => {
+            const newAuthPatientUser = localStorage.getItem('user');
+            const newStoredUser = isStaffRoute 
+                ? (authStaffUser || newAuthPatientUser) 
+                : (newAuthPatientUser || authStaffUser);
+            
+            const newUser = newStoredUser ? JSON.parse(newStoredUser) : null;
+            setUser(newUser);
+            setPatientName(getPatientName(newUser));
+        };
+
+        window.addEventListener('profileUpdated', handleProfileUpdate);
+        return () => {
+            window.removeEventListener('profileUpdated', handleProfileUpdate);
+        };
+    }, [isStaffRoute, authStaffUser]);
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -39,6 +62,9 @@ const ECareNavBar = () => {
 
     const handleHistoryClick = () => {
         setIsDropdownOpen(false);
+        if (window.showAppointmentHistory) {
+            window.showAppointmentHistory();
+        }
     };
 
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);

@@ -33,7 +33,7 @@ const HRDashboard = () => {
             </header>
 
             <main className="dashboard-content">
-                <div className="dashboard-welcome-card" style={{ background: 'linear-gradient(135deg, #9C27B0 0%, #673AB7 100%)' }}>
+                <div className="dashboard-welcome-card">
                     <h2>Welcome, {staffName}</h2>
                     <p>Manage employee records, attendance, and recruitment.</p>
                 </div>

@@ -414,6 +414,10 @@ const DoctorSearchResults = () => {
                                         <strong>Email</strong>
                                         <span>{selectedDoctor.email || 'Not Specified'}</span>
                                     </div>
+                                    <div className="dsr-modal-row">
+                                        <strong>Consulting Fee</strong>
+                                        <span className="dsr-modal-fee">Rs. {selectedDoctor.consulting_fee}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

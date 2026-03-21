@@ -148,7 +148,22 @@ exports.registerDoctor = async (req, res) => {
         );
 
         if (existingDoctors.length > 0) {
-            return res.status(409).json({ message: 'Doctor with this email, NIC, or SLMC ID already exists' });
+            const anyActive = existingDoctors.some(doc => doc.status !== 'canceled');
+            if (anyActive) {
+                return res.status(409).json({ message: 'Doctor with this email, NIC, or SLMC ID already exists' });
+            } else {
+                // All colliding records are canceled, we can safely overwrite the first one
+                // with new details and set status back to pending
+                const idToUpdate = existingDoctors[0].id;
+                const salt = await bcrypt.genSalt(10);
+                const hashedPassword = await bcrypt.hash(password, salt);
+                
+                await db.execute(
+                    'UPDATE doctors SET name=?, specialization=?, slmc_id=?, nic=?, email=?, phone=?, hospital=?, password_hash=?, status=? WHERE id=?',
+                    [name, specialization, slmcId, nic, email, phone, hospital || null, hashedPassword, 'pending', idToUpdate]
+                );
+                return res.status(201).json({ message: 'Doctor registered successfully', doctorId: idToUpdate });
+            }
         }
 
         // Hash password
@@ -157,8 +172,8 @@ exports.registerDoctor = async (req, res) => {
 
         // Insert new doctor
         const [result] = await db.execute(
-            'INSERT INTO doctors (name, specialization, slmc_id, nic, email, phone, hospital, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [name, specialization, slmcId, nic, email, phone, hospital || null, hashedPassword]
+            'INSERT INTO doctors (name, specialization, slmc_id, nic, email, phone, hospital, password_hash, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [name, specialization, slmcId, nic, email, phone, hospital || null, hashedPassword, 'pending']
         );
 
         res.status(201).json({ message: 'Doctor registered successfully', doctorId: result.insertId });
@@ -226,6 +241,10 @@ exports.login = async (req, res) => {
                 return res.status(401).json({ message: 'Invalid credentials' });
             }
 
+            if (doctor.status === 'canceled') {
+                return res.status(401).json({ message: 'Invalid credentials' });
+            }
+
             return res.status(200).json({
                 message: 'Login successful',
                 userType: 'doctor',
@@ -233,7 +252,8 @@ exports.login = async (req, res) => {
                     id: doctor.id,
                     name: doctor.name,
                     email: doctor.email,
-                    specialization: doctor.specialization
+                    specialization: doctor.specialization,
+                    status: doctor.status
                 }
             });
         }
@@ -251,7 +271,7 @@ exports.getDoctors = async (req, res) => {
     try {
         const { name, specialization, date } = req.query;
 
-        let query = 'SELECT DISTINCT d.id, d.name, d.specialization, d.email, d.phone, d.hospital FROM doctors d';
+        let query = 'SELECT DISTINCT d.id, d.name, d.specialization, d.email, d.phone, d.hospital, d.consulting_fee FROM doctors d';
         const params = [];
         const whereClauses = [];
 
@@ -301,5 +321,54 @@ exports.getSpecializations = async (req, res) => {
     } catch (error) {
         console.error('Error fetching specializations:', error);
         res.status(500).json({ message: 'Server error while fetching specializations' });
+    }
+};
+
+exports.deleteDoctorAccount = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await db.execute("DELETE FROM doctors WHERE id = ?", [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Doctor account not found' });
+        }
+        res.status(200).json({ message: 'Doctor account successfully deleted' });
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        res.status(500).json({ message: 'Server error while deleting account' });
+    }
+};
+
+exports.getDoctorDetails = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [doctors] = await db.execute(
+            'SELECT id, name, specialization, slmc_id, nic, email, phone, hospital, consulting_fee, status FROM doctors WHERE id = ?',
+            [id]
+        );
+        if (doctors.length === 0) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        res.status(200).json(doctors[0]);
+    } catch (error) {
+        console.error('Error fetching doctor details:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.updateDoctorProfile = async (req, res) => {
+    const { id } = req.params;
+    const { name, specialization, slmc_id, nic, email, phone, hospital, consulting_fee } = req.body;
+    try {
+        const [result] = await db.execute(
+            'UPDATE doctors SET name=?, specialization=?, slmc_id=?, nic=?, email=?, phone=?, hospital=?, consulting_fee=? WHERE id=?',
+            [name, specialization, slmc_id, nic, email, phone, hospital, consulting_fee, id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        res.status(200).json({ message: 'Doctor profile updated successfully' });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
