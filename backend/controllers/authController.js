@@ -271,7 +271,7 @@ exports.getDoctors = async (req, res) => {
     try {
         const { name, specialization, date } = req.query;
 
-        let query = 'SELECT DISTINCT d.id, d.name, d.specialization, d.email, d.phone, d.hospital FROM doctors d';
+        let query = 'SELECT DISTINCT d.id, d.name, d.specialization, d.email, d.phone, d.hospital, d.consulting_fee FROM doctors d';
         const params = [];
         const whereClauses = [];
 
@@ -335,5 +335,40 @@ exports.deleteDoctorAccount = async (req, res) => {
     } catch (error) {
         console.error('Error deleting account:', error);
         res.status(500).json({ message: 'Server error while deleting account' });
+    }
+};
+
+exports.getDoctorDetails = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [doctors] = await db.execute(
+            'SELECT id, name, specialization, slmc_id, nic, email, phone, hospital, consulting_fee, status FROM doctors WHERE id = ?',
+            [id]
+        );
+        if (doctors.length === 0) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        res.status(200).json(doctors[0]);
+    } catch (error) {
+        console.error('Error fetching doctor details:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.updateDoctorProfile = async (req, res) => {
+    const { id } = req.params;
+    const { name, specialization, slmc_id, nic, email, phone, hospital, consulting_fee } = req.body;
+    try {
+        const [result] = await db.execute(
+            'UPDATE doctors SET name=?, specialization=?, slmc_id=?, nic=?, email=?, phone=?, hospital=?, consulting_fee=? WHERE id=?',
+            [name, specialization, slmc_id, nic, email, phone, hospital, consulting_fee, id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        res.status(200).json({ message: 'Doctor profile updated successfully' });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
