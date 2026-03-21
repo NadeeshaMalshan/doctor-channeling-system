@@ -9,5 +9,7 @@ router.post('/staff-login', authController.staffLogin);
 router.get('/doctors/specializations', authController.getSpecializations);
 router.get('/doctors', authController.getDoctors);
 router.delete('/doctor/:id', authController.deleteDoctorAccount);
+router.get('/doctor/:id', authController.getDoctorDetails);
+router.put('/doctor/:id', authController.updateDoctorProfile);
 
 module.exports = router;

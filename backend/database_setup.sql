@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS doctors (
     phone VARCHAR(20) NOT NULL,
     hospital VARCHAR(255),
     password_hash VARCHAR(255) NOT NULL,
-    status ENUM('approved', 'pending', 'rejected', 'canceled') DEFAULT 'pending',
+    consulting_fee DECIMAL(10,2) DEFAULT 1000.00,
+    status ENUM('approved', 'pending', 'rejected') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS appointment_schedules (
