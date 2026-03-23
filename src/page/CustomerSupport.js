@@ -13,6 +13,7 @@ const CustomerSupport = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [ticketTitle, setTicketTitle] = useState('');
     const [ticketDescription, setTicketDescription] = useState('');
+    const [attachment, setAttachment] = useState(null);
     const [creating, setCreating] = useState(false);
     const [notification, setNotification] = useState(null);
 
@@ -48,7 +49,7 @@ const CustomerSupport = () => {
             }
         } catch (error) {
             console.error('Error fetching tickets:', error);
-            showNotification('Failed to connect to the server', 'error');
+            showNotification('Check your connection and try again.', 'error');
         } finally {
             setLoading(false);
         }
@@ -86,35 +87,58 @@ const CustomerSupport = () => {
     const handleCreateTicket = async (e) => {
         e.preventDefault();
         if (!ticketTitle.trim() || !ticketDescription.trim()) {
-            showNotification('Please fill in all fields', 'error');
+            showNotification('Title and description are required', 'error');
             return;
         }
+
+        if (ticketDescription.trim().length < 10) {
+            showNotification('Description must be at least 10 characters long', 'error');
+            return;
+        }
+
+        // Prevent duplication of the same ticket within 10 minutes
+        if (tickets.length > 0) {
+            const lastTicket = tickets[0];
+            if (lastTicket.subject === ticketTitle && lastTicket.description === ticketDescription) {
+                const lastTime = new Date(lastTicket.created_at).getTime();
+                const now = new Date().getTime();
+                if ((now - lastTime) < 10 * 60 * 1000) {
+                    showNotification('You cannot submit the exact same ticket within 10 minutes', 'error');
+                    return;
+                }
+            }
+        }
+
         setCreating(true);
         try {
+            const formData = new FormData();
+            formData.append('patientId', user.id);
+            formData.append('patientName', displayName);
+            formData.append('patientEmail', user.email);
+            formData.append('subject', ticketTitle);
+            formData.append('description', ticketDescription);
+            if (attachment) {
+                formData.append('attachment', attachment);
+            }
+
             const response = await fetch(`${API_URL}/api/support/tickets`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    patientId: user.id,
-                    patientName: displayName,
-                    patientEmail: user.email,
-                    subject: ticketTitle,
-                    description: ticketDescription,
-                }),
+                body: formData,
             });
             const data = await response.json();
             if (response.ok) {
-                showNotification('Ticket created successfully!');
+                showNotification('Ticket raised successfully.');
                 setShowCreateModal(false);
                 setTicketTitle('');
                 setTicketDescription('');
+                setAttachment(null);
                 fetchTickets();
             } else {
-                showNotification(data.message || 'Failed to create ticket', 'error');
+                showNotification(data.message || 'Ticket creation failed.', 'error');
             }
         } catch (error) {
             console.error('Error creating ticket:', error);
-            showNotification('Failed to connect to the server', 'error');
+            showNotification('Check your connection and try again.', 'error');
         } finally {
             setCreating(false);
         }
@@ -134,7 +158,7 @@ const CustomerSupport = () => {
                 showNotification(data.message || 'Failed to delete ticket', 'error');
             }
         } catch (error) {
-            showNotification('Failed to connect to the server', 'error');
+            showNotification('Check your connection and try again.', 'error');
         }
     };
 
@@ -214,6 +238,11 @@ const CustomerSupport = () => {
                                     <div className="cs-ticket-meta" style={{ marginTop: '10px' }}>
                                         <span className="cs-ticket-meta-item">{ticket.patient_name}</span>
                                         <span className="cs-ticket-meta-item">{formatDate(ticket.created_at)}</span>
+                                        {ticket.attachment_path && (
+                                            <a href={`${API_URL}/${ticket.attachment_path}`} target="_blank" rel="noopener noreferrer" className="cs-ticket-meta-item" style={{ color: '#2563EB', textDecoration: 'none' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>attach_file</span> View Attachment
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="cs-ticket-actions">
@@ -243,12 +272,55 @@ const CustomerSupport = () => {
                         </div>
                         <form className="cs-modal-body" onSubmit={handleCreateTicket}>
                             <div className="cs-form-group">
-                                <label>Title</label>
+                                <label>Title <span className="cs-required">*</span></label>
                                 <input type="text" value={ticketTitle} onChange={(e) => setTicketTitle(e.target.value)} required />
                             </div>
                             <div className="cs-form-group">
-                                <label>Description</label>
+                                <label>Description <span className="cs-required">*</span></label>
                                 <textarea value={ticketDescription} onChange={(e) => setTicketDescription(e.target.value)} rows={6} required />
+                            </div>
+                            <div className="cs-form-group">
+                                <label>
+                                    Attachment 
+                                    <span style={{fontSize: '12px', color: '#64748b', fontWeight: 'normal', marginLeft: '6px'}}>
+                                        (pdf, jpg, jpeg or png, Max 5MB)
+                                    </span>
+                                </label>
+                                <input 
+                                    type="file" 
+                                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) {
+                                            setAttachment(null);
+                                            return;
+                                        }
+                                        
+                                        // Validate file type
+                                        const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+                                        // Check extension fallback for generic types
+                                        const ext = file.name.split('.').pop().toLowerCase();
+                                        const validExts = ['pdf', 'jpg', 'jpeg', 'png'];
+                                        
+                                        if (!validTypes.includes(file.type) && !validExts.includes(ext)) {
+                                            showNotification('Invalid file type', 'error');
+                                            e.target.value = '';
+                                            setAttachment(null);
+                                            return;
+                                        }
+
+                                        // Validate file size
+                                        if (file.size > 5 * 1024 * 1024) {
+                                            showNotification('Your file must be less than 5 MB', 'error');
+                                            e.target.value = '';
+                                            setAttachment(null);
+                                            return;
+                                        }
+
+                                        setAttachment(file);
+                                    }}
+                                    style={{ padding: '8px', cursor: 'pointer' }}
+                                />
                             </div>
                             <p className="cs-modal-promise">Your problem will be solved within two working days</p>
                             <div className="cs-modal-footer">
