@@ -177,13 +177,6 @@ const DoctorAvailability = () => {
 
     const handleDelete = async (slotId) => {
         if (window.confirm('Are you sure you want to delete this availability slot? This action cannot be undone.')) {
-            // Check if slot has bookings
-            const slot = availability.find(s => s.id === slotId);
-            if (slot.booked_count > 0) {
-                alert('Cannot delete slot with existing bookings. Please mark it as unavailable instead.');
-                return;
-            }
-
             try {
                 await axios.delete(`http://localhost:5000/api/availability/${slotId}`);
                 await fetchAvailability(doctor.id);
@@ -218,7 +211,6 @@ const DoctorAvailability = () => {
     const totalSlots = availability.length;
     const activeSlots = availability.filter(s => s.is_available).length;
     const totalCapacity = availability.reduce((sum, slot) => sum + slot.capacity, 0);
-    const totalBooked = availability.reduce((sum, slot) => sum + (slot.booked_count || 0), 0);
 
     if (loading) {
         return (
@@ -291,17 +283,6 @@ const DoctorAvailability = () => {
                         <div className="stat-info">
                             <span className="stat-value">{totalCapacity}</span>
                             <span className="stat-label">Total Capacity</span>
-                        </div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon booked">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                            </svg>
-                        </div>
-                        <div className="stat-info">
-                            <span className="stat-value">{totalBooked}</span>
-                            <span className="stat-label">Booked</span>
                         </div>
                     </div>
                 </div>
@@ -488,8 +469,6 @@ const DoctorAvailability = () => {
                         <div className="calendar-legend">
                             <span className="legend-item available">Available</span>
                             <span className="legend-item unavailable">Unavailable</span>
-                            <span className="legend-item partial">Partially Booked</span>
-                            <span className="legend-item full">Fully Booked</span>
                         </div>
                     </div>
 
@@ -505,11 +484,8 @@ const DoctorAvailability = () => {
                                             <div className="no-slots">No slots set</div>
                                         ) : (
                                             daySlots.map(slot => {
-                                                const bookedPercentage = (slot.booked_count / slot.capacity) * 100;
                                                 let statusClass = 'available';
                                                 if (!slot.is_available) statusClass = 'unavailable';
-                                                else if (bookedPercentage >= 100) statusClass = 'full';
-                                                else if (bookedPercentage > 50) statusClass = 'partial';
 
                                                 return (
                                                     <div key={slot.id} className={`slot-card ${statusClass}`}>
@@ -536,15 +512,6 @@ const DoctorAvailability = () => {
                                                             <span className="capacity">
                                                                 Capacity: {slot.capacity}
                                                             </span>
-                                                            <span className="booked">
-                                                                Booked: {slot.booked_count}
-                                                            </span>
-                                                        </div>
-                                                        <div className="slot-progress">
-                                                            <div
-                                                                className="progress-bar"
-                                                                style={{ width: `${Math.min(bookedPercentage, 100)}%` }}
-                                                            ></div>
                                                         </div>
                                                         <div className="slot-status">
                                                             <label className="toggle-switch">
@@ -581,7 +548,6 @@ const DoctorAvailability = () => {
                     <ul className="tips-list">
                         <li>Set realistic capacities based on your consultation time</li>
                         <li>Mark slots as unavailable when you're on leave</li>
-                        <li>Slots with existing bookings cannot be deleted, only marked inactive</li>
                         <li>The system automatically generates appointment tokens based on slot duration</li>
                     </ul>
                 </div>
