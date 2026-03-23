@@ -11,6 +11,10 @@
     --color-border: #E5E7EB;
     --color-accent: #5DADE2;
     --gradient-primary: linear-gradient(135deg, #3B5DB0 0%, #1E3A5F 100%);
+    --color-background-light: #eef2fb;
+    --gradient-light-blue: linear-gradient(135deg, #dce6f7 0%, #c8d9f2 100%);
+    --color-gray-500: #9CA3AF;
+    --color-black-rgb: 0, 0, 0;
 }
 
 body {

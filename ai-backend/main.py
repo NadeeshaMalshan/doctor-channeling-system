@@ -7,6 +7,10 @@ import mysql.connector
 from dotenv import load_dotenv
 from prompts import REPORT_EXPLAIN_PROMPT
 import easyocr
+from typing import List
+import fitz  # PyMuPDF for PDF handling
+import io
+from PIL import Image
 
 reader = easyocr.Reader(['en']) 
 
@@ -35,18 +39,19 @@ class SymptomsRequest(BaseModel):
 
 class ReportTextRequest(BaseModel):
     text: str
+    language: str = "English"
 
 
 
 # LLM Query Function - Llama for Report Explanation
 
-def query_llm_for_report(report_text):
+def query_llm_for_report(report_text, language="English"):
     """Send medical report text to Llama LLM for simple explanation"""
-    prompt = REPORT_EXPLAIN_PROMPT.format(report_text=report_text)
+    prompt = REPORT_EXPLAIN_PROMPT.format(report_text=report_text, language=language)
     completion = client.chat.completions.create(
         model="meta-llama/Llama-3.1-8B-Instruct:novita",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=500,
+        max_tokens=800,
         temperature=0.5
     )
     return completion.choices[0].message.content
@@ -57,7 +62,7 @@ def query_llm_for_report(report_text):
 @app.post("/api/explain")
 async def explain_report(req: ReportTextRequest):
     try:
-        explanation = query_llm_for_report(req.text)
+        explanation = query_llm_for_report(req.text, req.language)
         return {"success": True, "explanation": explanation}
     except Exception as e:
         print(f"ERROR in explain: {e}")
@@ -67,18 +72,34 @@ async def explain_report(req: ReportTextRequest):
 # ENDPOINT 2: OCR
 
 @app.post("/api/ocr")
-async def ocr_extract(file: UploadFile = File(...)):
-    # 1. Read the file into bytes
-    contents = await file.read()
+async def ocr_extract(files: List[UploadFile] = File(...)):
+    all_extracted_text = []
+
+    for file in files:
+        contents = await file.read()
+        
+        if file.filename.lower().endswith('.pdf'):
+            # Handle PDF
+            try:
+                doc = fitz.open(stream=contents, filetype="pdf")
+                for page_num in range(len(doc)):
+                    page = doc.load_page(page_num)
+                    pix = page.get_pixmap()
+                    img_data = pix.tobytes("png")
+                    results = reader.readtext(img_data, detail=0)
+                    all_extracted_text.append(" ".join(results))
+                doc.close()
+            except Exception as e:
+                print(f"PDF Error: {e}")
+                continue
+        else:
+            # Handle Image
+            results = reader.readtext(contents, detail=0)
+            all_extracted_text.append(" ".join(results))
     
-    # 2. Extract text using the reader
-    # detail=0 returns only the text fragments
-    results = reader.readtext(contents, detail=0)
+    combined_text = "\n\n".join(all_extracted_text)
     
-    # 3. Join the fragments into one string
-    extracted_text = " ".join(results)
-    
-    return {"success": True, "text": extracted_text}
+    return {"success": True, "text": combined_text}
 
 # ENDPOINT 3: Doctor Suggestion (from Database by specialization)
 
