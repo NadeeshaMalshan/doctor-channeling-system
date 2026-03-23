@@ -3,13 +3,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #fce4e4 0%, #fff 100%);
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     padding: 20px;
     font-family: 'Inter', sans-serif;
 }
 
 .reject-container {
-    background: white;
+    background: #1E3A5F;
     padding: 40px;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
@@ -36,7 +36,7 @@
 }
 
 .reject-container h2 {
-    color: #2c3e50;
+    color: #E2E8F0;
     margin-bottom: 16px;
     font-size: 24px;
 }
