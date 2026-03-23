@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     schedule_id INT NOT NULL,
     doctor_id INT NOT NULL,
     patient_ID INT NOT NULL,
+    appointment_No INT NOT NULL,
     appointment_payment_status ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
@@ -115,6 +116,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     schedule_id INT NOT NULL,
     doctor_id INT NOT NULL,
     patient_ID INT NOT NULL,
+    appointment_No INT NOT NULL,
     appointment_payment_status ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
@@ -144,22 +146,5 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id)
 );
 
--- Trigger to synchronize payment_status in payments with appointment_payment_status in appointments
-DELIMITER //
-
-CREATE TRIGGER after_payment_update
-AFTER UPDATE ON payments
-FOR EACH ROW
-BEGIN
-    IF NEW.payment_status = 'SUCCESS' AND OLD.payment_status != 'SUCCESS' THEN
-        UPDATE appointments
-        SET appointment_payment_status = 'paid'
-        WHERE id = NEW.appointment_id;
-    ELSEIF NEW.payment_status = 'FAILED' AND OLD.payment_status != 'FAILED' THEN
-        UPDATE appointments
-        SET appointment_payment_status = 'failed'
-        WHERE id = NEW.appointment_id;
-    END IF;
-END //
-
-DELIMITER ;
+-- 2. Remove the old trigger to prevent conflicts
+DROP TRIGGER IF EXISTS sync_appointment_payment_status;

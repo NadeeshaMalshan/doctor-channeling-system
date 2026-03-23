@@ -148,7 +148,7 @@
 }
 
 .receipt-row .value.highlight {
-    color: #2563EB;
+    color: #2b4a8c;
     font-weight: 600;
 }
 
@@ -222,7 +222,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: background 0.15s;
-    background: #2563EB;
+    background: #2b4a8c;
     color: white;
     font-family: 'Inter', sans-serif;
     display: flex;
@@ -258,7 +258,7 @@
 
 /* download button */
 .pdf-btn {
-    background: #1E3A5F;
+    background: #2b4a8c;
     width: 100%;
 }
 
