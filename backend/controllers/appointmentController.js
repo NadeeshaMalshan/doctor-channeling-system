@@ -111,7 +111,7 @@ exports.getPatientAppointments = async (req, res) => {
         const [appointments] = await db.execute(`
             SELECT 
                 a.id as appointment_id,
-                a.appointment_payment_status,
+                a.appointment_status as appointment_payment_status,
                 a.created_at as booking_date,
                 s.schedule_date,
                 s.start_time,

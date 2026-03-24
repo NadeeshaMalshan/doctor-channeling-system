@@ -19,6 +19,11 @@ const ECare = () => {
     const [showAppointmentHistory, setShowAppointmentHistory] = useState(false);
     const [patientUser, setPatientUser] = useState(null);
     const [hasSupportUpdates, setHasSupportUpdates] = useState(false);
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+
+    const handleViewInfo = (doctor) => { setSelectedDoctor(doctor); setShowModal(true); };
+    const closeModal = () => { setShowModal(false); setSelectedDoctor(null); };
 
     // Get patient user from local storage
     useEffect(() => {
@@ -236,39 +241,92 @@ const ECare = () => {
                             <p>No doctors available at the moment.</p>
                         </div>
                     ) : (
-                        <div className="doctors-grid">
-                            {doctors.map((doctor) => (
-                                <div className="ecare-doctor-card" key={doctor.id}>
-                                    <div className="doctor-card-header">
-                                        <div className="doctor-avatar">
-                                            <span className="material-symbols-outlined">person</span>
+                        <>
+                            <div className="doctors-grid">
+                                {doctors.slice(0, 3).map((doctor) => (
+                                    <div className="ecare-doctor-card" key={doctor.id}>
+                                        <div className="doctor-card-header">
+                                            <div className="doctor-avatar">
+                                                <span className="material-symbols-outlined">person</span>
+                                            </div>
+                                            <div className="doctor-info">
+                                                <h3>{doctor.name}</h3>
+                                                <p className="doctor-specialty">{doctor.specialization}</p>
+                                                <p className="doctor-hospital">{doctor.hospital || 'NC+ Hospital Narammala'}</p>
+                                            </div>
                                         </div>
-                                        <div className="doctor-info">
-                                            <h3>{doctor.name}</h3>
-                                            <p className="doctor-specialty">{doctor.specialization}</p>
-                                            <p className="doctor-hospital">{doctor.hospital || 'NC+ Hospital Narammala'}</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="doctor-card-body">
-                                        <span className={`specialty-tag ${getTagClass(doctor.specialization)}`}>{doctor.specialization}</span>
-                                        <div className="doctor-contact">
-                                            <p className="doctor-email">{doctor.email}</p>
-                                            <p className="doctor-phone">{doctor.phone}</p>
+                                        <div className="doctor-card-body">
+                                            <span className={`specialty-tag ${getTagClass(doctor.specialization)}`}>{doctor.specialization}</span>
+                                            <div className="doctor-contact">
+                                                <p className="doctor-email">{doctor.email}</p>
+                                                <p className="doctor-phone">{doctor.phone}</p>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="doctor-card-footer">
-                                        <div className="availability-badge available">
-                                            Available
+                                        <div className="doctor-card-footer">
+                                            <div className="availability-badge available">
+                                                Available
+                                            </div>
+                                            <button className="viewInfo-btn" onClick={() => handleViewInfo(doctor)}>View info</button>
                                         </div>
-                                        <button className="viewInfo-btn">View info</button>
                                     </div>
+                                ))}
+                            </div>
+
+                            {doctors.length > 3 && (
+                                <div className="view-more-container" style={{ textAlign: 'center', marginTop: '30px' }}>
+                                    <button className="view-more-btn" onClick={() => navigate('/ecare/doctors')} style={{ padding: '10px 24px', backgroundColor: '#1a365d', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: 'background-color 0.3s' }}>
+                                        View More Doctors
+                                        <span className="material-symbols-outlined">arrow_forward</span>
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                        </>
                     )}
                 </section>
+                {/* Doctor Info Modal */}
+                {showModal && selectedDoctor && (
+                    <div className="dsr-modal-overlay" onClick={closeModal} style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <div className="dsr-modal" onClick={e => e.stopPropagation()} style={{background: 'white', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '450px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)'}}>
+                            <div className="dsr-modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '16px', marginBottom: '20px'}}>
+                                <h3 style={{margin: 0, color: '#1a365d', fontSize: '20px'}}>Doctor Information</h3>
+                                <button className="dsr-modal-close" onClick={closeModal} style={{background: 'none', border: 'none', cursor: 'pointer', outline: 'none', color: '#64748b', display: 'flex'}}>
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <div className="dsr-modal-body" style={{display: 'flex', gap: '24px', alignItems: 'center'}}>
+                                <div className="dsr-modal-avatar" style={{width: '90px', height: '90px', borderRadius: '50%', backgroundColor: '#f0f4f8', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                    <span className="material-symbols-outlined" style={{fontSize: '48px', color: '#1a365d'}}>person</span>
+                                </div>
+                                <div className="dsr-modal-info" style={{flex: 1}}>
+                                    <h4 className="dsr-modal-name" style={{margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a'}}>Dr. {selectedDoctor.name}</h4>
+                                    <span className="dsr-modal-spec" style={{color: '#64748b', fontSize: '14px', display: 'block', marginBottom: '16px', fontWeight: '500'}}>{selectedDoctor.specialization}</span>
+                                    <div className="dsr-modal-details" style={{display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: '#334155'}}>
+                                        <div className="dsr-modal-row" style={{display: 'flex', justifyContent: 'space-between', gap: '20px'}}>
+                                            <span style={{fontWeight: '600', color: '#475569'}}>Hospital:</span>
+                                            <span style={{textAlign: 'right'}}>{selectedDoctor.hospital || 'NC+ Hospital Narammala'}</span>
+                                        </div>
+                                        <div className="dsr-modal-row" style={{display: 'flex', justifyContent: 'space-between', gap: '20px'}}>
+                                            <span style={{fontWeight: '600', color: '#475569'}}>Phone:</span>
+                                            <span style={{textAlign: 'right'}}>{selectedDoctor.phone || 'Not Specified'}</span>
+                                        </div>
+                                        <div className="dsr-modal-row" style={{display: 'flex', justifyContent: 'space-between', gap: '20px'}}>
+                                            <span style={{fontWeight: '600', color: '#475569'}}>Email:</span>
+                                            <span style={{textAlign: 'right', wordBreak: 'break-all'}}>{selectedDoctor.email || 'Not Specified'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="dsr-modal-footer" style={{marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end'}}>
+                                <button className="dsr-modal-book-btn" onClick={() => navigate('/schedules')} style={{padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '500', transition: 'background-color 0.2s'}}>
+                                    <span className="material-symbols-outlined">event_available</span>
+                                    Book Appointment Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
 
             {/* Sticky Support Button */}
