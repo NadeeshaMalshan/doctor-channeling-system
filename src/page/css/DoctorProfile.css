@@ -495,42 +495,6 @@
     }
 }
 
-/* Dark Mode Support (Optional) */
-@media (prefers-color-scheme: dark) {
-    .doctor-profile-page {
-        background: #0F172A;
-    }
-
-    .profile-card {
-        background: #1E293B;
-        border-color: #334155;
-    }
-
-    .form-group label {
-        color: #94A3B8;
-    }
-
-    .form-group input {
-        background: #0F172A;
-        border-color: #334155;
-        color: #F1F5F9;
-    }
-
-    .form-group input:disabled {
-        background: #1E293B;
-        color: #94A3B8;
-    }
-
-    .action-btn.btn-gray {
-        background: #334155;
-        color: #F1F5F9;
-        border-color: #475569;
-    }
-
-    .action-btn.btn-gray:hover {
-        background: #475569;
-    }
-}
 
 /* Tooltip/Hover Effects */
 .form-group input:not(:disabled):hover {
