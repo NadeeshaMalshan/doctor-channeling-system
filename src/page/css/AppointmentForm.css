@@ -141,6 +141,15 @@
     font-weight: 500;
 }
 
+.summary-grid .queue-hint {
+    grid-column: 1 / -1;
+    margin: 0 0 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
+    font-weight: 500;
+}
+
 .form-actions {
     display: flex;
     gap: 15px;

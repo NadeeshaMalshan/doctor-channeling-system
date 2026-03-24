@@ -1,6 +1,6 @@
 /**
- * One-off migration: sync payments ↔ appointments, merge duplicate (schedule_id, patient_ID)
- * rows, recalc booked_count, add UNIQUE(schedule_id, patient_ID).
+ * One-off cleanup: sync payments ↔ appointments, merge duplicate (schedule_id, patient_ID) rows,
+ * recalc booked_count. Does NOT add a unique key — multiple bookings per patient per slot are allowed.
  * Run from repo: node backend/scripts/fixRedundantAppointments.js
  */
 const path = require('path');
@@ -55,12 +55,6 @@ async function main() {
             )
         `);
         console.log('Recalculated booked_count for all schedules.');
-
-        await conn.execute(`
-            ALTER TABLE appointments
-            ADD UNIQUE KEY uniq_schedule_patient (schedule_id, patient_ID)
-        `);
-        console.log('Added UNIQUE KEY uniq_schedule_patient (schedule_id, patient_ID).');
 
         await conn.commit();
         console.log('Done.');

@@ -199,6 +199,15 @@
     letter-spacing: 0.4px;
 }
 
+.details p.payment-booking-hint {
+    display: block;
+    width: 100%;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
+    text-align: left;
+}
+
 .fee-row {
     margin-top: 20px;
     padding-top: 16px;

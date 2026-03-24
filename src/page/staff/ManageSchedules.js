@@ -329,6 +329,13 @@ const ManageSchedules = () => {
                                                 </p>
                                                 <p>Phone: {app.customer_phone}</p>
                                                 <p>Booked on: {new Date(app.created_at).toLocaleString()}</p>
+                                                <p>
+                                                    <strong>Booking:</strong>{' '}
+                                                    {app.appointment_status ?? '—'}
+                                                    {app.payment_id != null && app.payment_id !== ''
+                                                        ? ` · payment #${app.payment_id}`
+                                                        : ''}
+                                                </p>
                                             </div>
                                             <div className="app-actions">
                                                 <span id='payment'>Payment Status :</span>

@@ -2,12 +2,14 @@ const db = require('./config/db');
 
 async function alterDb() {
     try {
-        console.log('Adding appointment_No column to appointments...');
+        console.log('Adding booking_queue_no column to appointments (legacy scripts used appointment_No)...');
         try {
-            await db.query(`ALTER TABLE appointments ADD COLUMN appointment_No INT NOT NULL AFTER patient_ID`);
-            console.log('Successfully added appointment_No.');
+            await db.query(
+                `ALTER TABLE appointments ADD COLUMN booking_queue_no INT NOT NULL DEFAULT 1 AFTER patient_ID`
+            );
+            console.log('Successfully added booking_queue_no.');
         } catch (e) {
-            console.log('Error adding appointment_No (may already exist):', e.message);
+            console.log('Error adding booking_queue_no (may already exist):', e.message);
         }
 
         console.log('Dropping after_payment_update trigger...');
