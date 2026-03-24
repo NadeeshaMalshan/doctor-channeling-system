@@ -204,7 +204,7 @@ const DoctorAvailability = () => {
 
     const handleLogout = () => {
         localStorage.clear();
-        navigate('/staff-login');
+        navigate('/');
     };
 
     // Calculate statistics
