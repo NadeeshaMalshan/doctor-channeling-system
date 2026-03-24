@@ -7,53 +7,116 @@ exports.finalizeAppointment = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Missing required data' });
     }
 
-    const { schedule_id, doctor_id, patient_ID, appointment_No } = pending_appointment;
+    const schedule_id = Number(pending_appointment.schedule_id);
+    const patient_ID = Number(pending_appointment.patient_ID);
+    if (!Number.isFinite(schedule_id) || !Number.isFinite(patient_ID)) {
+        return res.status(400).json({ success: false, message: 'Invalid schedule or patient' });
+    }
+
+    const paymentEnvironment = process.env.PAYHERE_TEST_MODE === 'true' ? 'SANDBOX' : 'LIVE';
+    const payAmount = amount != null ? Number(amount) : Number(pending_appointment.channelingFee);
+    const amountValue = Number.isFinite(payAmount) ? payAmount : 0;
 
     let connection;
     try {
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        // 1. Insert Appointment
-        const [appointmentResult] = await connection.execute(
-            `INSERT INTO appointments 
-            (schedule_id, doctor_id, patient_ID, appointment_No, appointment_payment_status) 
-            VALUES (?, ?, ?, ?, 'paid')`,
-            [schedule_id, doctor_id, patient_ID, appointment_No]
-        );
-
-        const newAppointmentId = appointmentResult.insertId;
-
-        // 2. Insert Payment
-        const paymentEnvironment = process.env.PAYHERE_TEST_MODE === 'true' ? 'SANDBOX' : 'LIVE';
-
-        await connection.execute(
-            `INSERT INTO payments 
-             (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status, payment_environment) 
-             VALUES (?, ?, ?, ?, ?, ?, 'SUCCESS', ?)`,
-            [newAppointmentId, payhere_order_id, patient_ID, doctor_id, schedule_id, amount || pending_appointment.channelingFee, paymentEnvironment]
-        );
-
-        // 3. Update Schedule booked_count
         const [schedules] = await connection.execute(
             'SELECT * FROM appointment_schedules WHERE id = ? FOR UPDATE',
             [schedule_id]
         );
+        if (schedules.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: 'Schedule not found' });
+        }
+        const schedule = schedules[0];
+        const doctor_id = schedule.doctor_id;
 
-        if (schedules.length > 0) {
-            const schedule = schedules[0];
+        const [dupOrderRows] = await connection.execute(
+            'SELECT id FROM payments WHERE internal_order_id = ? LIMIT 1',
+            [payhere_order_id]
+        );
+        if (dupOrderRows.length > 0) {
+            const [apptRows] = await connection.execute(
+                'SELECT id FROM appointments WHERE schedule_id = ? AND patient_ID = ? ORDER BY id ASC LIMIT 1',
+                [schedule_id, patient_ID]
+            );
+            await connection.commit();
+            return res.status(200).json({
+                success: true,
+                message: 'Payment already recorded',
+                data: { id: apptRows[0]?.id ?? null }
+            });
+        }
+
+        const [existing] = await connection.execute(
+            `SELECT id, appointment_payment_status FROM appointments
+             WHERE schedule_id = ? AND patient_ID = ?
+             ORDER BY id ASC
+             FOR UPDATE`,
+            [schedule_id, patient_ID]
+        );
+
+        let newAppointmentId;
+
+        if (existing.length > 0) {
+            if (existing.some((r) => r.appointment_payment_status === 'paid')) {
+                await connection.rollback();
+                return res.status(409).json({
+                    success: false,
+                    message: 'This schedule is already booked and paid for this patient'
+                });
+            }
+            newAppointmentId = existing[0].id;
+            await connection.execute(
+                `UPDATE appointments
+                 SET appointment_payment_status = 'paid', doctor_id = ?
+                 WHERE id = ?`,
+                [doctor_id, newAppointmentId]
+            );
+            await connection.execute(
+                `INSERT INTO payments
+                 (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status, payment_environment)
+                 VALUES (?, ?, ?, ?, ?, ?, 'SUCCESS', ?)`,
+                [newAppointmentId, payhere_order_id, patient_ID, doctor_id, schedule_id, amountValue, paymentEnvironment]
+            );
+        } else {
+            if (schedule.status !== 'active') {
+                await connection.rollback();
+                return res.status(400).json({ success: false, message: `Schedule is currently ${schedule.status}` });
+            }
+            if (schedule.booked_count >= schedule.max_patients) {
+                await connection.rollback();
+                return res.status(400).json({ success: false, message: 'Schedule is full' });
+            }
+
+            const appointment_No = schedule.booked_count + 1;
+
+            const [appointmentResult] = await connection.execute(
+                `INSERT INTO appointments
+                (schedule_id, doctor_id, patient_ID, appointment_No, appointment_payment_status)
+                VALUES (?, ?, ?, ?, 'paid')`,
+                [schedule_id, doctor_id, patient_ID, appointment_No]
+            );
+            newAppointmentId = appointmentResult.insertId;
+
+            await connection.execute(
+                `INSERT INTO payments
+                 (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status, payment_environment)
+                 VALUES (?, ?, ?, ?, ?, ?, 'SUCCESS', ?)`,
+                [newAppointmentId, payhere_order_id, patient_ID, doctor_id, schedule_id, amountValue, paymentEnvironment]
+            );
+
             const newBookedCount = schedule.booked_count + 1;
             let updateScheduleQuery = 'UPDATE appointment_schedules SET booked_count = ?';
             const updateParams = [newBookedCount];
-
             if (newBookedCount >= schedule.max_patients) {
                 updateScheduleQuery += ', status = ?';
                 updateParams.push('full');
             }
-
             updateScheduleQuery += ' WHERE id = ?';
             updateParams.push(schedule_id);
-
             await connection.execute(updateScheduleQuery, updateParams);
         }
 
@@ -63,10 +126,15 @@ exports.finalizeAppointment = async (req, res) => {
             message: 'Appointment finalized successfully',
             data: { id: newAppointmentId }
         });
-
     } catch (error) {
         if (connection) {
             await connection.rollback();
+        }
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                success: false,
+                message: 'A booking for this schedule already exists for this patient'
+            });
         }
         console.error('Finalize appointment error:', error);
         res.status(500).json({ success: false, message: 'Server error while finalizing appointment' });
@@ -120,6 +188,19 @@ exports.createAppointment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Schedule is full' });
         }
 
+        const [already] = await connection.execute(
+            'SELECT id FROM appointments WHERE schedule_id = ? AND patient_ID = ? LIMIT 1',
+            [schedule_id, patient_ID]
+        );
+        if (already.length > 0) {
+            await connection.rollback();
+            return res.status(409).json({
+                success: false,
+                message: 'You already have a booking for this schedule',
+                data: { id: already[0].id }
+            });
+        }
+
         const [result] = await connection.execute(
             `INSERT INTO appointments 
             (schedule_id, doctor_id, patient_ID) 
@@ -153,6 +234,12 @@ exports.createAppointment = async (req, res) => {
         if (connection) {
             await connection.rollback();
         }
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                success: false,
+                message: 'You already have a booking for this schedule'
+            });
+        }
         console.error('Create appointment error:', error);
         res.status(500).json({ success: false, message: 'Server error while booking appointment' });
     } finally {
@@ -161,8 +248,6 @@ exports.createAppointment = async (req, res) => {
         }
     }
 };
-
-
 
 exports.getAppointmentsBySchedule = async (req, res) => {
     const { schedule_id } = req.params;
@@ -325,5 +410,130 @@ exports.deleteAppointment = async (req, res) => {
         if (connection) {
             connection.release();
         }
+    }
+};
+
+/**
+ * PayHere /notify can arrive before the browser calls /finalize — no payments row yet.
+ * Creates booking + payment for ORD{schedule}_{patient}_{ts} orders (idempotent).
+ */
+exports.ensurePendingBookingAndPaymentFromNotify = async ({
+    schedule_id,
+    patient_ID,
+    internal_order_id,
+    amount,
+    paymentStatus,
+    final_payment_id,
+    final_method,
+    final_card_digits,
+    notifyEnvironment
+}) => {
+    let connection;
+    try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        const [dupOrder] = await connection.execute(
+            'SELECT id FROM payments WHERE internal_order_id = ? LIMIT 1',
+            [internal_order_id]
+        );
+        if (dupOrder.length > 0) {
+            await connection.commit();
+            return;
+        }
+
+        const [schedules] = await connection.execute(
+            'SELECT * FROM appointment_schedules WHERE id = ? FOR UPDATE',
+            [schedule_id]
+        );
+        if (schedules.length === 0) {
+            await connection.rollback();
+            return;
+        }
+        const schedule = schedules[0];
+        const doctor_id = schedule.doctor_id;
+
+        const [existing] = await connection.execute(
+            `SELECT id, appointment_payment_status FROM appointments
+             WHERE schedule_id = ? AND patient_ID = ?
+             ORDER BY id ASC
+             FOR UPDATE`,
+            [schedule_id, patient_ID]
+        );
+
+        let newAppointmentId;
+
+        if (existing.length > 0) {
+            newAppointmentId = existing[0].id;
+            if (!existing.some((r) => r.appointment_payment_status === 'paid')) {
+                await connection.execute(
+                    `UPDATE appointments
+                     SET appointment_payment_status = 'paid', doctor_id = ?
+                     WHERE id = ?`,
+                    [doctor_id, newAppointmentId]
+                );
+            } else {
+                await connection.execute(
+                    'UPDATE appointments SET doctor_id = ? WHERE id = ?',
+                    [doctor_id, newAppointmentId]
+                );
+            }
+        } else {
+            if (schedule.status !== 'active' || schedule.booked_count >= schedule.max_patients) {
+                await connection.rollback();
+                return;
+            }
+
+            const appointment_No = schedule.booked_count + 1;
+            const [appointmentResult] = await connection.execute(
+                `INSERT INTO appointments
+                (schedule_id, doctor_id, patient_ID, appointment_No, appointment_payment_status)
+                VALUES (?, ?, ?, ?, 'paid')`,
+                [schedule_id, doctor_id, patient_ID, appointment_No]
+            );
+            newAppointmentId = appointmentResult.insertId;
+
+            const newBookedCount = schedule.booked_count + 1;
+            let updateScheduleQuery = 'UPDATE appointment_schedules SET booked_count = ?';
+            const updateParams = [newBookedCount];
+            if (newBookedCount >= schedule.max_patients) {
+                updateScheduleQuery += ', status = ?';
+                updateParams.push('full');
+            }
+            updateScheduleQuery += ' WHERE id = ?';
+            updateParams.push(schedule_id);
+            await connection.execute(updateScheduleQuery, updateParams);
+        }
+
+        try {
+            await connection.execute(
+                `INSERT INTO payments
+                (appointment_id, internal_order_id, patient_id, doctor_id, appointment_schedule_id, amount, payment_status, payhere_payment_id, payment_method, card_last_digits, payment_environment)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    newAppointmentId,
+                    internal_order_id,
+                    patient_ID,
+                    doctor_id,
+                    schedule_id,
+                    amount,
+                    paymentStatus,
+                    final_payment_id,
+                    final_method,
+                    final_card_digits,
+                    notifyEnvironment
+                ]
+            );
+        } catch (insErr) {
+            if (insErr.code !== 'ER_DUP_ENTRY') throw insErr;
+        }
+
+        await connection.commit();
+    } catch (e) {
+        if (connection) await connection.rollback();
+        console.error('ensurePendingBookingAndPaymentFromNotify error:', e);
+        throw e;
+    } finally {
+        if (connection) connection.release();
     }
 };

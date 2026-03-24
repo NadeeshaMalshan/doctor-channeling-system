@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS appointments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE
+    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE,
+    UNIQUE KEY uniq_schedule_patient (schedule_id, patient_ID)
 );
 
 CREATE TABLE IF NOT EXISTS support_tickets (
@@ -96,35 +97,6 @@ CREATE TABLE IF NOT EXISTS doc_availability_slots (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id)
 );
 
-
-CREATE TABLE IF NOT EXISTS appointment_schedules (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    doctor_id INT NOT NULL,
-    schedule_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    max_patients INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    booked_count INT DEFAULT 0,
-    status ENUM('active','full','cancelled') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS appointments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    schedule_id INT NOT NULL,
-    doctor_id INT NOT NULL,
-    patient_ID INT NOT NULL,
-    appointment_No INT NOT NULL,
-    appointment_payment_status ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE
-);
-
-
 CREATE TABLE IF NOT EXISTS payments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     internal_order_id VARCHAR(50) NOT NULL,
@@ -143,7 +115,8 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (patient_id) REFERENCES patients(id),
     FOREIGN KEY (doctor_id) REFERENCES doctors(id),
     FOREIGN KEY (appointment_id) REFERENCES appointments(id),
-    FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id)
+    FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id),
+    UNIQUE KEY uniq_payments_internal_order (internal_order_id)
 );
 
 -- 2. Remove the old trigger to prevent conflicts

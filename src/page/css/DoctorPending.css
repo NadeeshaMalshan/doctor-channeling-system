@@ -9,7 +9,7 @@
 }
 
 .pending-container {
-    background: white;
+    background: #1E3A5F;
     padding: 50px 40px;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -20,36 +20,42 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.pending-icon-container {
-    margin-bottom: 30px;
-}
 
-.pending-icon {
-    width: 80px;
-    height: 80px;
-    color: #f39c12;
-    animation: pulse 2s infinite;
-}
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 .pending-container h2 {
-    color: #2c3e50;
+    color: #E2E8F0;
     margin-bottom: 20px;
     font-size: 28px;
     font-weight: 600;
 }
 
 .pending-message p {
-    color: #555;
+    color: #E2E8F0;
     font-size: 16px;
     line-height: 1.6;
     margin-bottom: 25px;
@@ -105,20 +111,20 @@
 }
 
 .step.completed .step-circle {
-    background: #27ae60;
+    background: #5886ea;
 }
 
 .step.completed .step-text {
-    color: #27ae60;
+    color: #5886ea;
 }
 
 .step.active .step-circle {
-    background: #f39c12;
+    background: #5886ea;
     box-shadow: 0 0 0 5px rgba(243, 156, 18, 0.2);
 }
 
 .step.active .step-text {
-    color: #f39c12;
+    color: #5886ea;
     font-weight: 600;
 }
 
@@ -129,7 +135,8 @@
     margin-top: 30px;
 }
 
-.back-home-btn, .contact-support-btn {
+.back-home-btn,
+.contact-support-btn {
     padding: 12px 24px;
     border: none;
     border-radius: 8px;
@@ -166,20 +173,24 @@
     .pending-actions {
         flex-direction: column;
     }
+
     .pending-steps {
         flex-direction: column;
         gap: 20px;
         padding: 0;
     }
+
     .pending-steps::before {
         display: none;
     }
+
     .step {
         flex-direction: row;
         gap: 15px;
         align-items: center;
         width: 100%;
     }
+
     .step-circle {
         margin-bottom: 0;
     }

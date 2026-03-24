@@ -1,6 +1,28 @@
 const db = require('../config/db');
 const crypto = require('crypto');
 
+/**
+ * ORD{appointmentId}_{timestamp}  → existing appointment checkout
+ * ORD{scheduleId}_{patientId}_{timestamp} → new booking (finalize) checkout
+ */
+function parseInternalOrderId(orderKey) {
+    const s = String(orderKey || '').trim();
+    if (!/^ORD/i.test(s)) return null;
+    const rest = s.replace(/^ORD/i, '');
+    const parts = rest.split('_').filter(Boolean);
+    if (parts.length === 2 && /^\d+$/.test(parts[0]) && /^\d+$/.test(parts[1])) {
+        return { kind: 'appointment', appointmentId: Number(parts[0]) };
+    }
+    if (parts.length >= 3 && /^\d+$/.test(parts[0]) && /^\d+$/.test(parts[1])) {
+        return {
+            kind: 'pending_slot',
+            scheduleId: Number(parts[0]),
+            patientId: Number(parts[1])
+        };
+    }
+    return null;
+}
+
 exports.getPaymentDetails = async (req, res) => {
     //create URL query (?patientID=1&appointment_schedule_id=1)
     const { patientID, appointment_schedule_id } = req.query;
@@ -30,7 +52,7 @@ exports.getPaymentDetails = async (req, res) => {
                  SELECT a.id
                  FROM appointments a
                  WHERE a.patient_ID = p.id AND a.schedule_id = aps.id
-                 ORDER BY a.created_at DESC, a.id DESC
+                 ORDER BY a.id ASC
                  LIMIT 1
              )
              WHERE p.id = ?`,
@@ -76,6 +98,44 @@ exports.generateHash = async (req, res) => {
     }
 };
 
+/** Create a PENDING payment row before PayHere (existing appointment flow) so /notify can UPDATE it. */
+exports.reserveCheckout = async (req, res) => {
+    const { internal_order_id, appointment_id, amount } = req.body;
+    if (!internal_order_id || appointment_id == null) {
+        return res.status(400).json({ message: 'internal_order_id and appointment_id required' });
+    }
+    const orderKey = String(internal_order_id).trim();
+    try {
+        const [dup] = await db.execute('SELECT id FROM payments WHERE internal_order_id = ? LIMIT 1', [orderKey]);
+        if (dup.length > 0) {
+            return res.status(200).json({ ok: true, existed: true });
+        }
+        const [appts] = await db.execute(
+            'SELECT id, schedule_id, doctor_id, patient_ID FROM appointments WHERE id = ?',
+            [appointment_id]
+        );
+        if (appts.length === 0) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+        const a = appts[0];
+        const env = process.env.PAYHERE_TEST_MODE === 'true' ? 'SANDBOX' : 'LIVE';
+        const amt = amount != null ? Number(amount) : 0;
+        await db.execute(
+            `INSERT INTO payments
+            (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payment_environment)
+            VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
+            [orderKey, a.patient_ID, a.doctor_id, a.schedule_id, appointment_id, amt, env]
+        );
+        return res.status(201).json({ ok: true });
+    } catch (e) {
+        if (e.code === 'ER_DUP_ENTRY') {
+            return res.status(200).json({ ok: true, existed: true });
+        }
+        console.error('reserveCheckout error:', e);
+        return res.status(500).json({ message: 'Could not reserve checkout' });
+    }
+};
+
 exports.handleNotification = async (req, res) => {
     const {
         merchant_id,
@@ -90,7 +150,7 @@ exports.handleNotification = async (req, res) => {
     } = req.body;
 
     // For our internal logic, we'll use paymentID to refer to our order_id
-    const internalPaymentID = order_id;
+    const internalPaymentID = String(order_id == null ? '' : order_id).trim();
 
     // md5 signature verification
     const merchantSecret = process.env.PAYHERE_SECRET_CODE.trim();
@@ -130,8 +190,9 @@ exports.handleNotification = async (req, res) => {
             const final_method = method || 'N/A';
 
             const notifyEnvironment = isTestMode ? 'SANDBOX' : 'LIVE';
+            const amountNum = payhere_amount != null ? Number(payhere_amount) : 0;
 
-            await db.execute(
+            const [updResult] = await db.execute(
                 `UPDATE payments 
                  SET payment_status = ?, 
                      payhere_payment_id = ?, 
@@ -141,6 +202,60 @@ exports.handleNotification = async (req, res) => {
                  WHERE internal_order_id = ?`,
                 [paymentStatus, final_payment_id, final_method, final_card_digits, notifyEnvironment, internalPaymentID]
             );
+
+            if (updResult.affectedRows === 0) {
+                const parsed = parseInternalOrderId(internalPaymentID);
+                if (parsed?.kind === 'appointment') {
+                    const [appts] = await db.execute(
+                        'SELECT id, schedule_id, doctor_id, patient_ID FROM appointments WHERE id = ?',
+                        [parsed.appointmentId]
+                    );
+                    if (appts.length > 0) {
+                        const a = appts[0];
+                        try {
+                            await db.execute(
+                                `INSERT INTO payments
+                                (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payhere_payment_id, payment_method, card_last_digits, payment_environment)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                [
+                                    internalPaymentID,
+                                    a.patient_ID,
+                                    a.doctor_id,
+                                    a.schedule_id,
+                                    parsed.appointmentId,
+                                    amountNum,
+                                    paymentStatus,
+                                    final_payment_id,
+                                    final_method,
+                                    final_card_digits,
+                                    notifyEnvironment
+                                ]
+                            );
+                        } catch (insErr) {
+                            if (insErr.code !== 'ER_DUP_ENTRY') throw insErr;
+                            await db.execute(
+                                `UPDATE payments 
+                                 SET payment_status = ?, payhere_payment_id = ?, payment_method = ?, card_last_digits = ?, payment_environment = ?
+                                 WHERE internal_order_id = ?`,
+                                [paymentStatus, final_payment_id, final_method, final_card_digits, notifyEnvironment, internalPaymentID]
+                            );
+                        }
+                    }
+                } else if (parsed?.kind === 'pending_slot' && paymentStatus === 'SUCCESS') {
+                    const appointmentController = require('./appointmentController');
+                    await appointmentController.ensurePendingBookingAndPaymentFromNotify({
+                        schedule_id: parsed.scheduleId,
+                        patient_ID: parsed.patientId,
+                        internal_order_id: internalPaymentID,
+                        amount: amountNum,
+                        paymentStatus,
+                        final_payment_id,
+                        final_method,
+                        final_card_digits,
+                        notifyEnvironment
+                    });
+                }
+            }
 
             res.status(200).send('OK');
         } catch (error) {
@@ -154,10 +269,11 @@ exports.handleNotification = async (req, res) => {
 
 exports.getPaymentStatus = async (req, res) => {
     const { orderID } = req.params;
+    const key = orderID != null ? String(orderID).trim() : '';
     try {
         const [rows] = await db.execute(
             'SELECT payment_status FROM payments WHERE internal_order_id = ?',
-            [orderID]
+            [key]
         );
 
         if (rows.length === 0) {

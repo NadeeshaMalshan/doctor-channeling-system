@@ -10,6 +10,41 @@ import LogoHospital from '../images/LogoHospital.png';
 
 const PAYMENT_CONTEXT_KEY = 'paymentContext';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+/** Public backend base (ngrok → port 5000). PayHere calls this host — not localhost. */
+const NGROK_PUBLIC_BASE = (
+    process.env.REACT_APP_NGROK_BASE || 'https://unboldly-nonpantheistic-dwight.ngrok-free.dev'
+).replace(/\/$/, '');
+
+/** Full notify URL; override entirely with REACT_APP_PAYHERE_NOTIFY_URL if needed. */
+const PAYHERE_NOTIFY_URL =
+    process.env.REACT_APP_PAYHERE_NOTIFY_URL || `${NGROK_PUBLIC_BASE}/api/payment/notify`;
+
+/** PayHere sometimes passes a string; guard against objects / whitespace. */
+const resolvePayHereOrderId = (raw) => {
+    if (raw == null || raw === '') return '';
+    if (typeof raw === 'object' && raw.order_id != null) return String(raw.order_id).trim();
+    return String(raw).trim();
+};
+
+/** Used when finalize returns 4xx/5xx but PayHere already charged (notify/async race). */
+async function pollPaymentUntilResolved(orderId) {
+    for (let i = 0; i < 15; i++) {
+        try {
+            const { data } = await axios.get(
+                `${API_BASE}/api/payment/status/${encodeURIComponent(orderId)}`
+            );
+            if (data.status === 'SUCCESS') return 'SUCCESS';
+            if (['FAILED', 'CANCELED', 'CHARGEDBACK'].includes(data.status)) return data.status;
+        } catch {
+            /* retry */
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+    }
+    return 'TIMEOUT';
+}
+
 const readStoredPaymentContext = () => {
     try {
         const raw = sessionStorage.getItem(PAYMENT_CONTEXT_KEY);
@@ -95,7 +130,9 @@ const PaymentPortal = () => {
         } else {
             const fetchDetails = async () => {
                 try {
-                    const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
+                    const response = await axios.get(
+                        `${API_BASE}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`
+                    );
                     setDetails(response.data);
                     setLoading(false);
                 } catch {
@@ -283,7 +320,7 @@ const PaymentPortal = () => {
             const payReturnUrl = payQs.toString() ? `${payReturnBase}?${payQs.toString()}` : payReturnBase;
 
             // get backend hash
-            const hashResponse = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/generate-hash`,
+            const hashResponse = await axios.post(`${API_BASE}/api/payment/generate-hash`,
                 {
                     paymentID: paymentID,
                     amount: amount,
@@ -295,13 +332,44 @@ const PaymentPortal = () => {
             );
             const { hash, merchantID } = hashResponse.data;
 
+            if (!pendingItem) {
+                const reserveRes = await axios.post(
+                    `${API_BASE}/api/payment/reserve-checkout`,
+                    {
+                        internal_order_id: paymentID,
+                        appointment_id: Number(paymentData.appointmentId),
+                        amount: amount
+                    },
+                    { validateStatus: (s) => s >= 200 && s < 500 }
+                );
+                if (reserveRes.status >= 400) {
+                    const m = reserveRes.data?.message || 'Could not reserve payment';
+                    alert(m);
+                    return;
+                }
+            }
+
+            try {
+                sessionStorage.setItem(
+                    'payhere_order_ctx',
+                    JSON.stringify({
+                        paymentID,
+                        mode: pendingItem ? 'pending' : 'existing',
+                        pending_appointment: pendingItem ? JSON.parse(pendingItem) : null,
+                        amount
+                    })
+                );
+            } catch {
+                /* ignore */
+            }
+
             // payhere payment obj
             const payment = {
                 "sandbox": isSandbox,
                 "merchant_id": merchantID,
                 "return_url": payReturnUrl,
                 "cancel_url": payReturnUrl,
-                "notify_url": "https://unboldly-nonpantheistic-dwight.ngrok-free.dev/api/payment/notify",
+                "notify_url": PAYHERE_NOTIFY_URL,
                 "order_id": paymentID,
                 "items": "Doctor Appointment",
                 "amount": amount,
@@ -318,29 +386,96 @@ const PaymentPortal = () => {
 
             // PayHere Callbacks - Register BEFORE starting payment
             window.payhere.onCompleted = async function onCompleted(order_id) {
-                const pendingItemStr = sessionStorage.getItem('pending_appointment');
-                if (pendingItemStr) {
+                const oid = resolvePayHereOrderId(order_id);
+                if (!oid) {
+                    console.error('PayHere onCompleted: missing order_id', order_id);
+                    navigate('/ecare/payment/failed');
+                    return;
+                }
+
+                let pendingItemStr = sessionStorage.getItem('pending_appointment');
+                if (!pendingItemStr) {
                     try {
-                        const pendingData = JSON.parse(pendingItemStr);
-                        const finalizeRes = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/appointments/finalize`, {
-                            pending_appointment: pendingData,
-                            payhere_order_id: order_id,
-                            amount: amount
-                        });
+                        const rawCtx = sessionStorage.getItem('payhere_order_ctx');
+                        if (rawCtx) {
+                            const ctx = JSON.parse(rawCtx);
+                            if (ctx.paymentID === oid && ctx.pending_appointment) {
+                                pendingItemStr = JSON.stringify(ctx.pending_appointment);
+                            }
+                        }
+                    } catch {
+                        /* ignore */
+                    }
+                }
+                if (pendingItemStr) {
+                    let pendingData;
+                    try {
+                        pendingData = JSON.parse(pendingItemStr);
+                    } catch (e) {
+                        console.error('Invalid pending_appointment', e);
+                        navigate('/ecare/payment/failed');
+                        return;
+                    }
 
-                        sessionStorage.removeItem('pending_appointment');
+                    try {
+                        const finalizeRes = await axios.post(
+                            `${API_BASE}/api/appointments/finalize`,
+                            {
+                                pending_appointment: pendingData,
+                                payhere_order_id: oid,
+                                amount: amount
+                            },
+                            { validateStatus: (s) => s >= 200 && s < 500 }
+                        );
 
-                        if (finalizeRes.data.success) {
+                        const payload = finalizeRes.data || {};
+                        const msg = typeof payload.message === 'string' ? payload.message : '';
+                        let treatAsSuccess = payload.success === true;
+
+                        if (!treatAsSuccess && finalizeRes.status === 409) {
+                            if (/already booked and paid/i.test(msg)) {
+                                treatAsSuccess = true;
+                            }
+                        }
+
+                        if (!treatAsSuccess) {
+                            const polled = await pollPaymentUntilResolved(oid);
+                            treatAsSuccess = polled === 'SUCCESS';
+                        }
+
+                        if (treatAsSuccess) {
+                            sessionStorage.removeItem('pending_appointment');
+                            sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/success', {
-                                state: { ...paymentData, paymentID: order_id, appointment_No: pendingData.appointment_No }
+                                state: {
+                                    ...paymentData,
+                                    paymentID: oid,
+                                    appointment_No: pendingData.appointment_No
+                                }
                             });
                         } else {
+                            sessionStorage.removeItem('pending_appointment');
+                            sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/failed');
                         }
                     } catch (e) {
                         console.error('Finalize error', e);
-                        sessionStorage.removeItem('pending_appointment');
-                        navigate('/ecare/payment/failed');
+                        const polled = await pollPaymentUntilResolved(oid);
+                        if (polled === 'SUCCESS') {
+                            sessionStorage.removeItem('pending_appointment');
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/success', {
+                                state: {
+                                    ...paymentData,
+                                    paymentID: oid,
+                                    appointment_No: pendingData.appointment_No
+                                }
+                            });
+                        } else {
+                            sessionStorage.removeItem('pending_appointment');
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/failed');
+                        }
                     }
                     return;
                 }
@@ -351,16 +486,20 @@ const PaymentPortal = () => {
                 const checkStatus = async () => {
                     attempts++;
                     try {
-                        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/status/${order_id}`);
+                        const response = await axios.get(
+                            `${API_BASE}/api/payment/status/${encodeURIComponent(oid)}`
+                        );
                         const status = response.data.status;
 
                         if (status === 'SUCCESS') {
+                            sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/success', {
-                                state: { ...paymentData, paymentID: order_id }
+                                state: { ...paymentData, paymentID: oid }
                             });
                             return;
                         }
                         if (['FAILED', 'CANCELED', 'CHARGEDBACK'].includes(status)) {
+                            sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/failed');
                             return;
                         }

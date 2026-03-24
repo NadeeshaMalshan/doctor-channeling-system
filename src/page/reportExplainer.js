@@ -6,8 +6,9 @@ import './css/reportExplainer.css';
 const ReportExplainer = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
-    const [uploadedImage, setUploadedImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [uploadedFiles, setUploadedFiles] = useState([]); // Array of File objects
+    const [filePreviews, setFilePreviews] = useState([]); // Array of preview objects {url, name, type}
+    const [selectedLanguage, setSelectedLanguage] = useState('English');
     const [ocrText, setOcrText] = useState('');
     const [explainedText, setExplainedText] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -29,35 +30,70 @@ const ReportExplainer = () => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(Array.from(e.dataTransfer.files));
         }
     };
 
     const handleFileInput = (e) => {
-        if (e.target.files && e.target.files[0]) {
-            handleFile(e.target.files[0]);
+        if (e.target.files && e.target.files.length > 0) {
+            handleFiles(Array.from(e.target.files));
         }
     };
 
-    const handleFile = (file) => {
-        if (!file.type.startsWith('image/')) {
-            alert('Please upload an image file (JPEG, PNG, etc.)');
+    const handleFiles = (files) => {
+        const validExtensions = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        const newFiles = files.filter(file => validExtensions.includes(file.type) || file.name.toLowerCase().endsWith('.pdf'));
+
+        if (newFiles.length === 0) {
+            alert('Please upload valid files (JPEG, PNG, or PDF).');
             return;
         }
-        setUploadedImage(file);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            setImagePreview(e.target.result);
-        };
-        reader.readAsDataURL(file);
+
+        if (uploadedFiles.length + newFiles.length > 5) {
+            alert('You can upload a maximum of 5 files.');
+            const remainingSlots = 5 - uploadedFiles.length;
+            if (remainingSlots <= 0) return;
+            newFiles.splice(remainingSlots);
+        }
+
+        setUploadedFiles(prev => [...prev, ...newFiles]);
+
+        newFiles.forEach(file => {
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                // PDF preview icon
+                setFilePreviews(prev => [...prev, {
+                    url: 'pdf-icon', // We'll handle this in render
+                    name: file.name,
+                    type: 'pdf'
+                }]);
+            } else {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setFilePreviews(prev => [...prev, {
+                        url: e.target.result,
+                        name: file.name,
+                        type: 'image'
+                    }]);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    };
+
+    const removeFile = (index) => {
+        setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+        setFilePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleExtractText = async () => {
+        if (uploadedFiles.length === 0) return;
         setIsExtracting(true);
         try {
             const formData = new FormData();
-            formData.append('file', uploadedImage);
+            uploadedFiles.forEach(file => {
+                formData.append('files', file);
+            });
 
             const response = await fetch('http://localhost:8000/api/ocr', {
                 method: 'POST',
@@ -85,7 +121,10 @@ const ReportExplainer = () => {
             const response = await fetch('http://localhost:8000/api/explain', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: ocrText }),
+                body: JSON.stringify({ 
+                    text: ocrText,
+                    language: selectedLanguage
+                }),
             });
 
             const data = await response.json();
@@ -103,8 +142,8 @@ const ReportExplainer = () => {
     };
 
     const handleReset = () => {
-        setUploadedImage(null);
-        setImagePreview(null);
+        setUploadedFiles([]);
+        setFilePreviews([]);
         setOcrText('');
         setExplainedText('');
         setStep(1);
@@ -165,7 +204,7 @@ const ReportExplainer = () => {
                             AI Powered Analysis
                         </div>
                         <h1>AI Report Explainer</h1>
-                        <p>Upload your medical reports and get instant AI-powered explanations in simple, easy-to-understand language.</p>
+                        <p>Upload up to 5 medical reports (Image or PDF) and get instant AI-powered explanations in your preferred language.</p>
                     </div>
 
                     {/* Steps Indicator */}
@@ -209,66 +248,96 @@ const ReportExplainer = () => {
                                 <h2>Medical Report</h2>
                             </div>
 
-                            {!imagePreview ? (
-                                <div
-                                    className={`re-dropzone ${dragActive ? 'drag-active' : ''}`}
-                                    onDragEnter={handleDrag}
-                                    onDragLeave={handleDrag}
-                                    onDragOver={handleDrag}
-                                    onDrop={handleDrop}
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileInput}
-                                        hidden
-                                    />
-                                    <div className="re-dropzone-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                                        </svg>
-                                    </div>
-                                    <h3>Drop your report image here</h3>
-                                    <p>or click to browse files</p>
-                                    <span className="re-dropzone-formats">Supports: JPEG, PNG, WebP, BMP</span>
+                            <div
+                                className={`re-dropzone ${dragActive ? 'drag-active' : ''}`}
+                                onDragEnter={handleDrag}
+                                onDragLeave={handleDrag}
+                                onDragOver={handleDrag}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                style={{ display: filePreviews.length >= 5 ? 'none' : 'block' }}
+                            >
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    onChange={handleFileInput}
+                                    multiple
+                                    hidden
+                                />
+                                <div className="re-dropzone-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                                    </svg>
                                 </div>
-                            ) : (
-                                <div className="re-image-preview">
-                                    <img src={imagePreview} alt="Uploaded report" />
-                                    <div className="re-image-overlay">
-                                        <button className="re-btn-change" onClick={() => fileInputRef.current?.click()}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                                            </svg>
-                                            Change Image
-                                        </button>
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleFileInput}
-                                            hidden
-                                        />
-                                    </div>
-                                    {step === 1 && (
-                                        <button className="re-btn-extract" onClick={handleExtractText} disabled={isExtracting}>
-                                            {isExtracting ? (
-                                                <>
-                                                    <div className="re-spinner"></div>
-                                                    Extracting Text...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                                <h3>Drop your reports here</h3>
+                                <p>or click to browse files (Limit: 5)</p>
+                                <span className="re-dropzone-formats">Supports: JPEG, PNG, WebP, PDF</span>
+                            </div>
+
+                            {filePreviews.length > 0 && (
+                                <div className="re-file-list">
+                                    {filePreviews.map((file, index) => (
+                                        <div key={index} className="re-file-item">
+                                            <div className="re-file-thumb">
+                                                {file.type === 'pdf' ? (
+                                                    <svg className="re-pdf-thumb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3.5h-1.25V9H19v1.25h-1.25V13H16V7h1.75v1zM9 9h1v1H9V9zm5 2h1V8.5h-1V11zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z" />
                                                     </svg>
-                                                    Extract Text from Image
-                                                </>
-                                            )}
-                                        </button>
-                                    )}
+                                                ) : (
+                                                    <img src={file.url} alt={file.name} />
+                                                )}
+                                            </div>
+                                            <div className="re-file-info">
+                                                <div className="re-file-name">{file.name}</div>
+                                                <div className="re-file-type">{file.type.toUpperCase()}</div>
+                                            </div>
+                                            <button className="re-file-remove" onClick={() => removeFile(index)}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {step === 1 && filePreviews.length > 0 && (
+                                <div className="re-btn-extract-container">
+                                    <button className="re-btn-extract" onClick={handleExtractText} disabled={isExtracting}>
+                                        {isExtracting ? (
+                                            <>
+                                                <div className="re-spinner"></div>
+                                                Extracting Text...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                                                </svg>
+                                                Extract Text from Files
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
+                            {step === 1 && (
+                                <div className="re-language-selector-container">
+                                    <div className="re-language-selector">
+                                        <h3>Choose Summary Language</h3>
+                                        <div className="re-lang-options">
+                                            {['English', 'Sinhala', 'Tamil'].map(lang => (
+                                                <button
+                                                    key={lang}
+                                                    className={`re-lang-btn ${selectedLanguage === lang ? 'active' : ''}`}
+                                                    onClick={() => setSelectedLanguage(lang)}
+                                                >
+                                                    {lang}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
