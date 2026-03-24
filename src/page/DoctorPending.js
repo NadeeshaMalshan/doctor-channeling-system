@@ -40,7 +40,7 @@ const DoctorPending = () => {
             <div className="pending-container">
                 <h2>Application Pending Approval</h2>
                 <div className="pending-message">
-                    <p>Thank you for registering with NC+ Hospital Narammala.</p>
+                    <p>Thank you for registering with Narammala Channeling Center.</p>
                     <p>Your doctor account is currently under review by our administration team. You will be notified once your account is approved and ready to use.</p>
                 </div>
 

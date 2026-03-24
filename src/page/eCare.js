@@ -246,7 +246,7 @@ const ECare = () => {
                                         <div className="doctor-info">
                                             <h3>{doctor.name}</h3>
                                             <p className="doctor-specialty">{doctor.specialization}</p>
-                                            <p className="doctor-hospital">{doctor.hospital || 'NC+ Hospital Narammala'}</p>
+                                            <p className="doctor-hospital">{doctor.hospital || 'Narammala Channeling Center'}</p>
                                         </div>
                                     </div>
 

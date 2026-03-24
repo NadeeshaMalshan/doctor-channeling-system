@@ -98,7 +98,7 @@ const AppointmentHistory = ({ patientId, onClose }) => {
                                         </div>
                                         <div className="detail-item">
                                             <span className="material-symbols-outlined">local_hospital</span>
-                                            <span>{apt.doctor_hospital || 'NC+ Hospital'}</span>
+                                            <span>{apt.doctor_hospital || 'Narammala Channeling Center'}</span>
                                         </div>
                                         <div className="detail-item">
                                             <span className="material-symbols-outlined">payments</span>
