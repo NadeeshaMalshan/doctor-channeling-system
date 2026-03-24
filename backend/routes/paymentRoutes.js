@@ -13,6 +13,7 @@ router.get('/status/:orderID', paymentController.getPaymentStatus);
 // Cashier-only routes (require staff JWT)
 router.get('/all-transactions', verifyStaffToken, paymentController.getAllPaymentsForCashier);
 router.put('/update-status/:orderID', verifyStaffToken, paymentController.updatePaymentStatus);
+router.post('/refund/:orderID', verifyStaffToken, paymentController.processRefund);
 router.delete('/delete-old', verifyStaffToken, paymentController.deleteOldPayments);
 router.delete('/delete-sandbox', verifyStaffToken, paymentController.deleteSandboxPayments);
 
