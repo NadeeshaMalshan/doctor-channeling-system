@@ -164,86 +164,128 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
 
     return (
         <div className="profile-overlay">
-            <div className="profile-modal">
+            <div className="profile-modal new-design">
                 <div className="profile-header">
-                    <h2>Your Profile</h2>
-                    <button className="close-btn" onClick={onClose}>&times;</button>
+                    <div className="header-title">
+                        <svg className="header-icon" viewBox="0 0 24 24" fill="#304f6d">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                        </svg>
+                        <h2>Your Profile</h2>
+                    </div>
+                    <button className="close-btn-new" onClick={onClose}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
 
                 <div className="profile-content">
                     {error && <div className="profile-error">{error}</div>}
                     {success && <div className="profile-success">{success}</div>}
 
-                    <div className="profile-photo-section">
-                        <div className="profile-avatar">
-                            {patient?.profile_photo ? (
-                                <img src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${patient.profile_photo}`} alt="Profile" />
-                            ) : (
-                                <div className="avatar-placeholder">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                    </svg>
-                                </div>
-                            )}
+                    <div className="profile-top-section">
+                        <div className="profile-avatar-wrapper">
+                            <div className="profile-avatar-outer">
+                                {patient?.profile_photo ? (
+                                    <img src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${patient.profile_photo}`} alt="Profile" className="avatar-img" />
+                                ) : (
+                                    <div className="avatar-placeholder new-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="#304f6d">
+                                            <path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="photo-actions">
-                            <label className="upload-btn">
-                                {uploading ? 'Uploading...' : 'Change Photo'}
-                                <input type="file" onChange={handlePhotoUpload} accept="image/*" hidden />
-                            </label>
-                        </div>
+                        <label className="change-photo-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                            <span>{uploading ? 'Uploading...' : 'Change Photo'}</span>
+                            <input type="file" onChange={handlePhotoUpload} accept="image/*" hidden />
+                        </label>
                     </div>
 
-                    <form className="profile-form" onSubmit={handleUpdate}>
-                        <div className="form-group">
-                            <label>First Name</label>
-                            <input
-                                type="text"
-                                name="firstName"
-                                value={formData.firstName}
-                                onChange={handleInputChange}
-                                disabled={!editMode}
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Second Name</label>
-                            <input
-                                type="text"
-                                name="secondName"
-                                value={formData.secondName}
-                                onChange={handleInputChange}
-                                disabled={!editMode}
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Email (Cannot be changed)</label>
-                            <input type="email" value={patient?.email || ''} disabled className="readonly-input" />
-                        </div>
-                        <div className="form-group">
-                            <label>NIC (Cannot be changed)</label>
-                            <input type="text" value={patient?.nic || ''} disabled className="readonly-input" />
-                        </div>
-                        <div className="form-group">
-                            <label>Phone</label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleInputChange}
-                                disabled={!editMode}
-                                required
-                            />
+                    <form className="profile-details-form" onSubmit={handleUpdate}>
+                        <div className="detail-row">
+                            <div className="detail-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                <span>First Name</span>
+                            </div>
+                            <div className="detail-value">
+                                {editMode ? (
+                                    <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} required className="edit-input" />
+                                ) : (
+                                    <span>{formData.firstName || patient?.first_name}</span>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="profile-actions">
+                        <div className="detail-row">
+                            <div className="detail-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748b"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                <span>Second Name</span>
+                            </div>
+                            <div className="detail-value">
+                                {editMode ? (
+                                    <input type="text" name="secondName" value={formData.secondName} onChange={handleInputChange} required className="edit-input" />
+                                ) : (
+                                    <span>{formData.secondName || patient?.second_name}</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="detail-row">
+                            <div className="detail-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748b"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                                <span>Email</span>
+                            </div>
+                            <div className="detail-value locked-val-container">
+                                <span>{patient?.email || ''}</span>
+                                <div className="lock-badge">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+                                    Cannot be changed
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="detail-row">
+                            <div className="detail-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748b"><path d="M21 3H3C1.89 3 1 3.89 1 5v14c0 1.11.89 2 2 2h18c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 16H3V5h18v14zm-9-8c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0-4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-4 8c0-1.33 2.67-2 4-2s4 .67 4 2v1H8v-1z"/></svg>
+                                <span>NIC</span>
+                            </div>
+                            <div className="detail-value locked-val-container">
+                                <span>{patient?.nic || ''}</span>
+                                <div className="lock-badge">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+                                    Cannot be changed
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="detail-row borderless">
+                            <div className="detail-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748b"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                                <span>Phone</span>
+                            </div>
+                            <div className="detail-value">
+                                {editMode ? (
+                                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="edit-input" />
+                                ) : (
+                                    <span>{formData.phone || patient?.phone}</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="profile-actions-area">
                             {!editMode ? (
-                                <button type="button" className="edit-btn" onClick={() => setEditMode(true)}>Edit Profile</button>
+                                <button type="button" className="btn-edit-profile" onClick={() => setEditMode(true)}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                    Edit Profile
+                                </button>
                             ) : (
-                                <div className="edit-actions">
-                                    <button type="submit" className="save-btn">Save Changes</button>
-                                    <button type="button" className="cancel-btn" onClick={() => {
+                                <div className="edit-btn-group">
+                                    <button type="submit" className="btn-save-profile">Save Changes</button>
+                                    <button type="button" className="btn-cancel-profile" onClick={() => {
                                         setEditMode(false);
                                         setFormData({
                                             firstName: patient.first_name,
@@ -256,10 +298,16 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
                         </div>
                     </form>
 
-                    <div className="danger-zone">
-                        <h3>Danger Zone</h3>
+                    <div className="danger-zone-card">
+                        <div className="danger-zone-header">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="#d45f53"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                            <h3>Danger Zone</h3>
+                        </div>
                         <p>Once you delete your account, there is no going back. Please be certain.</p>
-                        <button className="delete-account-btn" onClick={() => setShowDeleteConfirm(true)}>Delete My Account</button>
+                        <button className="btn-delete-account" onClick={() => setShowDeleteConfirm(true)}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            Delete My Account
+                        </button>
                     </div>
                 </div>
             </div>
