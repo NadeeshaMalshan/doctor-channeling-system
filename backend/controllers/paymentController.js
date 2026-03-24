@@ -156,10 +156,9 @@ exports.handleNotification = async (req, res) => {
         .digest('hex')
         .toUpperCase();
 
-    const envSandbox = String(process.env.PAYHERE_TEST_MODE || '').trim().toLowerCase() === 'true';
-    const signatureBypassForSandbox = envSandbox && md5sig === 'TEST_MODE';
+    const isTestMode = process.env.PAYHERE_TEST_MODE === 'true' && md5sig === 'TEST_MODE';
 
-    if (localMd5sig === md5sig || signatureBypassForSandbox) {
+    if (localMd5sig === md5sig || isTestMode) {
         try {
             // mapping status codes (PayHere may send string or number)
             // 2: Success, 0: Pending, -1: Canceled, -2: Failed, -3: Chargedback
@@ -184,7 +183,7 @@ exports.handleNotification = async (req, res) => {
             const final_payment_id = payment_id || 'N/A';
             const final_method = method || 'N/A';
 
-            const notifyEnvironment = envSandbox ? 'SANDBOX' : 'LIVE';
+            const notifyEnvironment = isTestMode ? 'SANDBOX' : 'LIVE';
             const amountNum = payhere_amount != null ? Number(payhere_amount) : 0;
 
             const [updResult] = await db.execute(
