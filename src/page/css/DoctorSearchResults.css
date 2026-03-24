@@ -479,9 +479,9 @@
 .dsr-card-info { flex: 1; min-width: 0; }
 
 .dsr-doctor-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: #000000;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0F172A;
     margin: 0 0 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -541,7 +541,7 @@
     padding: 4px;
     display: flex;
     align-items: center;
-    color: #1E3A5F;
+    color: #94A3B8;
     margin-left: auto;
     transition: color 0.15s;
     flex-shrink: 0;
@@ -549,9 +549,9 @@
 
 .dsr-btn-info .material-symbols-outlined {
     font-family: 'Material Symbols Outlined';
-    font-weight: 700;
+    font-weight: normal;
     font-style: normal;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1;
     letter-spacing: normal;
     text-transform: none;
@@ -576,11 +576,11 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 10px;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #1E3A5F;
+    color: #94A3B8;
     margin-bottom: 8px;
 }
 
@@ -605,9 +605,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748B;
+    font-size: 11px;
+    color: #CBD5E1;
     padding: 8px 0;
 }
 

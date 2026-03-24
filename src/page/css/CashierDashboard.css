@@ -521,10 +521,6 @@
     background: #E2E8F0;
 }
 
-.table-refund-btn:disabled {
-    cursor: not-allowed;
-}
-
 .table-success-btn {
     background: #DCFCE7;
     color: #15803D;

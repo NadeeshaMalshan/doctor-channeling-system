@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import Landing from './page/landing';
 import ECare from './page/eCare';
 import Login from './page/Login';
-import ResetPassword from './page/ResetPassword';
+import ForgotPassword from './page/ForgotPassword';
 import Signup from './page/Signup';
 import DoctorSignup from './page/DoctorSignup';
 import StaffLogin from './page/StaffLogin';
@@ -39,7 +39,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/eCare" element={<ECare />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/ecare/doc-signup" element={<DoctorSignup />} />
           <Route path="/ecare/staff-login" element={<StaffLogin />} />

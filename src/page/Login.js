@@ -1,34 +1,30 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 import './css/Login.css';
 import ReCAPTCHA from "react-google-recaptcha";
 
-const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const forgotCaptchaRef = useRef(null);
-
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
     const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [error, setError] = useState('');
-    const [successMsg, setSuccessMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-
     const [showForgotModal, setShowForgotModal] = useState(false);
     const [forgotEmail, setForgotEmail] = useState('');
-    const [forgotRecaptchaToken, setForgotRecaptchaToken] = useState(null);
     const [forgotError, setForgotError] = useState('');
     const [forgotLoading, setForgotLoading] = useState(false);
+    const [forgotRecaptchaToken, setForgotRecaptchaToken] = useState(null);
+    const forgotRecaptchaRef = useRef(null);
+    const [passwordResetNotice, setPasswordResetNotice] = useState(false);
 
     useEffect(() => {
-        if (location.state?.resetSuccess) {
-            setSuccessMsg(location.state.resetSuccess);
+        if (location.state?.passwordResetOk) {
+            setPasswordResetNotice(true);
             navigate(location.pathname, { replace: true, state: {} });
         }
     }, [location.pathname, location.state, navigate]);
@@ -53,7 +49,7 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch(`${apiBase}/api/auth/login`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -102,19 +98,26 @@ const Login = () => {
         }
     };
 
-    const closeForgotModal = () => {
-        setShowForgotModal(false);
-        setForgotEmail('');
+    const openForgotModal = () => {
+        setForgotEmail(formData.email || '');
         setForgotError('');
-        setForgotRecaptchaToken(null);
-        forgotCaptchaRef.current?.reset();
+        setShowForgotModal(true);
     };
 
-    const submitForgotPassword = async (e) => {
+    const closeForgotModal = () => {
+        setShowForgotModal(false);
+        setForgotError('');
+        setForgotLoading(false);
+        setForgotRecaptchaToken(null);
+        forgotRecaptchaRef.current?.reset();
+    };
+
+    const handleForgotSubmit = async (e) => {
         e.preventDefault();
         setForgotError('');
-        if (!forgotEmail.trim()) {
-            setForgotError('Please enter your email');
+        const trimmed = String(forgotEmail || '').trim();
+        if (!trimmed) {
+            setForgotError('Please enter your email address');
             return;
         }
         if (!forgotRecaptchaToken) {
@@ -123,24 +126,25 @@ const Login = () => {
         }
         setForgotLoading(true);
         try {
-            const res = await fetch(`${apiBase}/api/auth/forgot-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: forgotEmail.trim(),
-                    recaptchaToken: forgotRecaptchaToken
-                })
-            });
-            const data = await res.json();
-            if (!res.ok) {
+            const response = await fetch(
+                `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/forgot-password/request`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: trimmed, recaptchaToken: forgotRecaptchaToken })
+                }
+            );
+            const data = await response.json();
+            if (!response.ok) {
                 setForgotError(data.message || 'Something went wrong');
+                setForgotRecaptchaToken(null);
+                forgotRecaptchaRef.current?.reset();
                 return;
             }
-            const emailToUse = forgotEmail.trim();
             closeForgotModal();
-            navigate('/reset-password', { state: { email: emailToUse } });
+            navigate('/forgot-password', { state: { email: data.email || trimmed } });
         } catch {
-            setForgotError('Connection error. Please try again.');
+            setForgotError('Connection error. Please try again later.');
         } finally {
             setForgotLoading(false);
         }
@@ -189,6 +193,20 @@ const Login = () => {
                         <p>Enter your credentials to access your account</p>
                     </div>
 
+                    {passwordResetNotice && (
+                        <div className="login-success-banner" role="status">
+                            Password updated. You can sign in with your new password.
+                            <button
+                                type="button"
+                                className="login-success-banner-dismiss"
+                                onClick={() => setPasswordResetNotice(false)}
+                                aria-label="Dismiss"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="login-form">
                         <div className="form-group">
                             <label htmlFor="email">Email Address</label>
@@ -229,14 +247,12 @@ const Login = () => {
                         </div>
 
                         <div className="form-options">
-                            <button
-                                type="button"
-                                className="forgot-link"
-                                onClick={() => {
-                                    setShowForgotModal(true);
-                                    setForgotEmail(formData.email || '');
-                                }}
-                            >
+                            <label className="checkbox-wrapper">
+                                <input type="checkbox" />
+                                <span className="checkmark"></span>
+                                Remember me
+                            </label>
+                            <button type="button" className="forgot-link" onClick={openForgotModal}>
                                 Forgot Password?
                             </button>
                         </div>
@@ -248,22 +264,6 @@ const Login = () => {
                             />
                         </div>
 
-                        {successMsg && (
-                            <div
-                                className="login-success-banner"
-                                style={{
-                                    color: '#047857',
-                                    background: '#ecfdf5',
-                                    padding: '12px',
-                                    borderRadius: '10px',
-                                    textAlign: 'center',
-                                    marginBottom: '15px',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                {successMsg}
-                            </div>
-                        )}
                         {error && <div className="error-message" style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
 
                         <button type="submit" className="login-btn" disabled={isLoading}>
@@ -295,41 +295,38 @@ const Login = () => {
                     }}
                 >
                     <div className="forgot-modal" role="dialog" aria-labelledby="forgot-modal-title" aria-modal="true">
-                        <button type="button" className="forgot-modal-close" onClick={closeForgotModal} aria-label="Close">
-                            ×
-                        </button>
-                        <h2 id="forgot-modal-title">Forgot password</h2>
-                        <p className="forgot-modal-desc">Enter the email on your account. If it is registered, we will send a verification code.</p>
-                        <form onSubmit={submitForgotPassword} className="login-form forgot-modal-form">
-                            <div className="form-group">
-                                <label htmlFor="forgot-email">Email</label>
-                                <div className="input-wrapper">
-                                    <input
-                                        id="forgot-email"
-                                        type="email"
-                                        value={forgotEmail}
-                                        onChange={(e) => setForgotEmail(e.target.value)}
-                                        placeholder="Your email address"
-                                        required
-                                        autoComplete="email"
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                        <h3 id="forgot-modal-title">Reset password</h3>
+                        <p className="forgot-modal-desc">
+                            Enter the email for your patient or doctor account. If it exists, we will send a verification
+                            code.
+                        </p>
+                        <form onSubmit={handleForgotSubmit} className="forgot-modal-form">
+                            <label htmlFor="forgot-email">Email</label>
+                            <input
+                                id="forgot-email"
+                                type="email"
+                                autoComplete="email"
+                                placeholder="you@example.com"
+                                value={forgotEmail}
+                                onChange={(e) => setForgotEmail(e.target.value)}
+                                required
+                            />
+                            <div className="forgot-modal-recaptcha">
                                 <ReCAPTCHA
-                                    ref={forgotCaptchaRef}
+                                    ref={forgotRecaptchaRef}
                                     sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
                                     onChange={(token) => setForgotRecaptchaToken(token)}
                                 />
                             </div>
-                            {forgotError && (
-                                <div className="error-message" style={{ color: '#b91c1c', textAlign: 'center', marginBottom: '12px' }}>
-                                    {forgotError}
-                                </div>
-                            )}
-                            <button type="submit" className="login-btn" disabled={forgotLoading}>
-                                {forgotLoading ? <span className="loader" /> : 'Send code'}
-                            </button>
+                            {forgotError && <div className="forgot-modal-error">{forgotError}</div>}
+                            <div className="forgot-modal-buttons">
+                                <button type="button" className="forgot-modal-cancel" onClick={closeForgotModal}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="forgot-modal-submit" disabled={forgotLoading}>
+                                    {forgotLoading ? 'Sending…' : 'Continue'}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

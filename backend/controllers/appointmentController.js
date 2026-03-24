@@ -1,5 +1,4 @@
 const db = require('../config/db');
-const { sendPaymentReceiptEmailIfNeeded } = require('../services/paymentReceiptEmail');
 
 /** Match PayHere / DB variations (trim, case). */
 const SQL_PAYMENT_IS_SUCCESS = `UPPER(TRIM(COALESCE(p.payment_status, ''))) = 'SUCCESS'`;
@@ -68,11 +67,6 @@ exports.finalizeAppointment = async (req, res) => {
                 [payRows[0].id, Number(linkedAppt)]
             );
             await connection.commit();
-            setImmediate(() => {
-                sendPaymentReceiptEmailIfNeeded(payhere_order_id).catch((err) => {
-                    console.error('Payment receipt email (finalize):', err.message || err);
-                });
-            });
             return res.status(200).json({
                 success: true,
                 message: 'Payment already recorded',
@@ -177,11 +171,6 @@ exports.finalizeAppointment = async (req, res) => {
         }
 
         await connection.commit();
-        setImmediate(() => {
-            sendPaymentReceiptEmailIfNeeded(payhere_order_id).catch((err) => {
-                console.error('Payment receipt email (finalize):', err.message || err);
-            });
-        });
         res.status(200).json({
             success: true,
             message: 'Appointment finalized successfully',
