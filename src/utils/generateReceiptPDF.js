@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import LogoHospital from '../images/LogoHospital.png';
+import { getReceiptDetailRows, RECEIPT_CONDITIONS } from './receiptModel';
 
 // Color helpers
 const rgb = (r, g, b) => [r, g, b];
@@ -58,7 +59,7 @@ export const generateReceiptPDF = async (data) => {
     applyText(doc, TEXT_MID);
     doc.text('Narammala Channeling Center',             W - M, y + 9,  { align: 'right' });
     doc.text('Narammala, Sri Lanka',                    W - M, y + 14, { align: 'right' });
-    doc.text('support@nccecare.lk  |  +94 37 225 0000', W - M, y + 19, { align: 'right' });
+    doc.text('narammalachannelcenterandhospi@gmail.com  |  0372 249 959', W - M, y + 19, { align: 'right' });
 
     y += 24;
 
@@ -86,20 +87,7 @@ export const generateReceiptPDF = async (data) => {
     y += 12;
 
     // ─── BILL INFO BOX ────────────────────────────────────────────────
-    const rows = [
-        { label: 'Payment Reference',  value: data.paymentID  || 'N/A', mono: true },
-        null,
-        { label: 'Appointment ID',     value: `#${data.appointmentId || 'N/A'}` },
-        { label: 'Appointment No',     value: String(data.appointmentNo || 'N/A'), accent: true },
-        { label: 'Patient Name',       value: data.patientName    || 'N/A' },
-        { label: 'Doctor',             value: data.doctorName     || 'N/A' },
-        { label: 'Specialization',     value: data.specialization || 'N/A' },
-        { label: 'Date & Time',        value: data.dateTime       || 'N/A' },
-        null,
-        { label: 'Channeling Fee',     value: `LKR ${Number(data.channelingFee || (data.totalAmount - 400)).toFixed(2)}` },
-        { label: 'Service Charge',     value: `LKR ${Number(data.serviceCharge || 400).toFixed(2)}` },
-        { label: 'Total Amount Paid',  value: `LKR ${Number(data.totalAmount || 0).toFixed(2)}`, bold: true, large: true },
-    ];
+    const rows = getReceiptDetailRows(data);
 
     const ROW_H = 9;
     const DIV_H = 6;
@@ -166,13 +154,7 @@ export const generateReceiptPDF = async (data) => {
     y += 22;
 
     // ─── CONDITIONS BOX ───────────────────────────────────────────────
-    const conditions = [
-        'Refund Policy: Refunds are applicable within 24 hours of payment only. No refunds will be\n  processed after the 24-hour window has passed.',
-        'Appointment: Please arrive at least 10 minutes before your scheduled appointment time.',
-        'Cancellation: Notify us at least 2 hours in advance to reschedule or cancel your appointment.',
-        'This receipt is computer-generated and is valid without a physical signature.',
-        'Support: Contact support@nccecare.lk or call +94 37 225 0000 for any assistance.',
-    ];
+    const conditions = RECEIPT_CONDITIONS;
 
     // Measure total text height
     doc.setFont('helvetica', 'normal');

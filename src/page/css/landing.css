@@ -446,11 +446,6 @@ html {
     background: var(--border-light);
 }
 
-.section-divider-dark {
-    background: var(--border-dark);
-}
-
-
 /* ================================================================
    ABOUT SECTION — Off-white background
    ================================================================ */

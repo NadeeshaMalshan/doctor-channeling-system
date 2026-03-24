@@ -35,6 +35,7 @@ const CashierDashboard = () => {
     const [activeFilter, setActiveFilter] = useState('ALL');
     const [modal, setModal] = useState({ open: false, type: '', data: null });
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [refundSubmitting, setRefundSubmitting] = useState(false);
 
     useEffect(() => {
         document.title = 'Cashier Portal — NCC eCare';
@@ -94,9 +95,29 @@ const CashierDashboard = () => {
     const handleRefund = (payment) => setModal({ open: true, type: 'refund', data: payment });
 
     const confirmRefund = async () => {
-        setPayments(prev => prev.map(p => p.id === modal.data.id ? { ...p, status: 'REFUNDED' } : p));
-        showToast(`Payment ${modal.data.orderId} refunded`);
-        setModal({ open: false, type: '', data: null });
+        if (!modal?.data?.orderId || refundSubmitting) return;
+        try {
+            setRefundSubmitting(true);
+            await axios.post(
+                `http://localhost:5000/api/payment/refund/${modal.data.orderId}`,
+                {
+                    amount: modal.data.amount,
+                    reason: `Cashier refund for ${modal.data.orderId}`
+                },
+                authHeaders()
+            );
+            setPayments(prev => prev.map(p => p.orderId === modal.data.orderId ? { ...p, status: 'REFUNDED' } : p));
+            showToast(`Payment ${modal.data.orderId} refunded`);
+            setModal({ open: false, type: '', data: null });
+        } catch (error) {
+            console.error('Error processing refund:', error);
+            const message =
+                error?.response?.data?.message ||
+                'Failed to process refund';
+            showToast(message);
+        } finally {
+            setRefundSubmitting(false);
+        }
     };
 
     const handleUpdatePaymentStatus = async (payment, newStatus) => {
@@ -148,6 +169,10 @@ const CashierDashboard = () => {
 
     const closeModal = () => setModal({ open: false, type: '', data: null });
     const filterTabs = ['ALL', 'SUCCESS', 'PENDING', 'REFUNDED', 'FAILED'];
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate('/ecare/staff-login');
+    };
 
     return (
         <div className="cashier-page-wrapper">
@@ -169,7 +194,7 @@ const CashierDashboard = () => {
                         <span className="material-symbols-outlined">badge</span>
                         <span>Staff: <strong>Cashier</strong></span>
                     </div>
-                    <button className="cashier-nav-btn btn-logout" onClick={() => navigate('/ecare/staff-login')}>
+                    <button className="cashier-nav-btn btn-logout" onClick={handleLogout}>
                         <span className="material-symbols-outlined">logout</span>
                         Logout
                     </button>
@@ -386,8 +411,10 @@ const CashierDashboard = () => {
                                     Amount: <strong>LKR {modal.data.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
                                 </p>
                                 <div className="modal-actions">
-                                    <button className="modal-btn cancel" onClick={closeModal}>Cancel</button>
-                                    <button className="modal-btn confirm-primary" onClick={confirmRefund}>Confirm Refund</button>
+                                    <button className="modal-btn cancel" onClick={closeModal} disabled={refundSubmitting}>Cancel</button>
+                                    <button className="modal-btn confirm-primary" onClick={confirmRefund} disabled={refundSubmitting}>
+                                        {refundSubmitting ? 'Processing...' : 'Confirm Refund'}
+                                    </button>
                                 </div>
                             </>
                         )}

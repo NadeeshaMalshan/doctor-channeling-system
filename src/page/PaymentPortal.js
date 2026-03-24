@@ -10,6 +10,63 @@ import LogoHospital from '../images/LogoHospital.png';
 
 const PAYMENT_CONTEXT_KEY = 'paymentContext';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+/** Public backend base (ngrok → port 5000). PayHere calls this host — not localhost. */
+const NGROK_PUBLIC_BASE = (
+    process.env.REACT_APP_NGROK_BASE || 'https://unboldly-nonpantheistic-dwight.ngrok-free.dev'
+).replace(/\/$/, '');
+
+/** Full notify URL; override entirely with REACT_APP_PAYHERE_NOTIFY_URL if needed. */
+const PAYHERE_NOTIFY_URL =
+    process.env.REACT_APP_PAYHERE_NOTIFY_URL || `${NGROK_PUBLIC_BASE}/api/payment/notify`;
+
+/** PayHere sometimes passes a string; guard against objects / whitespace. */
+const resolvePayHereOrderId = (raw) => {
+    if (raw == null || raw === '') return '';
+    if (typeof raw === 'object' && raw.order_id != null) return String(raw.order_id).trim();
+    return String(raw).trim();
+};
+
+const TERMINAL_PAYMENT_FAIL = ['FAILED', 'CANCELED', 'CHARGEDBACK', 'DUPLICATE'];
+
+function queueReceiptEmail(orderId, patientId) {
+    if (orderId == null || String(orderId).trim() === '') return;
+    const pid = patientId != null ? Number(patientId) : NaN;
+    if (!Number.isFinite(pid)) return;
+    axios
+        .post(`${API_BASE}/api/payment/request-receipt-email`, {
+            order_id: String(orderId).trim(),
+            patient_id: pid
+        })
+        .catch(() => {});
+}
+
+/** Wait until PayHere /notify has written real status — never trust onCompleted alone. */
+async function pollPaymentUntilResolved(orderId) {
+    for (let i = 0; i < 28; i++) {
+        try {
+            const { data } = await axios.get(
+                `${API_BASE}/api/payment/status/${encodeURIComponent(orderId)}`
+            );
+            const st = String(data.status ?? '').toUpperCase();
+            if (st === 'SUCCESS') {
+                return {
+                    ok: true,
+                    appointment_id: data.appointment_id != null ? Number(data.appointment_id) : null
+                };
+            }
+            if (TERMINAL_PAYMENT_FAIL.includes(st)) {
+                return { ok: false, status: data.status };
+            }
+        } catch {
+            /* retry */
+        }
+        await new Promise((r) => setTimeout(r, i < 10 ? 500 : 1200));
+    }
+    return { ok: false, status: 'TIMEOUT' };
+}
+
 const readStoredPaymentContext = () => {
     try {
         const raw = sessionStorage.getItem(PAYMENT_CONTEXT_KEY);
@@ -19,6 +76,48 @@ const readStoredPaymentContext = () => {
         return null;
     }
 };
+
+function readScheduleIdFromPendingSession() {
+    try {
+        const raw = sessionStorage.getItem('pending_appointment');
+        if (!raw) return null;
+        const p = JSON.parse(raw);
+        if (p.schedule_id == null) return null;
+        return String(p.schedule_id);
+    } catch {
+        return null;
+    }
+}
+
+function readScheduleIdFromPayHereCtx() {
+    try {
+        const raw = sessionStorage.getItem('payhere_order_ctx');
+        if (!raw) return null;
+        const c = JSON.parse(raw);
+        const sid = c.pending_appointment?.schedule_id;
+        if (sid == null) return null;
+        return String(sid);
+    } catch {
+        return null;
+    }
+}
+
+/** MySQL / JSON may return number, bigint, or string — normalize for UI. */
+function displayScalar(val) {
+    if (val == null || val === '') return null;
+    if (typeof val === 'bigint') return val.toString();
+    const n = Number(val);
+    if (Number.isFinite(n) && String(val).trim() !== '') return String(n);
+    return String(val);
+}
+
+/** Queue no. as 01, 02, … (matches booking page). */
+function formatBookingQueueNo(val) {
+    if (val == null || val === '') return null;
+    const n = Number(typeof val === 'bigint' ? val.toString() : val);
+    if (!Number.isFinite(n) || n < 1) return displayScalar(val);
+    return String(Math.floor(n)).padStart(2, '0');
+}
 
 const PaymentPortal = () => {
     const navigate = useNavigate();
@@ -45,8 +144,14 @@ const PaymentPortal = () => {
 
     const appointmentScheduleId =
         scheduleFromUrl ||
-        (location.state?.appointmentScheduleId != null ? String(location.state.appointmentScheduleId) : null) ||
-        (storedCtx?.appointmentScheduleId != null ? String(storedCtx.appointmentScheduleId) : null);
+        readScheduleIdFromPendingSession() ||
+        readScheduleIdFromPayHereCtx() ||
+        (location.state?.appointmentScheduleId != null && location.state?.appointmentScheduleId !== ''
+            ? String(location.state.appointmentScheduleId)
+            : null) ||
+        (storedCtx?.appointmentScheduleId != null && storedCtx?.appointmentScheduleId !== ''
+            ? String(storedCtx.appointmentScheduleId)
+            : null);
 
     const idFromUrl = appointmentFromUrl && String(appointmentFromUrl).trim() !== ''
         ? String(appointmentFromUrl).trim()
@@ -76,18 +181,44 @@ const PaymentPortal = () => {
             return;
         }
 
-        const fetchDetails = async () => {
-            try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`);
-                setDetails(response.data);
-                setLoading(false);
-            } catch {
-                setError('fetch_failed');
-                setLoading(false);
-            }
-        };
-
-        fetchDetails();
+        const pendingItem = sessionStorage.getItem('pending_appointment');
+        if (pendingItem) {
+            const pendingData = JSON.parse(pendingItem);
+            const queueNo = pendingData.booking_queue_no ?? pendingData.appointment_No;
+            const mappedDetails = {
+                first_name: pendingData.patientName.split(' ')[0],
+                second_name: pendingData.patientName.split(' ').slice(1).join(' ') || '',
+                doctor_name: pendingData.doctorName,
+                specialization: pendingData.specialization,
+                schedule_date: pendingData.schedule_date,
+                start_time: pendingData.start_time,
+                channelingFee: pendingData.channelingFee,
+                appointment_schedule_id: pendingData.schedule_id,
+                appointment_queue_no: queueNo,
+                booking_queue_no: queueNo,
+                appointment_No: queueNo,
+                slots_snapshot:
+                    pendingData.max_patients != null
+                        ? `${Number(pendingData.booked_count_at_checkout) || 0} / ${Number(pendingData.max_patients)}`
+                        : null
+            };
+            setDetails(mappedDetails);
+            setLoading(false);
+        } else {
+            const fetchDetails = async () => {
+                try {
+                    const response = await axios.get(
+                        `${API_BASE}/api/payment/details?patientID=${patientId}&appointment_schedule_id=${appointmentScheduleId}`
+                    );
+                    setDetails(response.data);
+                    setLoading(false);
+                } catch {
+                    setError('fetch_failed');
+                    setLoading(false);
+                }
+            };
+            fetchDetails();
+        }
 
         return () => {
             document.title = "Doctor Channeling System";
@@ -213,33 +344,49 @@ const PaymentPortal = () => {
     const apiApptId = details.appointment_id;
     const resolvedAppointmentId =
         (apiApptId != null && apiApptId !== '' ? apiApptId : null) ?? appointmentIdFromBooking;
-    const queueNo = details.appointment_queue_no;
-    const displayAppointmentNo =
-        queueNo != null && queueNo !== '' ? queueNo : null;
+
+    const scheduleIdForDisplay =
+        displayScalar(details.appointment_schedule_id) ?? appointmentScheduleId ?? '—';
+
+    const bookingQueueRaw =
+        details.booking_queue_no ?? details.appointment_queue_no ?? details.appointment_No;
+    const bookingNoDisplay = formatBookingQueueNo(bookingQueueRaw);
 
     const channelingFeeNum = parseFloat(details.channelingFee);
     const channelingFee = Number.isFinite(channelingFeeNum) ? channelingFeeNum : 0;
+    const serviceChargeNum = parseFloat(details.serviceCharge);
+    const serviceCharge = Number.isFinite(serviceChargeNum) ? serviceChargeNum : 0;
 
     const paymentData = {
         patientName: `${details.first_name} ${details.second_name}`,
         doctorName: details.doctor_name,
         specialization: details.specialization,
-        appointmentScheduleNo: appointmentScheduleId,
-        appointmentNo: displayAppointmentNo,
+        appointmentScheduleId: scheduleIdForDisplay,
+        appointmentNo: bookingNoDisplay,
         appointmentId: resolvedAppointmentId,
         dateTime: formatScheduleDateTime(details.schedule_date, details.start_time),
         channelingFee,
-        serviceCharge: 400,
-        totalAmount: channelingFee + 400,
+        serviceCharge,
+        totalAmount: channelingFee + serviceCharge,
     };
 
     const handlePayHereClick = async () => {
-        const appointmentID = paymentData.appointmentId;
-        if (appointmentID == null || appointmentID === '') {
-            alert('Appointment number is missing. Please complete your booking again from the appointment page.');
-            return;
+        let paymentID = '';
+        const pendingItem = sessionStorage.getItem('pending_appointment');
+        if (pendingItem) {
+            if (patientId == null || String(patientId).trim() === '') {
+                alert('Please log in again before paying.');
+                return;
+            }
+            paymentID = 'ORD' + appointmentScheduleId + '_' + patientId + '_' + Date.now();
+        } else {
+            const appointmentID = paymentData.appointmentId;
+            if (appointmentID == null || appointmentID === '') {
+                alert('Appointment number is missing. Please complete your booking again from the appointment page.');
+                return;
+            }
+            paymentID = 'ORD' + appointmentID + '_' + Date.now();
         }
-        const paymentID = 'ORD' + appointmentID + '_' + Date.now();
         const amount = paymentData.totalAmount;
         const currency = 'LKR';
 
@@ -260,7 +407,7 @@ const PaymentPortal = () => {
             const payReturnUrl = payQs.toString() ? `${payReturnBase}?${payQs.toString()}` : payReturnBase;
 
             // get backend hash
-            const hashResponse = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/generate-hash`,
+            const hashResponse = await axios.post(`${API_BASE}/api/payment/generate-hash`,
                 {
                     paymentID: paymentID,
                     amount: amount,
@@ -272,13 +419,44 @@ const PaymentPortal = () => {
             );
             const { hash, merchantID } = hashResponse.data;
 
+            if (!pendingItem) {
+                const reserveRes = await axios.post(
+                    `${API_BASE}/api/payment/reserve-checkout`,
+                    {
+                        internal_order_id: paymentID,
+                        appointment_id: Number(paymentData.appointmentId),
+                        amount: amount
+                    },
+                    { validateStatus: (s) => s >= 200 && s < 500 }
+                );
+                if (reserveRes.status >= 400) {
+                    const m = reserveRes.data?.message || 'Could not reserve payment';
+                    alert(m);
+                    return;
+                }
+            }
+
+            try {
+                sessionStorage.setItem(
+                    'payhere_order_ctx',
+                    JSON.stringify({
+                        paymentID,
+                        mode: pendingItem ? 'pending' : 'existing',
+                        pending_appointment: pendingItem ? JSON.parse(pendingItem) : null,
+                        amount
+                    })
+                );
+            } catch {
+                /* ignore */
+            }
+
             // payhere payment obj
             const payment = {
                 "sandbox": isSandbox,
                 "merchant_id": merchantID,
                 "return_url": payReturnUrl,
                 "cancel_url": payReturnUrl,
-                "notify_url": "https://unboldly-nonpantheistic-dwight.ngrok-free.dev/api/payment/notify",
+                "notify_url": PAYHERE_NOTIFY_URL,
                 "order_id": paymentID,
                 "items": "Doctor Appointment",
                 "amount": amount,
@@ -295,22 +473,159 @@ const PaymentPortal = () => {
 
             // PayHere Callbacks - Register BEFORE starting payment
             window.payhere.onCompleted = async function onCompleted(order_id) {
+                const oid = resolvePayHereOrderId(order_id);
+                if (!oid) {
+                    console.error('PayHere onCompleted: missing order_id', order_id);
+                    navigate('/ecare/payment/failed');
+                    return;
+                }
+
+                let pendingItemStr = sessionStorage.getItem('pending_appointment');
+                if (!pendingItemStr) {
+                    try {
+                        const rawCtx = sessionStorage.getItem('payhere_order_ctx');
+                        if (rawCtx) {
+                            const ctx = JSON.parse(rawCtx);
+                            if (ctx.paymentID === oid && ctx.pending_appointment) {
+                                pendingItemStr = JSON.stringify(ctx.pending_appointment);
+                            }
+                        }
+                    } catch {
+                        /* ignore */
+                    }
+                }
+                if (pendingItemStr) {
+                    let pendingData;
+                    try {
+                        pendingData = JSON.parse(pendingItemStr);
+                    } catch (e) {
+                        console.error('Invalid pending_appointment', e);
+                        navigate('/ecare/payment/failed');
+                        return;
+                    }
+
+                    try {
+                        const polled = await pollPaymentUntilResolved(oid);
+                        if (!polled.ok) {
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/failed');
+                            return;
+                        }
+
+                        const finalizeRes = await axios.post(
+                            `${API_BASE}/api/appointments/finalize`,
+                            {
+                                pending_appointment: pendingData,
+                                payhere_order_id: oid,
+                                amount: amount
+                            },
+                            { validateStatus: (s) => s >= 200 && s < 500 }
+                        );
+
+                        const payload = finalizeRes.data || {};
+                        const finOk =
+                            finalizeRes.status === 200 &&
+                            payload.success === true &&
+                            payload.data?.id != null;
+                        const finRejected =
+                            finalizeRes.status === 400 ||
+                            (finalizeRes.status === 200 && payload.success === false);
+
+                        if (finRejected) {
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/failed');
+                            return;
+                        }
+
+                        if (!finOk && finalizeRes.status === 202) {
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/failed');
+                            return;
+                        }
+
+                        if (!finOk && polled.appointment_id != null && Number.isFinite(polled.appointment_id)) {
+                            queueReceiptEmail(oid, patientId);
+                            sessionStorage.removeItem('pending_appointment');
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/success', {
+                                state: {
+                                    ...paymentData,
+                                    paymentID: oid,
+                                    appointmentId: polled.appointment_id,
+                                    appointmentNo:
+                                        pendingData.booking_queue_no ?? pendingData.appointment_No
+                                }
+                            });
+                            return;
+                        }
+
+                        if (!finOk) {
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/failed');
+                            return;
+                        }
+
+                        queueReceiptEmail(oid, patientId);
+                        sessionStorage.removeItem('pending_appointment');
+                        sessionStorage.removeItem('payhere_order_ctx');
+                        navigate('/ecare/payment/success', {
+                            state: {
+                                ...paymentData,
+                                paymentID: oid,
+                                appointmentId: payload.data.id,
+                                appointmentNo:
+                                    pendingData.booking_queue_no ?? pendingData.appointment_No
+                            }
+                        });
+                    } catch (e) {
+                        console.error('Finalize error', e);
+                        const polled = await pollPaymentUntilResolved(oid);
+                        if (polled.ok && polled.appointment_id != null) {
+                            queueReceiptEmail(oid, patientId);
+                            sessionStorage.removeItem('pending_appointment');
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/success', {
+                                state: {
+                                    ...paymentData,
+                                    paymentID: oid,
+                                    appointmentId: polled.appointment_id,
+                                    appointmentNo:
+                                        pendingData.booking_queue_no ?? pendingData.appointment_No
+                                }
+                            });
+                        } else {
+                            sessionStorage.removeItem('payhere_order_ctx');
+                            navigate('/ecare/payment/failed');
+                        }
+                    }
+                    return;
+                }
+
                 let attempts = 0;
                 const maxAttempts = 15;
 
                 const checkStatus = async () => {
                     attempts++;
                     try {
-                        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/payment/status/${order_id}`);
-                        const status = response.data.status;
+                        const response = await axios.get(
+                            `${API_BASE}/api/payment/status/${encodeURIComponent(oid)}`
+                        );
+                        const status = String(response.data?.status ?? '').toUpperCase();
 
                         if (status === 'SUCCESS') {
+                            queueReceiptEmail(oid, patientId);
+                            sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/success', {
-                                state: { ...paymentData, paymentID: order_id }
+                                state: {
+                                    ...paymentData,
+                                    paymentID: oid,
+                                    appointmentId: response.data?.appointment_id
+                                }
                             });
                             return;
                         }
-                        if (['FAILED', 'CANCELED', 'CHARGEDBACK'].includes(status)) {
+                        if (TERMINAL_PAYMENT_FAIL.includes(status)) {
+                            sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/failed');
                             return;
                         }
@@ -329,11 +644,13 @@ const PaymentPortal = () => {
             };
 
             window.payhere.onDismissed = function onDismissed() {
-                /* user closed PayHere */
+                sessionStorage.removeItem('payhere_order_ctx');
+                navigate('/ecare/payment/failed');
             };
 
             window.payhere.onError = function onError() {
-                alert('Payment could not complete. Please try again.');
+                sessionStorage.removeItem('payhere_order_ctx');
+                navigate('/ecare/payment/failed');
             };
 
             window.payhere.startPayment(payment);
@@ -389,12 +706,14 @@ const PaymentPortal = () => {
                             <p><span>Patient name:</span> {paymentData.patientName}</p>
                             <p><span>Doctor name:</span> {paymentData.doctorName}</p>
                             <p><span>Specialization:</span> {paymentData.specialization}</p>
-                            <p><span>Appointment schedule no:</span> {paymentData.appointmentScheduleNo ?? '—'}</p>
+                            <p><span>Appointment schedule No:</span> {paymentData.appointmentScheduleId}</p>
+                            <p><span>Booking queue no:</span> {paymentData.appointmentNo ?? '—'}</p>
+                            {details.slots_snapshot != null && details.slots_snapshot !== '' && (
+                                <p><span>Slots (when you continued):</span> {details.slots_snapshot}</p>
+                            )}
                             <p><span>Date/Time:</span> {paymentData.dateTime}</p>
-                            <p><span>Appointment no:</span> {paymentData.appointmentNo != null && paymentData.appointmentNo !== '' ? paymentData.appointmentNo : '—'}</p>
                             <div className="fee-row">
                                 <p><span>Fee:</span> {paymentData.totalAmount} LKR</p>
-                                <small>({paymentData.serviceCharge} LKR for channeling center charges)</small>
                             </div>
                         </div>
 

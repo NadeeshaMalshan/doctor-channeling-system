@@ -5,13 +5,136 @@
     font-family: inherit;
 }
 
-.create-schedule-container {
-    max-width: 600px;
+/* Split View Layout */
+.split-view-wrapper {
+    display: flex;
+    gap: 30px;
+    max-width: 1200px;
     margin: 40px auto;
+    padding: 0 20px;
+    align-items: flex-start;
+}
+
+.availability-list-container {
+    flex: 6;
+    background: transparent;
+}
+
+.create-schedule-container {
+    flex: 4;
     background: white;
     padding: 40px;
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(118, 0, 253, 0.05);
+    position: sticky;
+    top: 40px;
+}
+
+/* Availability List Styles */
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.list-header h3 {
+    color: #1E3A5F;
+    font-size: 24px;
+    margin: 0;
+}
+
+.availability-filters {
+    display: flex;
+    gap: 15px;
+}
+
+.availability-filters select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    outline: none;
+}
+
+.availability-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.availability-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 5px solid transparent;
+}
+
+.availability-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.availability-card.active-card {
+    border-left-color: #2b4a8c;
+    background-color: #f8faff;
+}
+
+.card-info h4 {
+    margin: 0 0 5px 0;
+    color: #1E3A5F;
+    font-size: 18px;
+}
+
+.card-info p {
+    margin: 4px 0;
+    font-size: 14px;
+    color: #6B7280;
+}
+
+.card-info strong {
+    color: #374151;
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+}
+
+.mark-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.mark-btn:hover {
+    transform: scale(1.05);
+}
+
+.mark-btn.marked {
+    background-color: #15803d;
+    /* Green */
+}
+
+.mark-btn.unmarked {
+    background-color: #9ca3af;
+    /* Gray */
 }
 
 .create-schedule-header {
@@ -108,7 +231,7 @@
 .submit-btn:hover {
     background: #1E3A5F;
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(43, 74, 140, 0.2);
+    box-shadow: 0 8px 20px rgba(41, 148, 76, 0.2);
 }
 
 .message {

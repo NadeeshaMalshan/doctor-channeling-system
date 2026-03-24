@@ -310,7 +310,7 @@ function Landing() {
                     <div className="big-stat-number-wrapper">
                         <div className="big-stat-number big-stat-counter" data-target="1000" data-suffix="+">0</div>
                         <p className="big-stat-caption">
-                            Since our founding, NC+ Hospital has served over 1000+ patients
+                            Since our founding, Narammala Channeling Center has served over 1000+ patients
                             across Narammala and the surrounding communities.
                         </p>
                     </div>
@@ -336,7 +336,7 @@ function Landing() {
             <section id="about" className="section-about">
                 <div className="about-container">
                     <div className="about-image">
-                        <img src={hospitalImg} alt="NC+ Hospital Facility" className="about-hospital-image" />
+                        <img src={hospitalImg} alt="Narammala Channeling Center Facility" className="about-hospital-image" />
                     </div>
                     <div className="about-content">
                         <span className="about-badge">About Us</span>
@@ -483,7 +483,7 @@ function Landing() {
             <footer className="footer">
                 <div className="footer-container">
                     <div className="footer-section footer-about">
-                        <h3>NC+ Hospital</h3>
+                        <h3>Narammala Channeling Center</h3>
                         <p>
                             Narammala's premier private healthcare provider. Delivering
                             compassionate medical services with excellence since our founding.
@@ -535,7 +535,7 @@ function Landing() {
                     </div>
                 </div>
                 <div className="footer-bottom">
-                    <p>&copy; {new Date().getFullYear()} NC+ Hospital. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Narammala Channeling Center. All rights reserved.</p>
                 </div>
             </footer>
 

@@ -19,6 +19,7 @@ Your task:
 3. Tell the patient if their values are normal, high, or low
 4. Use bullet points for clarity
 5. Add a disclaimer that this is not a professional diagnosis
+6. **IMPORTANT**: Provide the entire explanation strictly in **{language}**.
 
 
 Important rules:
@@ -32,4 +33,4 @@ Important rules:
 Medical Report Text:
 {report_text}
 
-Please provide a clear, simple explanation:"""
+Please provide a clear, simple explanation in {language}:"""

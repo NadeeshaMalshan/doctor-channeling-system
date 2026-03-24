@@ -68,6 +68,25 @@
     margin-bottom: 40px;
 }
 
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.brand-logo img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.brand-logo span {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
 /* ===== Right Side - Signup Form ===== */
 .signup-right {
     flex: 1;
@@ -142,19 +161,21 @@
     align-items: center;
 }
 
-.input-wrapper svg {
+.signup-form .input-wrapper svg {
     position: absolute;
-    left: 16px;
-    width: 20px;
-    height: 20px;
+    left: 18px;
+    width: 18px;
+    height: 18px;
     color: #6B7280;
     pointer-events: none;
     transition: color 0.3s ease;
+    z-index: 2;
+    display: block;
 }
 
-.input-wrapper input {
+.signup-form .input-wrapper input {
     width: 100%;
-    padding: 14px 16px 14px 50px;
+    padding: 14px 16px 14px 56px;
     /* Slightly smaller padding to save space */
     font-size: 15px;
     border: 2px solid #E5E7EB;
@@ -319,6 +340,15 @@
 
     .signup-left-content h1 {
         font-size: 28px;
+    }
+
+    .brand-logo img {
+        width: 36px;
+        height: 36px;
+    }
+
+    .brand-logo span {
+        font-size: 22px;
     }
 
     .signup-right {

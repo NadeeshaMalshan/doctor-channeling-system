@@ -1,18 +1,37 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import './css/Login.css';
 import ReCAPTCHA from "react-google-recaptcha";
 
+const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const forgotCaptchaRef = useRef(null);
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
     const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    const [showForgotModal, setShowForgotModal] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotRecaptchaToken, setForgotRecaptchaToken] = useState(null);
+    const [forgotError, setForgotError] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
+
+    useEffect(() => {
+        if (location.state?.resetSuccess) {
+            setSuccessMsg(location.state.resetSuccess);
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.pathname, location.state, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -34,7 +53,7 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/login`, {
+            const response = await fetch(`${apiBase}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,13 +102,48 @@ const Login = () => {
         }
     };
 
-    const handleGoogleLogin = () => {
-        setIsLoading(true);
-        // Simulate Google OAuth - replace with actual Google authentication
-        setTimeout(() => {
-            setIsLoading(false);
-            navigate('/eCare');
-        }, 1500);
+    const closeForgotModal = () => {
+        setShowForgotModal(false);
+        setForgotEmail('');
+        setForgotError('');
+        setForgotRecaptchaToken(null);
+        forgotCaptchaRef.current?.reset();
+    };
+
+    const submitForgotPassword = async (e) => {
+        e.preventDefault();
+        setForgotError('');
+        if (!forgotEmail.trim()) {
+            setForgotError('Please enter your email');
+            return;
+        }
+        if (!forgotRecaptchaToken) {
+            setForgotError('Please complete the reCAPTCHA');
+            return;
+        }
+        setForgotLoading(true);
+        try {
+            const res = await fetch(`${apiBase}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: forgotEmail.trim(),
+                    recaptchaToken: forgotRecaptchaToken
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setForgotError(data.message || 'Something went wrong');
+                return;
+            }
+            const emailToUse = forgotEmail.trim();
+            closeForgotModal();
+            navigate('/reset-password', { state: { email: emailToUse } });
+        } catch {
+            setForgotError('Connection error. Please try again.');
+        } finally {
+            setForgotLoading(false);
+        }
     };
 
     return (
@@ -99,13 +153,11 @@ const Login = () => {
                 <div className="login-left-overlay"></div>
                 <div className="login-left-content">
                     <div className="brand-logo">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 10h-2v2c0 .55-.45 1-1 1s-1-.45-1-1v-2H9c-.55 0-1-.45-1-1s.45-1 1-1h2V9c0-.55.45-1 1-1s1 .45 1 1v2h2c.55 0 1 .45 1 1s-.45 1-1 1z" />
-                        </svg>
-                        <span>NC+ Hospital</span>
+                        <img src="/favicon.png" alt="NC+ logo" />
+                        <span>NCC eCare</span>
                     </div>
                     <h1>Welcome Back!</h1>
-                    <p>Your trusted healthcare partner in Narammala. Access your health records, book appointments, and manage your healthcare journey.</p>
+                    <p>Your trusted doctor booking portal in Narammala. Find specialist doctors, reserve your channeling slot, and manage upcoming appointments.</p>
                     <div className="login-features">
                         <div className="login-feature-item">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -117,13 +169,13 @@ const Login = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                             </svg>
-                            <span>Access Medical Records</span>
+                            <span>Choose Specialist Doctors</span>
                         </div>
                         <div className="login-feature-item">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                             </svg>
-                            <span>Get Lab Results Online</span>
+                            <span>Manage Upcoming Channelings</span>
                         </div>
                     </div>
                 </div>
@@ -177,12 +229,16 @@ const Login = () => {
                         </div>
 
                         <div className="form-options">
-                            <label className="checkbox-wrapper">
-                                <input type="checkbox" />
-                                <span className="checkmark"></span>
-                                Remember me
-                            </label>
-                            <button type="button" className="forgot-link">Forgot Password?</button>
+                            <button
+                                type="button"
+                                className="forgot-link"
+                                onClick={() => {
+                                    setShowForgotModal(true);
+                                    setForgotEmail(formData.email || '');
+                                }}
+                            >
+                                Forgot Password?
+                            </button>
                         </div>
 
                         <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
@@ -192,6 +248,22 @@ const Login = () => {
                             />
                         </div>
 
+                        {successMsg && (
+                            <div
+                                className="login-success-banner"
+                                style={{
+                                    color: '#047857',
+                                    background: '#ecfdf5',
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    textAlign: 'center',
+                                    marginBottom: '15px',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                {successMsg}
+                            </div>
+                        )}
                         {error && <div className="error-message" style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
 
                         <button type="submit" className="login-btn" disabled={isLoading}>
@@ -208,25 +280,60 @@ const Login = () => {
                         </button>
                     </form>
 
-                    <div className="divider">
-                        <span>or continue with</span>
-                    </div>
-
-                    <button className="google-login-btn" onClick={handleGoogleLogin} disabled={isLoading}>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                        </svg>
-                        Continue with Google
-                    </button>
-
                     <p className="signup-link">
                         Don't have an account? <Link to="/signup">Sign Up</Link>
                     </p>
                 </div>
             </div>
+
+            {showForgotModal && (
+                <div
+                    className="forgot-modal-overlay"
+                    role="presentation"
+                    onClick={(ev) => {
+                        if (ev.target === ev.currentTarget) closeForgotModal();
+                    }}
+                >
+                    <div className="forgot-modal" role="dialog" aria-labelledby="forgot-modal-title" aria-modal="true">
+                        <button type="button" className="forgot-modal-close" onClick={closeForgotModal} aria-label="Close">
+                            ×
+                        </button>
+                        <h2 id="forgot-modal-title">Forgot password</h2>
+                        <p className="forgot-modal-desc">Enter the email on your account. If it is registered, we will send a verification code.</p>
+                        <form onSubmit={submitForgotPassword} className="login-form forgot-modal-form">
+                            <div className="form-group">
+                                <label htmlFor="forgot-email">Email</label>
+                                <div className="input-wrapper">
+                                    <input
+                                        id="forgot-email"
+                                        type="email"
+                                        value={forgotEmail}
+                                        onChange={(e) => setForgotEmail(e.target.value)}
+                                        placeholder="Your email address"
+                                        required
+                                        autoComplete="email"
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                                <ReCAPTCHA
+                                    ref={forgotCaptchaRef}
+                                    sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                                    onChange={(token) => setForgotRecaptchaToken(token)}
+                                />
+                            </div>
+                            {forgotError && (
+                                <div className="error-message" style={{ color: '#b91c1c', textAlign: 'center', marginBottom: '12px' }}>
+                                    {forgotError}
+                                </div>
+                            )}
+                            <button type="submit" className="login-btn" disabled={forgotLoading}>
+                                {forgotLoading ? <span className="loader" /> : 'Send code'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

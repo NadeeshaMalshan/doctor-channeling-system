@@ -3,6 +3,13 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
 import './css/AppointmentForm.css';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+function formatQueueNo(n) {
+    if (n == null || !Number.isFinite(Number(n)) || Number(n) < 1) return '—';
+    return String(Number(n)).padStart(2, '0');
+}
+
 const AppointmentForm = () => {
     const { schedule_id, doctor_id } = useParams();
     const navigate = useNavigate();
@@ -32,7 +39,7 @@ const AppointmentForm = () => {
         if (!location.state?.schedule) {
             const fetchScheduleDetails = async () => {
                 try {
-                    const res = await fetch(`http://localhost:5000/api/schedules/${schedule_id}`);
+                    const res = await fetch(`${API_BASE}/api/schedules/${schedule_id}`);
                     const data = await res.json();
                     if (data.success) {
                         setScheduleDetails(data.data);
@@ -50,57 +57,75 @@ const AppointmentForm = () => {
         setError('');
 
         try {
-            const res = await fetch('http://localhost:5000/api/appointments', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    schedule_id,
-                    doctor_id,
-                    patient_ID: patient.id
-                })
-            });
-
+            // Fetch current schedule details to get up-to-date booked_count
+            const res = await fetch(`${API_BASE}/api/schedules/${schedule_id}`);
             const data = await res.json();
 
-            if (res.ok) {
-                const appointmentId =
-                    data?.data?.id ??
-                    data?.data?.insertId ??
-                    data?.id ??
-                    null;
-                const scheduleIdStr = String(schedule_id);
+            if (res.ok && data.success) {
+                const currentSchedule = data.data;
+                const booked = Number(currentSchedule.booked_count) || 0;
+                const max = Number(currentSchedule.max_patients) || 0;
 
-                if (appointmentId != null && appointmentId !== '') {
-                    try {
-                        sessionStorage.setItem('paymentContext', JSON.stringify({
-                            appointmentId: Number(appointmentId),
-                            appointmentScheduleId: scheduleIdStr
-                        }));
-                    } catch (_) { /* ignore */ }
+                if (currentSchedule.status === 'full' || (max > 0 && booked >= max)) {
+                    setError('This schedule is full. Please choose another slot.');
+                    return;
+                }
+
+                const booking_queue_no = booked + 1;
+
+                const pending_appointment = {
+                    schedule_id,
+                    doctor_id,
+                    patient_ID: patient.id,
+                    booking_queue_no,
+                    appointment_No: booking_queue_no,
+                    patientName: `${patient.first_name} ${patient.second_name}`,
+                    doctorName: currentSchedule.doctor_name,
+                    specialization: currentSchedule.specialization,
+                    schedule_date: currentSchedule.schedule_date,
+                    start_time: currentSchedule.start_time,
+                    channelingFee: Number(currentSchedule.price),
+                    max_patients: max,
+                    booked_count_at_checkout: booked
+                };
+
+                sessionStorage.setItem('pending_appointment', JSON.stringify(pending_appointment));
+                try {
+                    sessionStorage.setItem(
+                        'paymentContext',
+                        JSON.stringify({
+                            appointmentScheduleId: String(schedule_id),
+                            appointmentId: null
+                        })
+                    );
+                } catch {
+                    /* ignore */
                 }
 
                 const qs = new URLSearchParams();
-                qs.set('appointment_schedule_id', scheduleIdStr);
-                if (appointmentId != null && appointmentId !== '') {
-                    qs.set('appointment_id', String(appointmentId));
-                }
+                qs.set('appointment_schedule_id', String(schedule_id));
 
                 navigate(`/ecare/payment?${qs.toString()}`, {
                     replace: true,
                     state: {
-                        appointmentScheduleId: schedule_id,
-                        appointmentId: appointmentId != null ? Number(appointmentId) : null
+                        appointmentScheduleId: String(schedule_id)
                     }
                 });
             } else {
-                setError(data.message || 'Failed to book appointment');
+                setError(data?.message || 'Failed to fetch schedule details');
             }
         } catch (err) {
-            setError('Network error occurred while booking');
+            setError('Network error occurred before payment');
         } finally {
             setLoading(false);
         }
     };
+
+    const scheduleIsFull =
+        scheduleDetails &&
+        (scheduleDetails.status === 'full' ||
+            ((Number(scheduleDetails.max_patients) || 0) > 0 &&
+                (Number(scheduleDetails.booked_count) || 0) >= Number(scheduleDetails.max_patients)));
 
     return (
         <div className="appointment-form-page">
@@ -142,6 +167,22 @@ const AppointmentForm = () => {
 
                 <div className="appointment-right">
                     <div className="appointment-right-content">
+                        {scheduleIsFull && (
+                            <div
+                                style={{
+                                    background: '#fef3c7',
+                                    color: '#92400e',
+                                    padding: '15px',
+                                    borderRadius: '8px',
+                                    marginBottom: '20px',
+                                    textAlign: 'center',
+                                    fontWeight: 600
+                                }}
+                            >
+                                This schedule is full (all slots booked). Please pick another time.
+                            </div>
+                        )}
+
                         {error && (
                             <div style={{
                                 background: '#fee2e2',
@@ -162,7 +203,22 @@ const AppointmentForm = () => {
                                 <div className="summary-grid">
                                     <div className="summary-item">
                                         <span className="label">Appointment schedule No</span>
-                                        <span className="value">{schedule_id}</span>
+                                        <span className="value">{String(schedule_id)}</span>
+                                    </div>
+                                    <div className="summary-item">
+                                        <span className="label">Booking queue no</span>
+                                        <span className="value">
+                                            {formatQueueNo(
+                                                (Number(scheduleDetails.booked_count) || 0) + 1
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="summary-item">
+                                        <span className="label">Slots</span>
+                                        <span className="value">
+                                            {Number(scheduleDetails.booked_count) || 0} /{' '}
+                                            {Number(scheduleDetails.max_patients) || '—'} booked
+                                        </span>
                                     </div>
                                     <div className="summary-item">
                                         <span className="label">Doctor</span>
@@ -184,10 +240,6 @@ const AppointmentForm = () => {
                                         <span className="label">Price</span>
                                         <span className="value">Rs. {Number(scheduleDetails.price).toFixed(2)}</span>
                                     </div>
-                                    <div className="summary-item">
-                                        <span className="label">Appointment NO</span>
-                                        <span className="value">No. {Number(scheduleDetails.booked_count) + 1}</span>
-                                    </div>
                                 </div>
                             ) : (
                                 <p>Loading schedule details...</p>
@@ -201,7 +253,7 @@ const AppointmentForm = () => {
                             <button
                                 className="btn-confirm"
                                 onClick={handleConfirm}
-                                disabled={loading || !scheduleDetails || !patient}
+                                disabled={loading || !scheduleDetails || !patient || scheduleIsFull}
                             >
                                 {loading ? 'Processing...' : 'Proceed to Payment'}
                             </button>

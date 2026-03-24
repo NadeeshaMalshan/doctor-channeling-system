@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS doctors (
     phone VARCHAR(20) NOT NULL,
     hospital VARCHAR(255),
     password_hash VARCHAR(255) NOT NULL,
-    status ENUM('approved', 'pending', 'rejected', 'canceled') DEFAULT 'pending',
+    consulting_fee DECIMAL(10,2) DEFAULT 1000.00,
+    status ENUM('approved', 'pending', 'rejected') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS appointment_schedules (
@@ -53,16 +54,20 @@ CREATE TABLE IF NOT EXISTS appointment_schedules (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
 );
 
+-- Paid / failed state: use payments.appointment_id -> appointments.id (FK on payments table).
 CREATE TABLE IF NOT EXISTS appointments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     schedule_id INT NOT NULL,
     doctor_id INT NOT NULL,
     patient_ID INT NOT NULL,
-    appointment_payment_status ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
+    booking_queue_no INT NOT NULL,
+    appointment_status ENUM('added', 'failed', 'cancelled') NOT NULL DEFAULT 'added',
+    payment_id INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE
+    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE,
+    KEY idx_appointments_schedule_id (schedule_id)
 );
 
 CREATE TABLE IF NOT EXISTS support_tickets (
@@ -94,71 +99,32 @@ CREATE TABLE IF NOT EXISTS doc_availability_slots (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id)
 );
 
-
-CREATE TABLE IF NOT EXISTS appointment_schedules (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    doctor_id INT NOT NULL,
-    schedule_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    max_patients INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    booked_count INT DEFAULT 0,
-    status ENUM('active','full','cancelled') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS appointments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    schedule_id INT NOT NULL,
-    doctor_id INT NOT NULL,
-    patient_ID INT NOT NULL,
-    appointment_payment_status ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE
-);
-
-
 CREATE TABLE IF NOT EXISTS payments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     internal_order_id VARCHAR(50) NOT NULL,
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
     appointment_schedule_id INT NOT NULL,
-    appointment_id INT NOT NULL,
+    appointment_id INT DEFAULT NULL,
     payhere_payment_id VARCHAR(50) DEFAULT NULL,
     amount DECIMAL (10,2) NOT NULL,
     payment_method VARCHAR(20),
     card_last_digits VARCHAR(4) DEFAULT NULL,
     payment_status VARCHAR(20) DEFAULT 'PENDING',
     payment_environment ENUM('SANDBOX', 'LIVE') DEFAULT 'SANDBOX',
+    receipt_email_sent_at DATETIME NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id),
     FOREIGN KEY (doctor_id) REFERENCES doctors(id),
     FOREIGN KEY (appointment_id) REFERENCES appointments(id),
-    FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id)
+    FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id),
+    UNIQUE KEY uniq_payments_internal_order (internal_order_id)
 );
 
--- Trigger to synchronize payment_status in payments with appointment_payment_status in appointments
-DELIMITER //
+ALTER TABLE appointments
+    ADD CONSTRAINT fk_appointments_payment_id
+    FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL;
 
-CREATE TRIGGER after_payment_update
-AFTER UPDATE ON payments
-FOR EACH ROW
-BEGIN
-    IF NEW.payment_status = 'SUCCESS' AND OLD.payment_status != 'SUCCESS' THEN
-        UPDATE appointments
-        SET appointment_payment_status = 'paid'
-        WHERE id = NEW.appointment_id;
-    ELSEIF NEW.payment_status = 'FAILED' AND OLD.payment_status != 'FAILED' THEN
-        UPDATE appointments
-        SET appointment_payment_status = 'failed'
-        WHERE id = NEW.appointment_id;
-    END IF;
-END //
-
-DELIMITER ;
+-- 2. Remove the old trigger to prevent conflicts
+DROP TRIGGER IF EXISTS sync_appointment_payment_status;

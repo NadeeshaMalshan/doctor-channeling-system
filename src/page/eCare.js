@@ -255,13 +255,10 @@ const ECare = () => {
                                                 <p className="doctor-hospital">{doctor.hospital || 'NC+ Hospital Narammala'}</p>
                                             </div>
                                         </div>
-
-                                        <div className="doctor-card-body">
-                                            <span className={`specialty-tag ${getTagClass(doctor.specialization)}`}>{doctor.specialization}</span>
-                                            <div className="doctor-contact">
-                                                <p className="doctor-email">{doctor.email}</p>
-                                                <p className="doctor-phone">{doctor.phone}</p>
-                                            </div>
+                                        <div className="doctor-info">
+                                            <h3>{doctor.name}</h3>
+                                            <p className="doctor-specialty">{doctor.specialization}</p>
+                                            <p className="doctor-hospital">{doctor.hospital || 'Narammala Channeling Center'}</p>
                                         </div>
 
                                         <div className="doctor-card-footer">

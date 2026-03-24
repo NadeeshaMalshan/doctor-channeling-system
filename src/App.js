@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import Landing from './page/landing';
 import ECare from './page/eCare';
 import Login from './page/Login';
+import ResetPassword from './page/ResetPassword';
 import Signup from './page/Signup';
 import DoctorSignup from './page/DoctorSignup';
 import StaffLogin from './page/StaffLogin';
@@ -25,6 +26,7 @@ import ReportExplainer from './page/reportExplainer';
 import SmartDocSuggestion from './page/smartDocSuggestion';
 import DoctorAvailability from './page/DoctorAvailability';
 import DoctorSearchResults from './page/DoctorSearchResults';
+import DoctorProfile from './page/DoctorProfile';
 import DoctorPending from './page/DoctorPending';
 import DoctorReject from './page/DoctorReject';
 
@@ -37,6 +39,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/eCare" element={<ECare />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/ecare/doc-signup" element={<DoctorSignup />} />
           <Route path="/ecare/staff-login" element={<StaffLogin />} />
@@ -56,6 +59,7 @@ function App() {
           <Route path="/ecare/report-explainer" element={<ReportExplainer />} />
           <Route path="/ecare/smart-doctor" element={<SmartDocSuggestion />} />
           <Route path="/doctor-availability" element={<DoctorAvailability />} />
+          <Route path="/doctorprofile" element={<DoctorProfile />} />
           <Route path="/ecare/doctors" element={<DoctorSearchResults />} />
           <Route path="/ecare/staff/HRCustomerSupport" element={<StaffProtectedRoute element={<HRCustomerSupport />} allowedRoles={['HR', 'Admin']} />} />
           <Route path="/doctorpending" element={<DoctorPending />} />

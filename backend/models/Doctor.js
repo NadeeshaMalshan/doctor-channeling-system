@@ -3,7 +3,7 @@ const db = require('../config/db');
 const Doctor = {
     findAll: async () => {
         try {
-            const [rows] = await db.query('SELECT id, name, specialization, slmc_id AS slmc_no, nic, email, phone, hospital FROM doctors');
+            const [rows] = await db.query('SELECT id, name, specialization, slmc_id AS slmc_no, nic, email, phone, hospital, consulting_fee FROM doctors');
             return rows;
         } catch (error) {
             throw error;

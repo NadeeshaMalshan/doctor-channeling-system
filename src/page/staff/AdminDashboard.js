@@ -130,6 +130,7 @@ const AdminDashboard = () => {
     }, [selectedCategory, API_URL, fetchStaff, fetchUsers]);
 
     const handleLogout = () => {
+        localStorage.clear();
         navigate('/ecare/staff-login');
     };
 
@@ -727,7 +728,7 @@ const AdminDashboard = () => {
 
             <footer style={{ marginTop: 'auto', padding: '2rem 1rem 1rem', textAlign: 'center' }}>
                 <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', marginBottom: '1rem', width: '100%' }} />
-                <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>© 2026 NC+ Hospital. All rights reserved.</p>
+                <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>© 2026 Narammala Channeling Center. All rights reserved.</p>
             </footer>
         </div>
     );
