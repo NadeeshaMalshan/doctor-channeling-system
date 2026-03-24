@@ -169,6 +169,10 @@ const CashierDashboard = () => {
 
     const closeModal = () => setModal({ open: false, type: '', data: null });
     const filterTabs = ['ALL', 'SUCCESS', 'PENDING', 'REFUNDED', 'FAILED'];
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate('/ecare/staff-login');
+    };
 
     return (
         <div className="cashier-page-wrapper">
@@ -190,7 +194,7 @@ const CashierDashboard = () => {
                         <span className="material-symbols-outlined">badge</span>
                         <span>Staff: <strong>Cashier</strong></span>
                     </div>
-                    <button className="cashier-nav-btn btn-logout" onClick={() => navigate('/ecare/staff-login')}>
+                    <button className="cashier-nav-btn btn-logout" onClick={handleLogout}>
                         <span className="material-symbols-outlined">logout</span>
                         Logout
                     </button>

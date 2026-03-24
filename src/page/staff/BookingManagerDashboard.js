@@ -6,6 +6,7 @@ const BookingManagerDashboard = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
+        localStorage.clear();
         navigate('/ecare/staff-login');
     };
 
