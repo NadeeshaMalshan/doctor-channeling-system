@@ -36,15 +36,7 @@ exports.getPaymentDetails = async (req, res) => {
                     aps.booked_count, aps.schedule_date, aps.start_time, aps.price AS channelingFee,
                     aps.id AS appointment_schedule_id,
                     appt.id AS appointment_id,
-                    (
-                        SELECT COUNT(*)
-                        FROM appointments x
-                        WHERE x.schedule_id = appt.schedule_id
-                          AND (
-                            x.created_at < appt.created_at
-                            OR (x.created_at = appt.created_at AND x.id <= appt.id)
-                          )
-                    ) AS appointment_queue_no
+                    appt.booking_queue_no AS appointment_queue_no
              FROM patients p
              INNER JOIN appointment_schedules aps ON aps.id = ?
              INNER JOIN doctors d ON d.id = aps.doctor_id
@@ -52,7 +44,8 @@ exports.getPaymentDetails = async (req, res) => {
                  SELECT a.id
                  FROM appointments a
                  WHERE a.patient_ID = p.id AND a.schedule_id = aps.id
-                 ORDER BY a.id ASC
+                   AND COALESCE(a.appointment_status, 'added') <> 'failed'
+                 ORDER BY a.id DESC
                  LIMIT 1
              )
              WHERE p.id = ?`,
@@ -167,18 +160,19 @@ exports.handleNotification = async (req, res) => {
 
     if (localMd5sig === md5sig || isTestMode) {
         try {
-            // mapping status codes
+            // mapping status codes (PayHere may send string or number)
             // 2: Success, 0: Pending, -1: Canceled, -2: Failed, -3: Chargedback
+            const sc = String(status_code ?? '').trim();
             let paymentStatus = 'PENDING';
-            if (status_code === '2') {
+            if (sc === '2' || status_code === 2) {
                 paymentStatus = 'SUCCESS';
-            } else if (status_code === '0') {
+            } else if (sc === '0' || status_code === 0) {
                 paymentStatus = 'PENDING';
-            } else if (status_code === '-1') {
+            } else if (sc === '-1' || status_code === -1) {
                 paymentStatus = 'CANCELED';
-            } else if (status_code === '-2') {
+            } else if (sc === '-2' || status_code === -2) {
                 paymentStatus = 'FAILED';
-            } else if (status_code === '-3') {
+            } else if (sc === '-3' || status_code === -3) {
                 paymentStatus = 'CHARGEDBACK';
             }
 
@@ -241,19 +235,84 @@ exports.handleNotification = async (req, res) => {
                             );
                         }
                     }
-                } else if (parsed?.kind === 'pending_slot' && paymentStatus === 'SUCCESS') {
-                    const appointmentController = require('./appointmentController');
-                    await appointmentController.ensurePendingBookingAndPaymentFromNotify({
-                        schedule_id: parsed.scheduleId,
-                        patient_ID: parsed.patientId,
-                        internal_order_id: internalPaymentID,
-                        amount: amountNum,
-                        paymentStatus,
-                        final_payment_id,
-                        final_method,
-                        final_card_digits,
-                        notifyEnvironment
-                    });
+                } else if (parsed?.kind === 'pending_slot') {
+                    if (paymentStatus === 'SUCCESS') {
+                        const appointmentController = require('./appointmentController');
+                        await appointmentController.ensurePendingBookingAndPaymentFromNotify({
+                            schedule_id: parsed.scheduleId,
+                            patient_ID: parsed.patientId,
+                            internal_order_id: internalPaymentID,
+                            amount: amountNum,
+                            paymentStatus,
+                            final_payment_id,
+                            final_method,
+                            final_card_digits,
+                            notifyEnvironment
+                        });
+                    } else {
+                        let conn;
+                        try {
+                            conn = await db.getConnection();
+                            await conn.beginTransaction();
+
+                            const [schedRows] = await conn.execute(
+                                'SELECT doctor_id, booked_count FROM appointment_schedules WHERE id = ? FOR UPDATE',
+                                [parsed.scheduleId]
+                            );
+                            if (schedRows.length > 0) {
+                                const docId = schedRows[0].doctor_id;
+                                const bookingQueueNo = (Number(schedRows[0].booked_count) || 0) + 1;
+                                const [apRes] = await conn.execute(
+                                    `INSERT INTO appointments (schedule_id, doctor_id, patient_ID, booking_queue_no, appointment_status)
+                                     VALUES (?, ?, ?, ?, 'failed')`,
+                                    [parsed.scheduleId, docId, parsed.patientId, bookingQueueNo]
+                                );
+                                const apptId = apRes.insertId;
+                                const [pRes] = await conn.execute(
+                                    `INSERT INTO payments
+                                    (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payhere_payment_id, payment_method, card_last_digits, payment_environment)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    [
+                                        internalPaymentID,
+                                        parsed.patientId,
+                                        docId,
+                                        parsed.scheduleId,
+                                        apptId,
+                                        amountNum,
+                                        paymentStatus,
+                                        final_payment_id,
+                                        final_method,
+                                        final_card_digits,
+                                        notifyEnvironment
+                                    ]
+                                );
+                                const payId = pRes.insertId;
+                                await conn.execute(
+                                    'UPDATE appointments SET payment_id = ? WHERE id = ?',
+                                    [payId, apptId]
+                                );
+                            }
+                            await conn.commit();
+                        } catch (insErr) {
+                            if (conn) await conn.rollback();
+                            if (insErr.code !== 'ER_DUP_ENTRY') throw insErr;
+                            await db.execute(
+                                `UPDATE payments
+                                 SET payment_status = ?, payhere_payment_id = ?, payment_method = ?, card_last_digits = ?, payment_environment = ?
+                                 WHERE internal_order_id = ?`,
+                                [
+                                    paymentStatus,
+                                    final_payment_id,
+                                    final_method,
+                                    final_card_digits,
+                                    notifyEnvironment,
+                                    internalPaymentID
+                                ]
+                            );
+                        } finally {
+                            if (conn) conn.release();
+                        }
+                    }
                 }
             }
 
@@ -272,15 +331,18 @@ exports.getPaymentStatus = async (req, res) => {
     const key = orderID != null ? String(orderID).trim() : '';
     try {
         const [rows] = await db.execute(
-            'SELECT payment_status FROM payments WHERE internal_order_id = ?',
+            'SELECT payment_status, appointment_id FROM payments WHERE internal_order_id = ?',
             [key]
         );
 
         if (rows.length === 0) {
-            return res.status(200).json({ status: 'NOT_FOUND' });
+            return res.status(200).json({ status: 'NOT_FOUND', appointment_id: null });
         }
 
-        res.status(200).json({ status: rows[0].payment_status });
+        res.status(200).json({
+            status: rows[0].payment_status,
+            appointment_id: rows[0].appointment_id != null ? Number(rows[0].appointment_id) : null
+        });
     } catch (error) {
         console.error('Error fetching payment status:', error);
         res.status(500).json({ message: 'Internal server error' });

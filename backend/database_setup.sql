@@ -54,18 +54,20 @@ CREATE TABLE IF NOT EXISTS appointment_schedules (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
 );
 
+-- Paid / failed state: use payments.appointment_id -> appointments.id (FK on payments table).
 CREATE TABLE IF NOT EXISTS appointments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     schedule_id INT NOT NULL,
     doctor_id INT NOT NULL,
     patient_ID INT NOT NULL,
-    appointment_No INT NOT NULL,
-    appointment_payment_status ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
+    booking_queue_no INT NOT NULL,
+    appointment_status ENUM('added', 'failed', 'cancelled') NOT NULL DEFAULT 'added',
+    payment_id INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
     FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE,
-    UNIQUE KEY uniq_schedule_patient (schedule_id, patient_ID)
+    KEY idx_appointments_schedule_id (schedule_id)
 );
 
 CREATE TABLE IF NOT EXISTS support_tickets (
@@ -103,7 +105,7 @@ CREATE TABLE IF NOT EXISTS payments (
     patient_id INT NOT NULL,
     doctor_id INT NOT NULL,
     appointment_schedule_id INT NOT NULL,
-    appointment_id INT NOT NULL,
+    appointment_id INT DEFAULT NULL,
     payhere_payment_id VARCHAR(50) DEFAULT NULL,
     amount DECIMAL (10,2) NOT NULL,
     payment_method VARCHAR(20),
@@ -118,6 +120,10 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id),
     UNIQUE KEY uniq_payments_internal_order (internal_order_id)
 );
+
+ALTER TABLE appointments
+    ADD CONSTRAINT fk_appointments_payment_id
+    FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL;
 
 -- 2. Remove the old trigger to prevent conflicts
 DROP TRIGGER IF EXISTS sync_appointment_payment_status;
