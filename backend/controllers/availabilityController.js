@@ -23,6 +23,30 @@ exports.getAvailability = async (req, res) => {
     }
 };
 
+// Get all availability slots where is_available = 1 joined with doctors table
+exports.getAllAvailability = async (req, res) => {
+    try {
+        const [slots] = await db.execute(`
+            SELECT a.*, d.name AS doctor_name, d.specialization 
+            FROM doc_availability_slots a
+            JOIN doctors d ON a.doctor_id = d.id
+            WHERE a.is_available = 1
+            ORDER BY a.day_of_week ASC, a.start_time ASC
+        `);
+
+        const formattedSlots = slots.map(slot => ({
+            ...slot,
+            is_available: !!slot.is_available,
+            Marked: !!slot.Marked
+        }));
+
+        res.status(200).json(formattedSlots);
+    } catch (error) {
+        console.error('Error fetching all availability:', error);
+        res.status(500).json({ message: 'Server error fetching all availability' });
+    }
+};
+
 // Add new availability slot
 exports.createSlot = async (req, res) => {
     try {
@@ -100,5 +124,31 @@ exports.toggleStatus = async (req, res) => {
     } catch (error) {
         console.error('Error toggling slot status:', error);
         res.status(500).json({ message: 'Server error toggling slot status' });
+    }
+};
+
+// Toggle Marked status
+exports.toggleMarked = async (req, res) => {
+    try {
+        const slotId = req.params.id;
+
+        // Fetch current status
+        const [slots] = await db.execute('SELECT Marked FROM doc_availability_slots WHERE id = ?', [slotId]);
+        if (slots.length === 0) {
+            return res.status(404).json({ message: 'Slot not found' });
+        }
+
+        const currentMarked = slots[0].Marked;
+        const newMarked = currentMarked ? 0 : 1;
+
+        await db.execute(
+            'UPDATE doc_availability_slots SET Marked = ? WHERE id = ?',
+            [newMarked, slotId]
+        );
+
+        res.status(200).json({ message: 'Slot marked status updated successfully', Marked: !!newMarked });
+    } catch (error) {
+        console.error('Error toggling marked status:', error);
+        res.status(500).json({ message: 'Server error toggling marked status' });
     }
 };
