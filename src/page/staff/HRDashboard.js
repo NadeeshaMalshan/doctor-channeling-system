@@ -18,8 +18,7 @@ const HRDashboard = () => {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('staffUser');
-        localStorage.removeItem('staffToken');
+        localStorage.clear();
         navigate('/ecare/staff-login');
     };
 

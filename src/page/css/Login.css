@@ -176,19 +176,21 @@
     align-items: center;
 }
 
-.input-wrapper svg {
+.login-form .input-wrapper svg {
     position: absolute;
-    left: 16px;
-    width: 20px;
-    height: 20px;
+    left: 18px;
+    width: 18px;
+    height: 18px;
     color: #6B7280;
     pointer-events: none;
     transition: color 0.3s ease;
+    z-index: 2;
+    display: block;
 }
 
-.input-wrapper input {
+.login-form .input-wrapper input {
     width: 100%;
-    padding: 16px 16px 16px 50px;
+    padding: 16px 16px 16px 56px;
     font-size: 15px;
     border: 2px solid #E5E7EB;
     border-radius: 12px;

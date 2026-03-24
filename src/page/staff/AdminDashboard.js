@@ -130,6 +130,7 @@ const AdminDashboard = () => {
     }, [selectedCategory, API_URL, fetchStaff, fetchUsers]);
 
     const handleLogout = () => {
+        localStorage.clear();
         navigate('/ecare/staff-login');
     };
 
