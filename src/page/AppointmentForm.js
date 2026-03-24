@@ -213,10 +213,6 @@ const AppointmentForm = () => {
                                             )}
                                         </span>
                                     </div>
-                                    <p className="queue-hint">
-                                        Next in line if you complete payment now. Your slot is only saved after a
-                                        successful payment — failed or cancelled payments do not take a queue number.
-                                    </p>
                                     <div className="summary-item">
                                         <span className="label">Slots</span>
                                         <span className="value">

@@ -96,8 +96,7 @@ export const generateReceiptPDF = async (data) => {
         { label: 'Specialization',     value: data.specialization || 'N/A' },
         { label: 'Date & Time',        value: data.dateTime       || 'N/A' },
         null,
-        { label: 'Channeling Fee',     value: `LKR ${Number(data.channelingFee || (data.totalAmount - 400)).toFixed(2)}` },
-        { label: 'Service Charge',     value: `LKR ${Number(data.serviceCharge || 400).toFixed(2)}` },
+        { label: 'Fee',                value: `LKR ${Number(data.totalAmount || 0).toFixed(2)}` },
         { label: 'Total Amount Paid',  value: `LKR ${Number(data.totalAmount || 0).toFixed(2)}`, bold: true, large: true },
     ];
 
