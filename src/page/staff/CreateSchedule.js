@@ -23,10 +23,14 @@ const CreateSchedule = () => {
     const [selectedSpecialization, setSelectedSpecialization] = useState('');
     const [filteredDoctors, setFilteredDoctors] = useState([]);
 
+    const [availabilityList, setAvailabilityList] = useState([]);
+    const [filterDay, setFilterDay] = useState('');
+    const [filterMarked, setFilterMarked] = useState('All');
+
     const [message, setMessage] = useState('');
     const [isError, setIsError] = useState(false);
 
-    // Fetch doctors on mount
+    // Fetch doctors and availability on mount
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
@@ -44,7 +48,19 @@ const CreateSchedule = () => {
                 setMessage("Could not load doctors list.");
             }
         };
+
+        const fetchAvailability = async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/availability/all');
+                const data = await response.json();
+                if (response.ok) setAvailabilityList(data);
+            } catch (error) {
+                console.error("Failed to fetch availability:", error);
+            }
+        };
+
         fetchDoctors();
+        fetchAvailability();
     }, []);
 
     // Handle specialization change
@@ -83,6 +99,43 @@ const CreateSchedule = () => {
         const newTime = h && m ? `${h}:${m}` : '';
         setFormData(prev => ({ ...prev, [field]: newTime }));
     };
+
+    const toggleMarked = async (e, slotId) => {
+        e.stopPropagation();
+        try {
+            const res = await fetch(`http://localhost:5000/api/availability/${slotId}/mark`, {
+                method: 'PATCH'
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setAvailabilityList(prev => prev.map(s => s.id === slotId ? { ...s, Marked: data.Marked } : s));
+            }
+        } catch (error) {
+            console.error('Error toggling mark:', error);
+        }
+    };
+
+    const handleCardClick = (slot) => {
+        setSelectedSpecialization(slot.specialization);
+        setFilteredDoctors(allDoctors.filter(doc => doc.specialization === slot.specialization));
+
+        let parsedMaxPatients = parseInt(slot.capacity, 10);
+
+        setFormData(prev => ({
+            ...prev,
+            doctor_id: slot.doctor_id,
+            start_time: slot.start_time.substring(0, 5),
+            end_time: slot.end_time.substring(0, 5),
+            max_patients: parsedMaxPatients || ''
+        }));
+    };
+
+    const filteredAvailability = availabilityList.filter(slot => {
+        if (filterDay && slot.day_of_week !== filterDay) return false;
+        if (filterMarked === 'Marked' && !slot.Marked) return false;
+        if (filterMarked === 'Unmarked' && slot.Marked) return false;
+        return true;
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -138,132 +191,187 @@ const CreateSchedule = () => {
     return (
         <div className="create-schedule-page">
             <ECareNavBar />
-            <div className="create-schedule-container">
-                <div className="create-schedule-header">
-                    <h2>Create Doctor Schedule</h2>
-                    <p>Add new availability for doctors</p>
+            <div className="split-view-wrapper">
+                <div className="availability-list-container">
+                    <div className="list-header">
+                        <h3>Doctor Availability</h3>
+                        <div className="availability-filters">
+                            <select value={filterDay} onChange={e => setFilterDay(e.target.value)}>
+                                <option value="">All Days</option>
+                                <option value="Monday">Monday</option>
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                                <option value="Saturday">Saturday</option>
+                                <option value="Sunday">Sunday</option>
+                            </select>
+                            <select value={filterMarked} onChange={e => setFilterMarked(e.target.value)}>
+                                <option value="All">All Status</option>
+                                <option value="Marked">Marked</option>
+                                <option value="Unmarked">Unmarked</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="availability-cards">
+                        {filteredAvailability.length > 0 ? filteredAvailability.map(slot => (
+                            <div
+                                key={slot.id}
+                                className={`availability-card ${formData.doctor_id === slot.doctor_id && formData.start_time === slot.start_time.substring(0, 5) ? 'active-card' : ''}`}
+                                onClick={() => handleCardClick(slot)}
+                            >
+                                <div className="card-info">
+                                    <h4>Dr. {slot.doctor_name}</h4>
+                                    <p><strong>{slot.specialization}</strong></p>
+                                    <p>{slot.day_of_week} • {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</p>
+                                    <p>Capacity: {slot.capacity}</p>
+                                </div>
+                                <div className="card-actions">
+                                    <button
+                                        type="button"
+                                        className={`mark-btn ${slot.Marked ? 'marked' : 'unmarked'}`}
+                                        onClick={(e) => toggleMarked(e, slot.id)}
+                                        title={slot.Marked ? 'Unmark Slot' : 'Mark Slot'}
+                                    >
+                                        {slot.Marked ? '✓' : '+'}
+                                    </button>
+                                </div>
+                            </div>
+                        )) : (
+                            <p style={{ textAlign: 'center', color: '#6B7280' }}>No availability slots found.</p>
+                        )}
+                    </div>
                 </div>
 
-                {message && (
-                    <div className={`message ${isError ? 'error' : 'success'}`}>
-                        {message}
-                    </div>
-                )}
-
-                <form className="schedule-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Specialization</label>
-                        <select
-                            value={selectedSpecialization}
-                            onChange={handleSpecializationChange}
-                            required
-                        >
-                            <option value="">Select Specialization</option>
-                            {specializations.map(spec => (
-                                <option key={spec} value={spec}>{spec}</option>
-                            ))}
-                        </select>
+                <div className="create-schedule-container">
+                    <div className="create-schedule-header">
+                        <h2>Create Doctor Schedule</h2>
+                        <p>Add new availability for doctors</p>
                     </div>
 
-                    <div className="form-group">
-                        <label>Doctor Name</label>
-                        <select
-                            name="doctor_id"
-                            value={formData.doctor_id}
-                            onChange={handleChange}
-                            required
-                            disabled={!selectedSpecialization}
-                        >
-                            <option value="">Select a Doctor</option>
-                            {filteredDoctors.map(doc => (
-                                <option key={doc.id} value={doc.id}>Dr. {doc.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {message && (
+                        <div className={`message ${isError ? 'error' : 'success'}`}>
+                            {message}
+                        </div>
+                    )}
 
-                    <div className="form-group">
-                        <label>Schedule Date</label>
-                        <input
-                            type="date"
-                            name="schedule_date"
-                            value={formData.schedule_date}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                    <div className="time-row">
+                    <form className="schedule-form" onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label>Start Time (24H)</label>
-                            <div className="time-picker-container">
-                                <select
-                                    value={formData.start_time ? formData.start_time.split(':')[0] : ''}
-                                    onChange={(e) => handleTimeChange('start_time', 'hour', e.target.value)}
-                                    required
-                                >
-                                    <option value="" disabled>HH</option>
-                                    {hours.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
-                                <span>:</span>
-                                <select
-                                    value={formData.start_time ? formData.start_time.split(':')[1] : ''}
-                                    onChange={(e) => handleTimeChange('start_time', 'minute', e.target.value)}
-                                    required
-                                >
-                                    <option value="" disabled>MM</option>
-                                    {minutes.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
+                            <label>Specialization</label>
+                            <select
+                                value={selectedSpecialization}
+                                onChange={handleSpecializationChange}
+                                required
+                            >
+                                <option value="">Select Specialization</option>
+                                {specializations.map(spec => (
+                                    <option key={spec} value={spec}>{spec}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Doctor Name</label>
+                            <select
+                                name="doctor_id"
+                                value={formData.doctor_id}
+                                onChange={handleChange}
+                                required
+                                disabled={!selectedSpecialization}
+                            >
+                                <option value="">Select a Doctor</option>
+                                {filteredDoctors.map(doc => (
+                                    <option key={doc.id} value={doc.id}>Dr. {doc.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Schedule Date</label>
+                            <input
+                                style={{ backgroundColor: "#fffffffd" }}
+                                type="date"
+                                name="schedule_date"
+                                value={formData.schedule_date}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="time-row">
+                            <div className="form-group">
+                                <label>Start Time (24H)</label>
+                                <div className="time-picker-container">
+                                    <select
+                                        value={formData.start_time ? formData.start_time.split(':')[0] : ''}
+                                        onChange={(e) => handleTimeChange('start_time', 'hour', e.target.value)}
+                                        required
+                                    >
+                                        <option value="" disabled>HH</option>
+                                        {hours.map(h => <option key={h} value={h}>{h}</option>)}
+                                    </select>
+                                    <span>:</span>
+                                    <select
+                                        value={formData.start_time ? formData.start_time.split(':')[1] : ''}
+                                        onChange={(e) => handleTimeChange('start_time', 'minute', e.target.value)}
+                                        required
+                                    >
+                                        <option value="" disabled>MM</option>
+                                        {minutes.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>End Time (24H)</label>
+                                <div className="time-picker-container">
+                                    <select
+                                        value={formData.end_time ? formData.end_time.split(':')[0] : ''}
+                                        onChange={(e) => handleTimeChange('end_time', 'hour', e.target.value)}
+                                        required
+                                    >
+                                        <option value="" disabled>HH</option>
+                                        {hours.map(h => <option key={h} value={h}>{h}</option>)}
+                                    </select>
+                                    <span>:</span>
+                                    <select
+                                        value={formData.end_time ? formData.end_time.split(':')[1] : ''}
+                                        onChange={(e) => handleTimeChange('end_time', 'minute', e.target.value)}
+                                        required
+                                    >
+                                        <option value="" disabled>MM</option>
+                                        {minutes.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <div className="form-group">
-                            <label>End Time (24H)</label>
-                            <div className="time-picker-container">
-                                <select
-                                    value={formData.end_time ? formData.end_time.split(':')[0] : ''}
-                                    onChange={(e) => handleTimeChange('end_time', 'hour', e.target.value)}
-                                    required
-                                >
-                                    <option value="" disabled>HH</option>
-                                    {hours.map(h => <option key={h} value={h}>{h}</option>)}
-                                </select>
-                                <span>:</span>
-                                <select
-                                    value={formData.end_time ? formData.end_time.split(':')[1] : ''}
-                                    onChange={(e) => handleTimeChange('end_time', 'minute', e.target.value)}
-                                    required
-                                >
-                                    <option value="" disabled>MM</option>
-                                    {minutes.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
-                            </div>
+                            <label>Max Patients</label>
+                            <input
+                                type="number"
+                                name="max_patients"
+                                value={formData.max_patients}
+                                onChange={handleChange}
+                                placeholder="e.g. 20"
+                                required
+                            />
                         </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Max Patients</label>
-                        <input
-                            type="number"
-                            name="max_patients"
-                            value={formData.max_patients}
-                            onChange={handleChange}
-                            placeholder="e.g. 20"
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Price (Rs.)</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            name="price"
-                            value={formData.price}
-                            onChange={handleChange}
-                            placeholder="e.g. 1500.00"
-                            required
-                        />
-                    </div>
+                        <div className="form-group">
+                            <label>Price (Rs.)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                name="price"
+                                value={formData.price}
+                                onChange={handleChange}
+                                placeholder="e.g. 1500.00"
+                                required
+                            />
+                        </div>
 
-                    <button type="submit" className="submit-btn">Create Schedule</button>
-                    <button type="button" className="submit-btn" style={{ background: '#6B7280', marginTop: '10px' }} onClick={() => navigate('/schedules/manage')}>Back to Dashboard</button>
-                </form>
+                        <button type="submit" className="submit-btn" style={{ width: '100%' }}>Create Schedule</button>
+                        <button type="button" className="submit-btn" style={{ background: '#6B7280', marginTop: '10px', width: '100%' }} onClick={() => navigate('/schedules/manage')}>Back to Dashboard</button>
+                    </form>
+                </div>
             </div>
         </div>
     );
