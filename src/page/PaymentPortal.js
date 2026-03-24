@@ -342,6 +342,8 @@ const PaymentPortal = () => {
 
     const channelingFeeNum = parseFloat(details.channelingFee);
     const channelingFee = Number.isFinite(channelingFeeNum) ? channelingFeeNum : 0;
+    const serviceChargeNum = parseFloat(details.serviceCharge);
+    const serviceCharge = Number.isFinite(serviceChargeNum) ? serviceChargeNum : 0;
 
     const paymentData = {
         patientName: `${details.first_name} ${details.second_name}`,
@@ -352,8 +354,8 @@ const PaymentPortal = () => {
         appointmentId: resolvedAppointmentId,
         dateTime: formatScheduleDateTime(details.schedule_date, details.start_time),
         channelingFee,
-        serviceCharge: 400,
-        totalAmount: channelingFee + 400,
+        serviceCharge,
+        totalAmount: channelingFee + serviceCharge,
     };
 
     const handlePayHereClick = async () => {
@@ -693,13 +695,9 @@ const PaymentPortal = () => {
                             {details.slots_snapshot != null && details.slots_snapshot !== '' && (
                                 <p><span>Slots (when you continued):</span> {details.slots_snapshot}</p>
                             )}
-                            <p className="payment-booking-hint">
-                                Same numbers as the booking page. Queue is saved only after successful payment.
-                            </p>
                             <p><span>Date/Time:</span> {paymentData.dateTime}</p>
                             <div className="fee-row">
                                 <p><span>Fee:</span> {paymentData.totalAmount} LKR</p>
-                                <small>({paymentData.serviceCharge} LKR for channeling center charges)</small>
                             </div>
                         </div>
 
