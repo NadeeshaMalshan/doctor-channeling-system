@@ -1,18 +1,37 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import './css/Login.css';
 import ReCAPTCHA from "react-google-recaptcha";
 
+const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const forgotCaptchaRef = useRef(null);
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
     const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    const [showForgotModal, setShowForgotModal] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotRecaptchaToken, setForgotRecaptchaToken] = useState(null);
+    const [forgotError, setForgotError] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
+
+    useEffect(() => {
+        if (location.state?.resetSuccess) {
+            setSuccessMsg(location.state.resetSuccess);
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.pathname, location.state, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -34,7 +53,7 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/login`, {
+            const response = await fetch(`${apiBase}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,6 +99,50 @@ const Login = () => {
             setError('Connection error. Please try again later.');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const closeForgotModal = () => {
+        setShowForgotModal(false);
+        setForgotEmail('');
+        setForgotError('');
+        setForgotRecaptchaToken(null);
+        forgotCaptchaRef.current?.reset();
+    };
+
+    const submitForgotPassword = async (e) => {
+        e.preventDefault();
+        setForgotError('');
+        if (!forgotEmail.trim()) {
+            setForgotError('Please enter your email');
+            return;
+        }
+        if (!forgotRecaptchaToken) {
+            setForgotError('Please complete the reCAPTCHA');
+            return;
+        }
+        setForgotLoading(true);
+        try {
+            const res = await fetch(`${apiBase}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: forgotEmail.trim(),
+                    recaptchaToken: forgotRecaptchaToken
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setForgotError(data.message || 'Something went wrong');
+                return;
+            }
+            const emailToUse = forgotEmail.trim();
+            closeForgotModal();
+            navigate('/reset-password', { state: { email: emailToUse } });
+        } catch {
+            setForgotError('Connection error. Please try again.');
+        } finally {
+            setForgotLoading(false);
         }
     };
 
@@ -166,12 +229,16 @@ const Login = () => {
                         </div>
 
                         <div className="form-options">
-                            <label className="checkbox-wrapper">
-                                <input type="checkbox" />
-                                <span className="checkmark"></span>
-                                Remember me
-                            </label>
-                            <button type="button" className="forgot-link">Forgot Password?</button>
+                            <button
+                                type="button"
+                                className="forgot-link"
+                                onClick={() => {
+                                    setShowForgotModal(true);
+                                    setForgotEmail(formData.email || '');
+                                }}
+                            >
+                                Forgot Password?
+                            </button>
                         </div>
 
                         <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
@@ -181,6 +248,22 @@ const Login = () => {
                             />
                         </div>
 
+                        {successMsg && (
+                            <div
+                                className="login-success-banner"
+                                style={{
+                                    color: '#047857',
+                                    background: '#ecfdf5',
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    textAlign: 'center',
+                                    marginBottom: '15px',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                {successMsg}
+                            </div>
+                        )}
                         {error && <div className="error-message" style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
 
                         <button type="submit" className="login-btn" disabled={isLoading}>
@@ -202,6 +285,55 @@ const Login = () => {
                     </p>
                 </div>
             </div>
+
+            {showForgotModal && (
+                <div
+                    className="forgot-modal-overlay"
+                    role="presentation"
+                    onClick={(ev) => {
+                        if (ev.target === ev.currentTarget) closeForgotModal();
+                    }}
+                >
+                    <div className="forgot-modal" role="dialog" aria-labelledby="forgot-modal-title" aria-modal="true">
+                        <button type="button" className="forgot-modal-close" onClick={closeForgotModal} aria-label="Close">
+                            ×
+                        </button>
+                        <h2 id="forgot-modal-title">Forgot password</h2>
+                        <p className="forgot-modal-desc">Enter the email on your account. If it is registered, we will send a verification code.</p>
+                        <form onSubmit={submitForgotPassword} className="login-form forgot-modal-form">
+                            <div className="form-group">
+                                <label htmlFor="forgot-email">Email</label>
+                                <div className="input-wrapper">
+                                    <input
+                                        id="forgot-email"
+                                        type="email"
+                                        value={forgotEmail}
+                                        onChange={(e) => setForgotEmail(e.target.value)}
+                                        placeholder="Your email address"
+                                        required
+                                        autoComplete="email"
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                                <ReCAPTCHA
+                                    ref={forgotCaptchaRef}
+                                    sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                                    onChange={(token) => setForgotRecaptchaToken(token)}
+                                />
+                            </div>
+                            {forgotError && (
+                                <div className="error-message" style={{ color: '#b91c1c', textAlign: 'center', marginBottom: '12px' }}>
+                                    {forgotError}
+                                </div>
+                            )}
+                            <button type="submit" className="login-btn" disabled={forgotLoading}>
+                                {forgotLoading ? <span className="loader" /> : 'Send code'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,6 +1,8 @@
 const db = require('../config/db');
 const crypto = require('crypto');
 const axios = require('axios');
+const { sendPaymentReceiptEmailIfNeeded } = require('../services/paymentReceiptEmail');
+const { sendRefundNotificationEmail } = require('../services/refundNotificationEmail');
 
 async function getPayHereOAuthToken() {
     const oauthUrl = String(process.env.PAYHERE_OAUTH_URL || '').trim();
@@ -24,9 +26,6 @@ async function getPayHereOAuthToken() {
     });
 
     const token = tokenRes?.data?.access_token || tokenRes?.data?.token || null;
-    // #region agent log
-    fetch('http://127.0.0.1:7369/ingest/41c668f3-cb4e-4259-ac8e-af504c4e8c5b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c06af'},body:JSON.stringify({sessionId:'2c06af',runId:'initial',hypothesisId:'H5',location:'paymentController.js:getPayHereOAuthToken',message:'OAuth token response received',data:{hasOAuthUrl:Boolean(oauthUrl),hasAppId:Boolean(appId),hasAppSecret:Boolean(appSecret),hasToken:Boolean(token),status:tokenRes?.status || null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return token ? String(token).trim() : null;
 }
 
@@ -185,9 +184,11 @@ exports.handleNotification = async (req, res) => {
         .digest('hex')
         .toUpperCase();
 
-    const isTestMode = process.env.PAYHERE_TEST_MODE === 'true' && md5sig === 'TEST_MODE';
+    // Real PayHere sandbox sends a normal md5sig, not the literal "TEST_MODE".
+    // TEST_MODE bypass is only for local/mock notify without a valid signature.
+    const isTestModeSignatureBypass = process.env.PAYHERE_TEST_MODE === 'true' && md5sig === 'TEST_MODE';
 
-    if (localMd5sig === md5sig || isTestMode) {
+    if (localMd5sig === md5sig || isTestModeSignatureBypass) {
         try {
             // mapping status codes (PayHere may send string or number)
             // 2: Success, 0: Pending, -1: Canceled, -2: Failed, -3: Chargedback
@@ -212,7 +213,7 @@ exports.handleNotification = async (req, res) => {
             const final_payment_id = payment_id || 'N/A';
             const final_method = method || 'N/A';
 
-            const notifyEnvironment = isTestMode ? 'SANDBOX' : 'LIVE';
+            const notifyEnvironment = process.env.PAYHERE_TEST_MODE === 'true' ? 'SANDBOX' : 'LIVE';
             const amountNum = payhere_amount != null ? Number(payhere_amount) : 0;
 
             const [updResult] = await db.execute(
@@ -345,6 +346,14 @@ exports.handleNotification = async (req, res) => {
                 }
             }
 
+            if (paymentStatus === 'SUCCESS') {
+                setImmediate(() => {
+                    sendPaymentReceiptEmailIfNeeded(internalPaymentID).catch((err) => {
+                        console.error('Payment receipt email:', err.message || err);
+                    });
+                });
+            }
+
             res.status(200).send('OK');
         } catch (error) {
             console.error('Database update error:', error);
@@ -375,6 +384,39 @@ exports.getPaymentStatus = async (req, res) => {
     } catch (error) {
         console.error('Error fetching payment status:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+/** Patient-triggered fallback: existing checkout flow does not call /finalize; ensures receipt email is attempted. */
+exports.requestReceiptEmail = async (req, res) => {
+    const order_id = req.body?.order_id != null ? String(req.body.order_id).trim() : '';
+    const patient_id = req.body?.patient_id != null ? Number(req.body.patient_id) : NaN;
+    if (!order_id || !Number.isFinite(patient_id)) {
+        return res.status(400).json({ ok: false, message: 'order_id and patient_id required' });
+    }
+    try {
+        const [rows] = await db.execute(
+            `SELECT patient_id FROM payments
+             WHERE internal_order_id = ?
+               AND UPPER(TRIM(COALESCE(payment_status, ''))) = 'SUCCESS'
+             LIMIT 1`,
+            [order_id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ ok: false, message: 'Payment not found or not successful' });
+        }
+        if (Number(rows[0].patient_id) !== patient_id) {
+            return res.status(403).json({ ok: false, message: 'Forbidden' });
+        }
+        setImmediate(() => {
+            sendPaymentReceiptEmailIfNeeded(order_id).catch((err) => {
+                console.error('requestReceiptEmail:', err.message || err);
+            });
+        });
+        return res.status(202).json({ ok: true, message: 'Receipt email queued if SMTP is configured' });
+    } catch (error) {
+        console.error('requestReceiptEmail error:', error);
+        return res.status(500).json({ ok: false, message: 'Internal server error' });
     }
 };
 
@@ -481,9 +523,6 @@ exports.processRefund = async (req, res) => {
         return res.status(500).json({ message: 'PayHere refund auth credentials are not configured in environment variables' });
     }
     try {
-        // #region agent log
-        fetch('http://127.0.0.1:7369/ingest/41c668f3-cb4e-4259-ac8e-af504c4e8c5b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c06af'},body:JSON.stringify({sessionId:'2c06af',runId:'initial',hypothesisId:'H1',location:'paymentController.js:processRefund:start',message:'Refund flow started',data:{orderId:internalOrderId,refundApiUrl,hasApiKey:Boolean(payhereApiKey),hasRefundAuthCode:Boolean(payhereRefundAuthCode),hasAmount:amount != null,reason:String(reason || '')},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         const [rows] = await db.execute(
             `SELECT id, amount, payment_status, payhere_payment_id
              FROM payments
@@ -523,59 +562,44 @@ exports.processRefund = async (req, res) => {
             reason: normalizedReason,
             reference: internalOrderId
         };
-        // #region agent log
-        fetch('http://127.0.0.1:7369/ingest/41c668f3-cb4e-4259-ac8e-af504c4e8c5b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c06af'},body:JSON.stringify({sessionId:'2c06af',runId:'initial',hypothesisId:'H3',location:'paymentController.js:processRefund:paymentCheck',message:'Payment eligibility checked',data:{dbPaymentStatus:payment.payment_status,hasPayherePaymentId:Boolean(payment.payhere_payment_id && payment.payhere_payment_id !== 'N/A'),payherePaymentId:String(payment.payhere_payment_id || ''),refundAmount:payload.amount},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         // PayHere public refunds API expects Bearer API key.
         // merchant/v1 endpoints may require OAuth token depending on merchant config.
         let authorizationHeader = '';
         const isMerchantApi = /\/merchant\/v1\//i.test(refundApiUrl);
-        let authSource = 'none';
 
         if (isMerchantApi) {
             const oauthToken = await getPayHereOAuthToken();
             if (oauthToken) {
                 authorizationHeader = `Bearer ${oauthToken}`;
-                authSource = 'oauth_token';
             }
             if (!authorizationHeader && payhereRefundAuthCode) {
                 const hasPrefix = /^basic\s+|^bearer\s+/i.test(payhereRefundAuthCode);
                 authorizationHeader = hasPrefix
                     ? payhereRefundAuthCode
                     : `Basic ${payhereRefundAuthCode}`;
-                authSource = hasPrefix ? 'refund_auth_code_prefixed' : 'refund_auth_code_basic';
             }
             if (!authorizationHeader && payhereApiKey) {
                 authorizationHeader = `Bearer ${payhereApiKey}`;
-                authSource = 'api_key_bearer_fallback';
             }
         } else if (payhereApiKey) {
             authorizationHeader = `Bearer ${payhereApiKey}`;
-            authSource = 'api_key_bearer';
         } else if (payhereRefundAuthCode) {
             const hasPrefix = /^bearer\s+/i.test(payhereRefundAuthCode);
             authorizationHeader = hasPrefix
                 ? payhereRefundAuthCode
                 : `Bearer ${payhereRefundAuthCode}`;
-            authSource = hasPrefix ? 'refund_auth_code_bearer_prefixed' : 'refund_auth_code_bearer';
         }
 
         if (!authorizationHeader) {
             return res.status(500).json({ message: 'Could not build PayHere authorization header. Check refund credentials.' });
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7369/ingest/41c668f3-cb4e-4259-ac8e-af504c4e8c5b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c06af'},body:JSON.stringify({sessionId:'2c06af',runId:'initial',hypothesisId:'H2',location:'paymentController.js:processRefund:authBuilt',message:'Refund auth header decided',data:{refundApiUrl,isMerchantApi,authSource,authScheme:authorizationHeader.startsWith('Bearer ') ? 'Bearer' : (authorizationHeader.startsWith('Basic ') ? 'Basic' : 'Other')},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         const headers = {
             'Content-Type': 'application/json',
             Accept: 'application/json',
             Authorization: authorizationHeader
         };
-        // #region agent log
-        fetch('http://127.0.0.1:7369/ingest/41c668f3-cb4e-4259-ac8e-af504c4e8c5b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c06af'},body:JSON.stringify({sessionId:'2c06af',runId:'initial',hypothesisId:'H4',location:'paymentController.js:processRefund:requestOut',message:'Refund request sending',data:{requestHost:(() => { try { return new URL(refundApiUrl).host; } catch (_) { return 'invalid-url'; } })(),reference:payload.reference,reason:payload.reason},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
 
         const refundRes = await axios.post(refundApiUrl, payload, {
             headers,
@@ -597,6 +621,12 @@ exports.processRefund = async (req, res) => {
             ['REFUNDED', internalOrderId]
         );
 
+        setImmediate(() => {
+            sendRefundNotificationEmail(internalOrderId, refundAmount, normalizedReason).catch((err) => {
+                console.error('Refund notification email:', err.message || err);
+            });
+        });
+
         return res.status(200).json({
             message: 'Refund processed successfully',
             orderID: internalOrderId,
@@ -605,9 +635,6 @@ exports.processRefund = async (req, res) => {
     } catch (error) {
         const providerBody = error?.response?.data;
         const providerStatus = error?.response?.status;
-        // #region agent log
-        fetch('http://127.0.0.1:7369/ingest/41c668f3-cb4e-4259-ac8e-af504c4e8c5b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c06af'},body:JSON.stringify({sessionId:'2c06af',runId:'initial',hypothesisId:'H4',location:'paymentController.js:processRefund:catch',message:'Refund request failed',data:{providerStatus:providerStatus || null,providerBody:providerBody || null,errorMessage:error?.message || 'unknown'},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         console.error('processRefund error:', providerStatus || '', providerBody || error.message);
         return res.status(providerStatus && providerStatus >= 400 && providerStatus < 600 ? providerStatus : 500).json({
             message: 'Refund request failed',
