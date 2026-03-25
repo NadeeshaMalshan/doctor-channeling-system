@@ -64,9 +64,8 @@ exports.deleteDoctorAccount = async (req, res) => {
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        await connection.execute("DELETE FROM doc_availability_slots WHERE doctor_id = ?", [id]);
-
-        // 5. Delete from doctors
+        // Deleted manual deletes of associated data as the database now handles this via ON DELETE SET NULL
+        // 1. Delete from doctors
         const [result] = await connection.execute("DELETE FROM doctors WHERE id = ?", [id]);
 
         if (result.affectedRows === 0) {

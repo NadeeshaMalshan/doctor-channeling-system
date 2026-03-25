@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS doctors (
 );
 CREATE TABLE IF NOT EXISTS appointment_schedules (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    doctor_id INT NOT NULL,
+    doctor_id INT NULL,
     schedule_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
@@ -51,21 +51,21 @@ CREATE TABLE IF NOT EXISTS appointment_schedules (
     booked_count INT DEFAULT 0,
     status ENUM('active','full','cancelled') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+    CONSTRAINT fk_doctor_schedules FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL
 );
 
 -- Paid / failed state: use payments.appointment_id -> appointments.id (FK on payments table).
 CREATE TABLE IF NOT EXISTS appointments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     schedule_id INT NOT NULL,
-    doctor_id INT NOT NULL,
+    doctor_id INT NULL,
     patient_ID INT NULL,
     booking_queue_no INT NOT NULL,
     appointment_status ENUM('added', 'failed', 'cancelled') NOT NULL DEFAULT 'added',
     payment_id INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
+    CONSTRAINT fk_doctor_appointments FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL,
     FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE SET NULL,
     KEY idx_appointments_schedule_id (schedule_id)
 );
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 
 CREATE TABLE IF NOT EXISTS doc_availability_slots (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    doctor_id INT NOT NULL,
+    doctor_id INT NULL,
     day_of_week VARCHAR(10),
     start_time TIME,
     end_time TIME,
@@ -96,14 +96,14 @@ CREATE TABLE IF NOT EXISTS doc_availability_slots (
     slot_duration INT DEFAULT 10,
     booked_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+    CONSTRAINT fk_doctor_slots FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS payments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     internal_order_id VARCHAR(50) NOT NULL,
     patient_id INT NULL,
-    doctor_id INT NOT NULL,
+    doctor_id INT NULL,
     appointment_schedule_id INT NOT NULL,
     appointment_id INT DEFAULT NULL,
     payhere_payment_id VARCHAR(50) DEFAULT NULL,
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS payments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id),
+    CONSTRAINT fk_doctor_payments FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL,
     FOREIGN KEY (appointment_id) REFERENCES appointments(id),
     FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id),
     UNIQUE KEY uniq_payments_internal_order (internal_order_id)
