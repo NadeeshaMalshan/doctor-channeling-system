@@ -25,7 +25,7 @@ function getTransporter() {
 }
 
 /**
- * @param {{ to: string, subject: string, text: string, html?: string }} opts
+ * @param {{ to: string, subject: string, text: string, html?: string, attachments?: any[] }} opts
  */
 async function sendMail(opts) {
     const t = getTransporter();
@@ -39,7 +39,8 @@ async function sendMail(opts) {
         to: opts.to,
         subject: opts.subject,
         text: opts.text,
-        html: opts.html || opts.text.replace(/\n/g, '<br>')
+        html: opts.html || opts.text.replace(/\n/g, '<br>'),
+        ...(opts.attachments ? { attachments: opts.attachments } : {})
     });
     return { sent: true };
 }

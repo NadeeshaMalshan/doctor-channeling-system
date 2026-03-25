@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ECareNavBar from '../../Components/eCareNavBar';
+import { formatMediumDateLK } from '../../utils/sriLankaTime';
 import '../css/CustomerSupport.css';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -140,10 +141,7 @@ const HRCustomerSupport = () => {
         setReplyText('');
     };
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    };
+    const formatDate = (dateString) => formatMediumDateLK(dateString);
 
 
 

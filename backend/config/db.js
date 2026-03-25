@@ -38,7 +38,9 @@ const poolConfig = {
 const pool = mysql.createPool(poolConfig);
 
 // Silently handle idle connection drops (Aiven drops inactive connections)
+// Session timezone: Sri Lanka (UTC+5:30) so NOW() / TIMESTAMP display match local standard time.
 pool.on('connection', (connection) => {
+    connection.query("SET time_zone = '+05:30'", () => {});
     connection.on('error', (err) => {
         if (err.code !== 'ECONNRESET' && err.code !== 'PROTOCOL_CONNECTION_LOST') {
             console.error('Unexpected DB connection error:', err);

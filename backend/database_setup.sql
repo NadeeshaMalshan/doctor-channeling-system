@@ -125,6 +125,32 @@ ALTER TABLE appointments
     ADD CONSTRAINT fk_appointments_payment_id
     FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL;
 
+CREATE TABLE IF NOT EXISTS refund_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    appointment_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    payment_id INT NULL,
+    internal_order_id VARCHAR(50) NOT NULL,
+    status ENUM('pending', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL DEFAULT NULL,
+    INDEX idx_refund_requests_status (status),
+    INDEX idx_refund_requests_appt (appointment_id),
+    CONSTRAINT fk_refund_requests_appointment
+        FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+    CONSTRAINT fk_refund_requests_patient
+        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    CONSTRAINT fk_refund_requests_payment
+        FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS payment_email_logs (
+    internal_order_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    payment_status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_payment_email_logs_status (payment_status)
+);
+
 -- Password reset OTPs (forgot password flow)
 CREATE TABLE IF NOT EXISTS password_reset_otps (
     id INT AUTO_INCREMENT PRIMARY KEY,

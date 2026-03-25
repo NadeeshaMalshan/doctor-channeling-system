@@ -40,6 +40,7 @@ const patientRoutes = require('./routes/patientRoutes');
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/patient', patientRoutes);
+app.use('/api/refund-requests', require('./routes/refundRequestRoutes'));
 
 // Test Route
 app.get('/', (res) => {

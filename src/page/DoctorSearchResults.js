@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
+import { formatScheduleDateLK } from '../utils/sriLankaTime';
 import './css/DoctorSearchResults.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -139,11 +140,7 @@ const DoctorSearchResults = () => {
         return list;
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString(undefined, {
-            weekday: 'short', month: 'short', day: 'numeric'
-        });
-    };
+    const formatDate = (dateString) => formatScheduleDateLK(dateString);
 
     const handleBook = (schedule) => {
         const userStr = localStorage.getItem('user');

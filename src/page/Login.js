@@ -247,11 +247,6 @@ const Login = () => {
                         </div>
 
                         <div className="form-options">
-                            <label className="checkbox-wrapper">
-                                <input type="checkbox" />
-                                <span className="checkmark"></span>
-                                Remember me
-                            </label>
                             <button type="button" className="forgot-link" onClick={openForgotModal}>
                                 Forgot Password?
                             </button>

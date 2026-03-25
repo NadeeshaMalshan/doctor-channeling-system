@@ -4,8 +4,7 @@ import axios from 'axios';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
 import LogoHospital from '../images/LogoHospital.png';
-
-
+import { formatScheduleDateLK, formatWallTime12 } from '../utils/sriLankaTime';
 
 
 const PAYMENT_CONTEXT_KEY = 'paymentContext';
@@ -319,11 +318,9 @@ const PaymentPortal = () => {
     const formatScheduleDateTime = (scheduleDate, startTime) => {
         try {
             const raw = scheduleDate ? String(scheduleDate).split('T')[0] : '';
-            const datePart = raw ? new Date(raw + 'T12:00:00') : null;
-            const dateStr = datePart && !Number.isNaN(datePart.getTime())
-                ? datePart.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
-                : String(scheduleDate || '');
-            return startTime ? `${dateStr} · ${startTime}` : dateStr;
+            const dateStr = raw ? formatScheduleDateLK(raw) : String(scheduleDate || '');
+            const timeStr = startTime ? formatWallTime12(startTime) : '';
+            return timeStr ? `${dateStr} · ${timeStr}` : dateStr;
         } catch {
             return `${scheduleDate} ${startTime || ''}`;
         }

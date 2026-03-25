@@ -130,9 +130,63 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     padding-bottom: 16px;
     border-bottom: 1px solid #f1f5f9;
+}
+
+.appointment-datetime-banner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);
+    border: 1px solid #e0f2fe;
+    border-radius: 10px;
+}
+
+.datetime-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+}
+
+.datetime-block .material-symbols-outlined {
+    font-size: 22px;
+    color: #0284c7;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.datetime-block > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.datetime-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+}
+
+.datetime-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+@media (max-width: 480px) {
+    .appointment-datetime-banner {
+        grid-template-columns: 1fr;
+    }
 }
 
 .doctor-info h3 {
@@ -157,6 +211,11 @@
     letter-spacing: 0.5px;
 }
 
+.status-appt-added {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
 .status-paid {
     background-color: #dcfce7;
     color: #166534;
@@ -167,9 +226,14 @@
     color: #854d0e;
 }
 
-.status-failed, .status-cancelled {
+.status-failed {
     background-color: #fee2e2;
     color: #991b1b;
+}
+
+.status-cancelled {
+    background-color: #ffedd5;
+    color: #9a3412;
 }
 
 .status-refunded {
@@ -201,6 +265,22 @@
     color: #64748b;
 }
 
+.payment-status-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.payment-status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
 .detail-item.booking-date {
     grid-column: 1 / -1;
     margin-top: 8px;
@@ -213,4 +293,83 @@
 .detail-item.booking-date .material-symbols-outlined {
     font-size: 16px;
     color: #94a3b8;
+}
+
+.refund-toast {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.refund-toast-ok {
+    background: #ecfdf5;
+    color: #166534;
+    border: 1px solid #a7f3d0;
+}
+
+.refund-toast-err {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.refund-request-row {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.btn-request-refund {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-request-refund:hover:not(:disabled) {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+.btn-request-refund:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.refund-request-hint {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.4;
+    max-width: 100%;
+}
+
+.refund-pending-note {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: #92400e;
+}
+
+.refund-pending-note .material-symbols-outlined {
+    font-size: 20px;
+    flex-shrink: 0;
 }

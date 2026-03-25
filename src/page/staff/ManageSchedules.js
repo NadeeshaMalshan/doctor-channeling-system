@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ECareNavBar from '../../Components/eCareNavBar';
+import { formatDateTimeLK } from '../../utils/sriLankaTime';
 import '../css/ManageSchedules.css';
 
 const ManageSchedules = () => {
@@ -328,7 +329,7 @@ const ManageSchedules = () => {
                                                     <strong>Schedule No:</strong> {app.schedule_id ?? selectedScheduleId}
                                                 </p>
                                                 <p>Phone: {app.customer_phone}</p>
-                                                <p>Booked on: {new Date(app.created_at).toLocaleString()}</p>
+                                                <p>Booked on: {formatDateTimeLK(app.created_at)}</p>
                                                 <p>
                                                     <strong>Booking:</strong>{' '}
                                                     {app.appointment_status ?? '—'}

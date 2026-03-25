@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
+import { formatScheduleDateLK } from '../utils/sriLankaTime';
 import './css/ScheduleList.css';
 
 const ScheduleList = () => {
@@ -47,10 +48,7 @@ const ScheduleList = () => {
         navigate(`/appointments/new/${schedule.id}/${schedule.doctor_id}`, { state: { schedule } });
     };
 
-    const formatDate = (dateString) => {
-        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString(undefined, options);
-    };
+    const formatDate = (dateString) => formatScheduleDateLK(dateString);
 
     return (
         <div className="schedule-list-page">
