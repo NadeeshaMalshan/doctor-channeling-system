@@ -12,7 +12,9 @@ import fitz  # PyMuPDF for PDF handling
 import io
 from PIL import Image
 
-reader = easyocr.Reader(['en']) 
+# easyocr downloads detection/recognition models on first run and prints a progress bar.
+# On some Windows terminals this can crash with UnicodeEncodeError, so keep it quiet.
+reader = easyocr.Reader(['en'], verbose=False)
 
 load_dotenv()
 

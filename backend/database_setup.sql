@@ -111,7 +111,6 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_method VARCHAR(20),
     card_last_digits VARCHAR(4) DEFAULT NULL,
     payment_status VARCHAR(20) DEFAULT 'PENDING',
-    payment_environment ENUM('SANDBOX', 'LIVE') DEFAULT 'SANDBOX',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id),

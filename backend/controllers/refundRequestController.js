@@ -169,3 +169,68 @@ exports.listPendingRefundRequests = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error while loading refund requests' });
     }
 };
+
+exports.listAllRefundRequests = async (req, res) => {
+    const role = req.staff?.role;
+    if (role !== 'Cashier' && role !== 'Admin') {
+        return res.status(403).json({ success: false, message: 'Only cashiers and admins can view refund requests' });
+    }
+
+    try {
+        const [rows] = await db.execute(`
+            SELECT
+                rr.id,
+                rr.appointment_id,
+                rr.patient_id,
+                rr.internal_order_id,
+                rr.requested_at,
+                rr.resolved_at,
+                rr.status,
+                CONCAT(TRIM(pt.first_name), ' ', TRIM(pt.second_name)) AS patient_name,
+                pt.phone AS patient_phone,
+                pt.email AS patient_email,
+                d.name AS doctor_name,
+                COALESCE(pay.amount, s.price) AS amount,
+                s.schedule_date,
+                s.start_time
+            FROM refund_requests rr
+            JOIN patients pt ON pt.id = rr.patient_id
+            JOIN appointments a ON a.id = rr.appointment_id
+            JOIN appointment_schedules s ON s.id = a.schedule_id
+            JOIN doctors d ON d.id = a.doctor_id
+            LEFT JOIN payments pay ON pay.internal_order_id = rr.internal_order_id
+            ORDER BY rr.requested_at DESC
+        `);
+
+        return res.status(200).json({ success: true, data: rows });
+    } catch (error) {
+        if (error?.code === 'ER_NO_SUCH_TABLE') {
+            return res.status(200).json({ success: true, data: [] });
+        }
+        console.error('listAllRefundRequests error:', error);
+        return res.status(500).json({ success: false, message: 'Server error while loading refund requests' });
+    }
+};
+
+exports.deleteOldRefundRequests = async (req, res) => {
+    const role = req.staff?.role;
+    if (role !== 'Cashier' && role !== 'Admin') {
+        return res.status(403).json({ success: false, message: 'Only cashiers and admins can delete refund requests' });
+    }
+
+    try {
+        const [result] = await db.execute(
+            `DELETE FROM refund_requests
+             WHERE requested_at < DATE_SUB(NOW(), INTERVAL 2 YEAR)`
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: `Deleted ${result.affectedRows} old refund request(s)`,
+            count: result.affectedRows
+        });
+    } catch (error) {
+        console.error('deleteOldRefundRequests error:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};

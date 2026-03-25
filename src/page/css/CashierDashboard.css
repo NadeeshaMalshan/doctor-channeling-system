@@ -355,6 +355,16 @@
     background: #FEE2E2;
 }
 
+.cashier-toolbar-btn.refund-requests {
+    background: #EEF2FF;
+    color: #3730A3;
+    border: 1px solid #C7D2FE;
+}
+
+.cashier-toolbar-btn.refund-requests:hover {
+    background: #E0E7FF;
+}
+
 .cashier-toolbar-btn.delete-sandbox {
     background: #F8FAFC;
     color: #475569;

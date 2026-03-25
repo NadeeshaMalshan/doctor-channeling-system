@@ -421,13 +421,12 @@ exports.reserveCheckout = async (req, res) => {
             return res.status(404).json({ message: 'Appointment not found' });
         }
         const a = appts[0];
-        const env = process.env.PAYHERE_TEST_MODE === 'true' ? 'SANDBOX' : 'LIVE';
         const amt = amount != null ? Number(amount) : 0;
         await db.execute(
             `INSERT INTO payments
-            (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payment_environment)
-            VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
-            [orderKey, a.patient_ID, a.doctor_id, a.schedule_id, appointment_id, amt, env]
+            (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status)
+            VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
+            [orderKey, a.patient_ID, a.doctor_id, a.schedule_id, appointment_id, amt]
         );
         return res.status(201).json({ ok: true });
     } catch (e) {
@@ -492,8 +491,6 @@ exports.handleNotification = async (req, res) => {
 
             const final_payment_id = payment_id || 'N/A';
             const final_method = method || 'N/A';
-
-            const notifyEnvironment = isTestMode ? 'SANDBOX' : 'LIVE';
             const amountNum = payhere_amount != null ? Number(payhere_amount) : 0;
 
             const [updResult] = await db.execute(
@@ -501,10 +498,9 @@ exports.handleNotification = async (req, res) => {
                  SET payment_status = ?, 
                      payhere_payment_id = ?, 
                      payment_method = ?, 
-                     card_last_digits = ?,
-                     payment_environment = ?
+                     card_last_digits = ?
                  WHERE internal_order_id = ?`,
-                [paymentStatus, final_payment_id, final_method, final_card_digits, notifyEnvironment, internalPaymentID]
+                [paymentStatus, final_payment_id, final_method, final_card_digits, internalPaymentID]
             );
 
             if (updResult.affectedRows === 0) {
@@ -519,8 +515,8 @@ exports.handleNotification = async (req, res) => {
                         try {
                             await db.execute(
                                 `INSERT INTO payments
-                                (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payhere_payment_id, payment_method, card_last_digits, payment_environment)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payhere_payment_id, payment_method, card_last_digits)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                                 [
                                     internalPaymentID,
                                     a.patient_ID,
@@ -531,17 +527,16 @@ exports.handleNotification = async (req, res) => {
                                     paymentStatus,
                                     final_payment_id,
                                     final_method,
-                                    final_card_digits,
-                                    notifyEnvironment
+                                    final_card_digits
                                 ]
                             );
                         } catch (insErr) {
                             if (insErr.code !== 'ER_DUP_ENTRY') throw insErr;
                             await db.execute(
                                 `UPDATE payments 
-                                 SET payment_status = ?, payhere_payment_id = ?, payment_method = ?, card_last_digits = ?, payment_environment = ?
+                                 SET payment_status = ?, payhere_payment_id = ?, payment_method = ?, card_last_digits = ?
                                  WHERE internal_order_id = ?`,
-                                [paymentStatus, final_payment_id, final_method, final_card_digits, notifyEnvironment, internalPaymentID]
+                                [paymentStatus, final_payment_id, final_method, final_card_digits, internalPaymentID]
                             );
                         }
                     }
@@ -556,8 +551,7 @@ exports.handleNotification = async (req, res) => {
                             paymentStatus,
                             final_payment_id,
                             final_method,
-                            final_card_digits,
-                            notifyEnvironment
+                            final_card_digits
                         });
                     } else {
                         let conn;
@@ -580,8 +574,8 @@ exports.handleNotification = async (req, res) => {
                                 const apptId = apRes.insertId;
                                 const [pRes] = await conn.execute(
                                     `INSERT INTO payments
-                                    (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payhere_payment_id, payment_method, card_last_digits, payment_environment)
-                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                    (internal_order_id, patient_id, doctor_id, appointment_schedule_id, appointment_id, amount, payment_status, payhere_payment_id, payment_method, card_last_digits)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                                     [
                                         internalPaymentID,
                                         parsed.patientId,
@@ -592,8 +586,7 @@ exports.handleNotification = async (req, res) => {
                                         paymentStatus,
                                         final_payment_id,
                                         final_method,
-                                        final_card_digits,
-                                        notifyEnvironment
+                                        final_card_digits
                                     ]
                                 );
                                 const payId = pRes.insertId;
@@ -608,14 +601,13 @@ exports.handleNotification = async (req, res) => {
                             if (insErr.code !== 'ER_DUP_ENTRY') throw insErr;
                             await db.execute(
                                 `UPDATE payments
-                                 SET payment_status = ?, payhere_payment_id = ?, payment_method = ?, card_last_digits = ?, payment_environment = ?
+                                 SET payment_status = ?, payhere_payment_id = ?, payment_method = ?, card_last_digits = ?
                                  WHERE internal_order_id = ?`,
                                 [
                                     paymentStatus,
                                     final_payment_id,
                                     final_method,
                                     final_card_digits,
-                                    notifyEnvironment,
                                     internalPaymentID
                                 ]
                             );
@@ -675,7 +667,6 @@ exports.getAllPaymentsForCashier = async (req, res) => {
                 p.payment_method,
                 p.amount,
                 p.payment_status AS status,
-                p.payment_environment,
                 p.card_last_digits,
                 p.created_at
             FROM payments p
@@ -693,7 +684,6 @@ exports.getAllPaymentsForCashier = async (req, res) => {
                 p.payment_method,
                 p.amount,
                 p.payment_status AS status,
-                p.payment_environment,
                 p.card_last_digits,
                 p.created_at,
                 EXISTS (
@@ -736,15 +726,9 @@ exports.deleteOldPayments = async (req, res) => {
 };
 
 exports.deleteSandboxPayments = async (req, res) => {
-    try {
-        const [result] = await db.execute(
-            `DELETE FROM payments WHERE payment_environment = 'SANDBOX'`
-        );
-        res.status(200).json({ message: `Deleted ${result.affectedRows} sandbox payment(s)`, count: result.affectedRows });
-    } catch (error) {
-        console.error('Error deleting sandbox payments:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
+    return res.status(410).json({
+        message: 'payment_environment has been removed from schema, so sandbox deletion is no longer supported.'
+    });
 };
 
 exports.updatePaymentStatus = async (req, res) => {

@@ -11,8 +11,6 @@ const authHeaders = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('staffToken')}` }
 });
 
-const isSandboxPayment = (p) => p.paymentEnvironment === 'SANDBOX';
-
 const isOlderThan2Years = (dateStr) => {
     if (!dateStr) return false;
     const twoYearsAgo = new Date();
@@ -61,7 +59,6 @@ const CashierDashboard = () => {
                         status: item.status ? item.status.toUpperCase() : 'PENDING',
                         cardLast4: item.card_last_digits || '0000',
                         date: item.created_at,
-                        paymentEnvironment: item.payment_environment || 'SANDBOX',
                         hasPendingRefundRequest
                     };
                 });
@@ -160,24 +157,6 @@ const CashierDashboard = () => {
         } catch (error) {
             console.error('Error deleting old payments:', error);
             showToast('Failed to delete old payments');
-        }
-        setModal({ open: false, type: '', data: null });
-    };
-
-    const handleDeleteSandbox = () => {
-        const sb = payments.filter(isSandboxPayment);
-        if (sb.length === 0) { showToast('No sandbox payments found'); return; }
-        setModal({ open: true, type: 'deleteSandbox', data: sb });
-    };
-
-    const confirmDeleteSandbox = async () => {
-        try {
-            const response = await axios.delete(`${API_BASE}/api/payment/delete-sandbox`, authHeaders());
-            setPayments(prev => prev.filter(p => !isSandboxPayment(p)));
-            showToast(`Deleted ${response.data.count} sandbox payment(s)`);
-        } catch (error) {
-            console.error('Error deleting sandbox payments:', error);
-            showToast('Failed to delete sandbox payments');
         }
         setModal({ open: false, type: '', data: null });
     };
@@ -306,9 +285,13 @@ const CashierDashboard = () => {
                                 <span className="material-symbols-outlined">timer_off</span>
                                 Delete Old (&gt;2 yrs)
                             </button>
-                            <button className="cashier-toolbar-btn delete-sandbox" onClick={handleDeleteSandbox}>
-                                <span className="material-symbols-outlined">science</span>
-                                Delete Sandbox
+                            <button
+                                className="cashier-toolbar-btn refund-requests"
+                                onClick={() => navigate('/ecare/staff/refunds')}
+                                title="View refund requests"
+                            >
+                                <span className="material-symbols-outlined">receipt_long</span>
+                                Refunds
                             </button>
                         </div>
 
@@ -366,9 +349,6 @@ const CashierDashboard = () => {
                                                     <span className={`status-badge ${STATUS_COLORS[payment.status] || ''}`}>
                                                         {payment.status}
                                                     </span>
-                                                    {isSandboxPayment(payment) && (
-                                                        <span className="sandbox-tag">SANDBOX</span>
-                                                    )}
                                                 </td>
                                                 <td style={{ color: '#64748B' }}>
                                                     {payment.date ? formatMediumDateTimeLK(payment.date) : 'N/A'}
@@ -444,18 +424,6 @@ const CashierDashboard = () => {
                                 <div className="modal-actions">
                                     <button className="modal-btn cancel" onClick={closeModal}>Cancel</button>
                                     <button className="modal-btn confirm-danger" onClick={confirmDeleteOld}>Delete</button>
-                                </div>
-                            </>
-                        )}
-                        {modal.type === 'deleteSandbox' && (
-                            <>
-                                <h3>Delete Sandbox Payments</h3>
-                                <p>
-                                    This will permanently delete <strong>{modal.data.length}</strong> sandbox payment record(s). This action cannot be undone.
-                                </p>
-                                <div className="modal-actions">
-                                    <button className="modal-btn cancel" onClick={closeModal}>Cancel</button>
-                                    <button className="modal-btn confirm-danger" onClick={confirmDeleteSandbox}>Delete</button>
                                 </div>
                             </>
                         )}
