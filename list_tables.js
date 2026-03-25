@@ -1,12 +1,13 @@
-const pool = require('./backend/config/db');
+require('dotenv').config({ path: './backend/.env' });
+const db = require('./backend/config/db');
 
 async function listTables() {
     try {
-        const [rows] = await pool.execute('SHOW TABLES');
-        console.log('Tables in database:', rows.map(r => Object.values(r)[0]));
+        const [rows] = await db.query('SHOW TABLES');
+        console.log(rows);
         process.exit(0);
     } catch (err) {
-        console.error('Failed to list tables:', err);
+        console.error(err);
         process.exit(1);
     }
 }
