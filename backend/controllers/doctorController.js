@@ -59,15 +59,29 @@ exports.getSpecializations = async (req, res) => {
 
 exports.deleteDoctorAccount = async (req, res) => {
     const { id } = req.params;
+    let connection;
     try {
-        const [result] = await db.execute("DELETE FROM doctors WHERE id = ?", [id]);
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        await connection.execute("DELETE FROM doc_availability_slots WHERE doctor_id = ?", [id]);
+
+        // 5. Delete from doctors
+        const [result] = await connection.execute("DELETE FROM doctors WHERE id = ?", [id]);
+
         if (result.affectedRows === 0) {
+            await connection.rollback();
             return res.status(404).json({ message: 'Doctor account not found' });
         }
-        res.status(200).json({ message: 'Doctor account successfully deleted' });
+
+        await connection.commit();
+        res.status(200).json({ message: 'Doctor account and all associated data successfully deleted' });
     } catch (error) {
+        if (connection) await connection.rollback();
         console.error('Error deleting account:', error);
         res.status(500).json({ message: 'Server error while deleting account' });
+    } finally {
+        if (connection) connection.release();
     }
 };
 
