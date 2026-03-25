@@ -1,6 +1,11 @@
 const db = require('../config/db');
 const crypto = require('crypto');
 const axios = require('axios');
+const { sendMail } = require('../utils/emailSender');
+const { buildRefundProcessedPatientEmail, colomboDateTimeLabel } = require('../utils/refundFlowPatientEmail');
+const { buildReceiptEmailHtml, buildReceiptEmailText } = require('../utils/receiptEmailHtml');
+const { buildReceiptFailEmailHtml, buildReceiptFailEmailText } = require('../utils/receiptFailEmailHtml');
+const { buildReceiptPdfBufferFromJsPDF } = require('../utils/generateReceiptPdfNode');
 
 async function getPayHereOAuthToken() {
     const oauthUrl = String(process.env.PAYHERE_OAUTH_URL || '').trim();
@@ -50,6 +55,282 @@ function parseInternalOrderId(orderKey) {
         };
     }
     return null;
+}
+
+async function sendPaymentResultEmail(internalOrderId, paymentStatus) {
+    // Only terminal outcomes should notify patients.
+    const terminal =
+        paymentStatus === 'SUCCESS' ||
+        paymentStatus === 'FAILED' ||
+        paymentStatus === 'CANCELED' ||
+        paymentStatus === 'CHARGEDBACK';
+    if (!terminal) return;
+
+    try {
+        // Idempotence guard (best-effort). If the log table doesn't exist yet, continue.
+        try {
+            await db.execute(
+                'INSERT INTO payment_email_logs (internal_order_id, payment_status) VALUES (?, ?)',
+                [internalOrderId, paymentStatus]
+            );
+        } catch (e) {
+            if (e?.code === 'ER_DUP_ENTRY') return;
+            if (e?.code !== 'ER_NO_SUCH_TABLE') throw e;
+        }
+
+        const [rows] = await db.execute(
+            `SELECT
+                p.internal_order_id,
+                p.amount,
+                p.payment_status,
+                p.patient_id,
+                p.doctor_id,
+                p.appointment_id,
+                p.appointment_schedule_id,
+                pt.first_name,
+                pt.second_name,
+                pt.email,
+                d.name AS doctor_name,
+                d.specialization,
+                s.schedule_date,
+                s.start_time,
+                a.booking_queue_no
+             FROM payments p
+             JOIN patients pt ON pt.id = p.patient_id
+             JOIN doctors d ON d.id = p.doctor_id
+             JOIN appointment_schedules s ON s.id = p.appointment_schedule_id
+             LEFT JOIN appointments a ON a.id = p.appointment_id
+             WHERE p.internal_order_id = ?
+             LIMIT 1`,
+            [internalOrderId]
+        );
+
+        if (!rows.length) return;
+        const p = rows[0];
+
+        const patientName = `${p.first_name || ''} ${p.second_name || ''}`.trim() || 'Patient';
+        const email = String(p.email || '').trim();
+        if (!email) return;
+
+        let appointmentId = p.appointment_id != null ? Number(p.appointment_id) : null;
+        let appointmentNo = p.booking_queue_no != null ? Number(p.booking_queue_no) : null;
+
+        if (appointmentId == null || !Number.isFinite(appointmentId)) {
+            // Fallback: resolve appointment by (patient, schedule) using the latest booking row.
+            const [ap] = await db.execute(
+                `SELECT id, booking_queue_no
+                 FROM appointments
+                 WHERE patient_ID = ? AND schedule_id = ?
+                 ORDER BY id DESC
+                 LIMIT 1`,
+                [p.patient_id, p.appointment_schedule_id]
+            );
+            if (ap.length) {
+                appointmentId = Number(ap[0].id);
+                appointmentNo = ap[0].booking_queue_no != null ? Number(ap[0].booking_queue_no) : null;
+            }
+        }
+
+        const dateTimeLabel = `${p.schedule_date || '—'} ${p.start_time || ''}`.trim() || '—';
+        const pdfData = {
+            paymentID: internalOrderId,
+            appointmentId: appointmentId != null ? appointmentId : null,
+            appointmentNo: appointmentNo != null ? appointmentNo : null,
+            patientName,
+            doctorName: p.doctor_name,
+            specialization: p.specialization,
+            dateTime: dateTimeLabel,
+            totalAmount: Number(p.amount || 0)
+        };
+
+        const subject =
+            paymentStatus === 'SUCCESS'
+                ? 'Booking successful — NCC eCare'
+                : 'Payment failed — NCC eCare';
+
+        if (paymentStatus === 'SUCCESS') {
+            const html = buildReceiptEmailHtml(pdfData);
+            const text = buildReceiptEmailText(pdfData);
+            const pdfBuffer = buildReceiptPdfBufferFromJsPDF(pdfData);
+
+            await sendMail({
+                to: email,
+                subject,
+                html,
+                text,
+                attachments: [
+                    {
+                        filename: `NCC-Receipt-${internalOrderId}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }
+                ]
+            });
+        } else {
+            const html = buildReceiptFailEmailHtml(pdfData);
+            const text = buildReceiptFailEmailText(pdfData);
+            await sendMail({ to: email, subject, html, text });
+        }
+    } catch (e) {
+        console.error('sendPaymentResultEmail error:', e.message);
+    }
+}
+
+/**
+ * After a payment is marked REFUNDED: find the booking row and set appointment_status = 'cancelled'
+ * (matches manual cancel slot logic). Tries: payments.appointment_id → appointments.payment_id →
+ * refund_requests → ORD{apptId}_* order id → schedule+patient for ORD{sched}_{pat}_*.
+ */
+async function markAppointmentCancelledAfterRefund(payment, internalOrderId) {
+    let apptId = payment.appointment_id != null ? Number(payment.appointment_id) : null;
+    if (!Number.isFinite(apptId)) {
+        apptId = null;
+    }
+
+    if (apptId == null && payment.id != null) {
+        try {
+            const [byPay] = await db.execute(
+                'SELECT id FROM appointments WHERE payment_id = ? LIMIT 1',
+                [payment.id]
+            );
+            if (byPay.length && byPay[0].id != null) {
+                apptId = Number(byPay[0].id);
+            }
+        } catch (e) {
+            console.warn('markAppointmentCancelledAfterRefund (payment_id):', e.message);
+        }
+    }
+
+    if (apptId == null) {
+        try {
+            const [rrRows] = await db.execute(
+                `SELECT appointment_id FROM refund_requests WHERE internal_order_id = ? ORDER BY id DESC LIMIT 1`,
+                [internalOrderId]
+            );
+            if (rrRows.length && rrRows[0].appointment_id != null) {
+                apptId = Number(rrRows[0].appointment_id);
+            }
+        } catch (rrSelErr) {
+            if (rrSelErr?.code !== 'ER_NO_SUCH_TABLE') {
+                console.warn('markAppointmentCancelledAfterRefund (refund_requests):', rrSelErr.message);
+            }
+        }
+    }
+
+    if (apptId == null) {
+        const parsed = parseInternalOrderId(internalOrderId);
+        if (parsed?.kind === 'appointment' && Number.isFinite(parsed.appointmentId)) {
+            apptId = parsed.appointmentId;
+        } else if (
+            parsed?.kind === 'pending_slot' &&
+            payment.patient_id != null &&
+            payment.appointment_schedule_id != null
+        ) {
+            try {
+                const [ap] = await db.execute(
+                    `SELECT id FROM appointments WHERE patient_ID = ? AND schedule_id = ? ORDER BY id DESC LIMIT 1`,
+                    [payment.patient_id, payment.appointment_schedule_id]
+                );
+                if (ap.length && ap[0].id != null) {
+                    apptId = Number(ap[0].id);
+                }
+            } catch (e) {
+                console.warn('markAppointmentCancelledAfterRefund (schedule+patient):', e.message);
+            }
+        }
+    }
+
+    if (apptId == null) {
+        console.warn(
+            'markAppointmentCancelledAfterRefund: no appointment resolved for order',
+            internalOrderId,
+            'payment id',
+            payment.id
+        );
+        return;
+    }
+
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const [existing] = await connection.execute('SELECT * FROM appointments WHERE id = ? FOR UPDATE', [apptId]);
+        if (existing.length > 0) {
+            const appointment = existing[0];
+            const prevStatus = String(appointment.appointment_status || 'added').toLowerCase();
+            if (prevStatus !== 'cancelled') {
+                await connection.execute(`UPDATE appointments SET appointment_status = 'cancelled' WHERE id = ?`, [apptId]);
+                const wasCountedSlot = prevStatus !== 'failed' && Number(appointment.booking_queue_no) > 0;
+                if (wasCountedSlot) {
+                    const [schedules] = await connection.execute(
+                        'SELECT * FROM appointment_schedules WHERE id = ? FOR UPDATE',
+                        [appointment.schedule_id]
+                    );
+                    if (schedules.length > 0) {
+                        const schedule = schedules[0];
+                        const newBookedCount = Math.max(0, Number(schedule.booked_count) - 1);
+                        let scheduleUpdate = 'UPDATE appointment_schedules SET booked_count = ?';
+                        const scheduleParams = [newBookedCount];
+                        if (schedule.status === 'full') {
+                            scheduleUpdate += ', status = ?';
+                            scheduleParams.push('active');
+                        }
+                        scheduleUpdate += ' WHERE id = ?';
+                        scheduleParams.push(appointment.schedule_id);
+                        await connection.execute(scheduleUpdate, scheduleParams);
+                    }
+                }
+            }
+        }
+        await connection.commit();
+    } catch (apptErr) {
+        await connection.rollback();
+        console.error('markAppointmentCancelledAfterRefund: failed:', apptErr.message);
+    } finally {
+        connection.release();
+    }
+}
+
+async function sendPatientRefundCompletedEmail(payment, internalOrderId, refundedAmount) {
+    try {
+        if (!payment?.patient_id) return;
+        const [patRows] = await db.execute(
+            `SELECT email, first_name, second_name FROM patients WHERE id = ?`,
+            [payment.patient_id]
+        );
+        if (!patRows.length) return;
+        const pt = patRows[0];
+        const email = String(pt.email || '').trim();
+        if (!email) return;
+
+        const [meta] = await db.execute(
+            `SELECT d.name AS doctor_name, s.schedule_date
+             FROM payments p
+             JOIN appointment_schedules s ON s.id = p.appointment_schedule_id
+             JOIN doctors d ON d.id = p.doctor_id
+             WHERE p.internal_order_id = ?
+             LIMIT 1`,
+            [internalOrderId]
+        );
+        const doctorName = meta[0]?.doctor_name;
+        const scheduleRaw = meta[0]?.schedule_date;
+        const scheduleDateLabel =
+            scheduleRaw != null ? String(scheduleRaw).split('T')[0].replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1') : undefined;
+
+        const patientName = `${pt.first_name || ''} ${pt.second_name || ''}`.trim() || 'Patient';
+        const amt = refundedAmount != null ? Number(refundedAmount) : Number(payment.amount);
+        const { html, text, subject } = buildRefundProcessedPatientEmail({
+            patientName,
+            orderRef: internalOrderId,
+            refundAmount: amt,
+            originalAmount: Number(payment.amount),
+            doctorName,
+            scheduleDateLabel,
+            processedDateLabel: colomboDateTimeLabel()
+        });
+        await sendMail({ to: email, subject, html, text });
+    } catch (e) {
+        console.error('sendPatientRefundCompletedEmail:', e.message);
+    }
 }
 
 exports.getPaymentDetails = async (req, res) => {
@@ -345,6 +626,12 @@ exports.handleNotification = async (req, res) => {
                 }
             }
 
+            // Send patient email (with receipt PDF attachment on SUCCESS).
+            // Best-effort: never block PayHere callback.
+            if (paymentStatus) {
+                sendPaymentResultEmail(internalPaymentID, paymentStatus).catch(() => {});
+            }
+
             res.status(200).send('OK');
         } catch (error) {
             console.error('Database update error:', error);
@@ -379,9 +666,8 @@ exports.getPaymentStatus = async (req, res) => {
 };
 
 exports.getAllPaymentsForCashier = async (req, res) => {
-    try {
-        const [rows] = await db.execute(`
-            SELECT 
+    const baseSelect = `
+            SELECT
                 p.appointment_id,
                 CONCAT(pt.first_name, ' ', pt.second_name) AS patient_name,
                 d.name AS doctor_name,
@@ -392,18 +678,46 @@ exports.getAllPaymentsForCashier = async (req, res) => {
                 p.payment_environment,
                 p.card_last_digits,
                 p.created_at
+            FROM payments p
+            JOIN patients pt ON p.patient_id = pt.id
+            LEFT JOIN doctors d ON p.doctor_id = d.id
+            ORDER BY p.created_at DESC`;
 
-                FROM
-                    payments p
-                JOIN 
-                patients pt ON p.patient_id = pt.id
-                LEFT JOIN
-                doctors d ON p.doctor_id = d.id
-                ORDER BY 
-                p.created_at DESC -- Show newest transactions first
+    try {
+        const [rows] = await db.execute(`
+            SELECT
+                p.appointment_id,
+                CONCAT(pt.first_name, ' ', pt.second_name) AS patient_name,
+                d.name AS doctor_name,
+                p.internal_order_id AS transaction_id,
+                p.payment_method,
+                p.amount,
+                p.payment_status AS status,
+                p.payment_environment,
+                p.card_last_digits,
+                p.created_at,
+                EXISTS (
+                    SELECT 1 FROM refund_requests rr
+                    WHERE rr.internal_order_id = p.internal_order_id
+                      AND rr.status = 'pending'
+                ) AS pending_refund_request
+            FROM payments p
+            JOIN patients pt ON p.patient_id = pt.id
+            LEFT JOIN doctors d ON p.doctor_id = d.id
+            ORDER BY p.created_at DESC
             `);
         res.status(200).json(rows);
     } catch (error) {
+        if (error?.code === 'ER_NO_SUCH_TABLE') {
+            try {
+                const [rows] = await db.execute(baseSelect);
+                const withFlag = rows.map((r) => ({ ...r, pending_refund_request: 0 }));
+                return res.status(200).json(withFlag);
+            } catch (e2) {
+                console.error('Error fetching all payments:', e2);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        }
         console.error('Error fetching all payments:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -450,6 +764,18 @@ exports.updatePaymentStatus = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Payment not found' });
         }
+        if (status === 'REFUNDED') {
+            const [payRows] = await db.execute(
+                `SELECT id, appointment_id, patient_id, appointment_schedule_id, amount
+                 FROM payments WHERE internal_order_id = ? LIMIT 1`,
+                [orderID]
+            );
+            if (payRows.length > 0) {
+                const row = payRows[0];
+                await markAppointmentCancelledAfterRefund(row, orderID);
+                sendPatientRefundCompletedEmail(row, orderID, row.amount).catch(() => {});
+            }
+        }
         res.status(200).json({ message: 'Payment status updated successfully' });
     } catch (error) {
         console.error('Error updating payment status:', error);
@@ -485,7 +811,7 @@ exports.processRefund = async (req, res) => {
         fetch('http://127.0.0.1:7369/ingest/41c668f3-cb4e-4259-ac8e-af504c4e8c5b',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2c06af'},body:JSON.stringify({sessionId:'2c06af',runId:'initial',hypothesisId:'H1',location:'paymentController.js:processRefund:start',message:'Refund flow started',data:{orderId:internalOrderId,refundApiUrl,hasApiKey:Boolean(payhereApiKey),hasRefundAuthCode:Boolean(payhereRefundAuthCode),hasAmount:amount != null,reason:String(reason || '')},timestamp:Date.now()})}).catch(()=>{});
         // #endregion
         const [rows] = await db.execute(
-            `SELECT id, amount, payment_status, payhere_payment_id
+            `SELECT id, appointment_id, patient_id, appointment_schedule_id, amount, payment_status, payhere_payment_id
              FROM payments
              WHERE internal_order_id = ?
              LIMIT 1`,
@@ -505,6 +831,23 @@ exports.processRefund = async (req, res) => {
         }
         if (payment.payment_status !== 'SUCCESS') {
             return res.status(400).json({ message: `Only SUCCESS payments can be refunded. Current status: ${payment.payment_status}` });
+        }
+
+        try {
+            const [pendingReq] = await db.execute(
+                `SELECT id FROM refund_requests WHERE internal_order_id = ? AND status = 'pending' LIMIT 1`,
+                [internalOrderId]
+            );
+            if (pendingReq.length === 0) {
+                return res.status(403).json({
+                    message:
+                        'No pending refund request for this payment. The patient must submit a refund request from eCare appointment history first.'
+                });
+            }
+        } catch (rrErr) {
+            if (rrErr?.code !== 'ER_NO_SUCH_TABLE') {
+                throw rrErr;
+            }
         }
 
         const refundAmount = amount != null ? Number(amount) : Number(payment.amount);
@@ -596,6 +939,23 @@ exports.processRefund = async (req, res) => {
             'UPDATE payments SET payment_status = ? WHERE internal_order_id = ?',
             ['REFUNDED', internalOrderId]
         );
+
+        try {
+            await db.execute(
+                `UPDATE refund_requests
+                 SET status = 'completed', resolved_at = CURRENT_TIMESTAMP
+                 WHERE internal_order_id = ? AND status = 'pending'`,
+                [internalOrderId]
+            );
+        } catch (rrErr) {
+            if (rrErr?.code !== 'ER_NO_SUCH_TABLE') {
+                console.warn('refund_requests completion update:', rrErr.message);
+            }
+        }
+
+        await markAppointmentCancelledAfterRefund(payment, internalOrderId);
+
+        sendPatientRefundCompletedEmail(payment, internalOrderId, refundAmount).catch(() => {});
 
         return res.status(200).json({
             message: 'Refund processed successfully',

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import LogoHospital from '../images/LogoHospital.png';
 import { getReceiptDetailRows, RECEIPT_CONDITIONS } from './receiptModel';
+import { formatDateTimeLK, formatMediumDateLK } from './sriLankaTime';
 
 // Color helpers
 const rgb = (r, g, b) => [r, g, b];
@@ -80,7 +81,7 @@ export const generateReceiptPDF = async (data) => {
     applyText(doc, TEXT_LIGHT);
     const now = new Date();
     doc.text(
-        `Issued: ${now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+        `Issued: ${formatMediumDateLK(now)}`,
         W - M, y + 4, { align: 'right' }
     );
 
@@ -205,7 +206,7 @@ export const generateReceiptPDF = async (data) => {
     applyText(doc, TEXT_LIGHT);
     doc.text('NCC eCare — Narammala Channeling Center', M, y + 5);
     doc.text(
-        `Generated: ${now.toLocaleString('en-US')}`,
+        `Generated: ${formatDateTimeLK(now)}`,
         W - M, y + 5, { align: 'right' }
     );
 

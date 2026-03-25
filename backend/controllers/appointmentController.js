@@ -309,6 +309,11 @@ exports.getAppointmentsBySchedule = async (req, res) => {
                        WHEN EXISTS (
                            SELECT 1 FROM payments pay
                            WHERE pay.appointment_id = a.id
+                             AND UPPER(TRIM(COALESCE(pay.payment_status, ''))) = 'REFUNDED'
+                       ) THEN 'refunded'
+                       WHEN EXISTS (
+                           SELECT 1 FROM payments pay
+                           WHERE pay.appointment_id = a.id
                              AND UPPER(TRIM(COALESCE(pay.payment_status, ''))) = 'SUCCESS'
                        ) THEN 'paid'
                        ELSE 'pending'
@@ -338,6 +343,11 @@ exports.getPatientAppointments = async (req, res) => {
                     WHEN EXISTS (
                         SELECT 1 FROM payments p
                         WHERE p.appointment_id = a.id
+                          AND UPPER(TRIM(COALESCE(p.payment_status, ''))) = 'REFUNDED'
+                    ) THEN 'refunded'
+                    WHEN EXISTS (
+                        SELECT 1 FROM payments p
+                        WHERE p.appointment_id = a.id
                           AND UPPER(TRIM(COALESCE(p.payment_status, ''))) = 'SUCCESS'
                     ) THEN 'paid'
                     ELSE 'pending'
@@ -349,12 +359,30 @@ exports.getPatientAppointments = async (req, res) => {
                 s.price,
                 d.name as doctor_name,
                 d.specialization as doctor_specialization,
-                d.hospital as doctor_hospital
+                d.hospital as doctor_hospital,
+                (
+                    SELECT p.internal_order_id FROM payments p
+                    WHERE p.appointment_id = a.id
+                      AND UPPER(TRIM(COALESCE(p.payment_status, ''))) = 'SUCCESS'
+                    ORDER BY p.id DESC
+                    LIMIT 1
+                ) AS payment_order_id,
+                (
+                    SELECT p.updated_at FROM payments p
+                    WHERE p.appointment_id = a.id
+                      AND UPPER(TRIM(COALESCE(p.payment_status, ''))) = 'SUCCESS'
+                    ORDER BY p.id DESC
+                    LIMIT 1
+                ) AS payment_paid_at,
+                EXISTS (
+                    SELECT 1 FROM refund_requests rr
+                    WHERE rr.appointment_id = a.id AND rr.status = 'pending'
+                ) AS refund_request_pending
             FROM appointments a
             JOIN appointment_schedules s ON a.schedule_id = s.id
             JOIN doctors d ON a.doctor_id = d.id
             WHERE a.patient_ID = ?
-            ORDER BY s.schedule_date DESC, s.start_time DESC
+            ORDER BY a.created_at DESC, a.id DESC
         `, [patient_id]);
 
         res.status(200).json({ success: true, message: 'Patient appointments fetched successfully', data: appointments });

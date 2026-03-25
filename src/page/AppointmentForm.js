@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
+import { formatScheduleDateLK, formatWallTime12 } from '../utils/sriLankaTime';
 import './css/AppointmentForm.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -230,11 +231,13 @@ const AppointmentForm = () => {
                                     </div>
                                     <div className="summary-item">
                                         <span className="label">Date</span>
-                                        <span className="value">{new Date(scheduleDetails.schedule_date).toLocaleDateString()}</span>
+                                        <span className="value">{formatScheduleDateLK(scheduleDetails.schedule_date)}</span>
                                     </div>
                                     <div className="summary-item">
                                         <span className="label">Time</span>
-                                        <span className="value">{scheduleDetails.start_time} - {scheduleDetails.end_time}</span>
+                                        <span className="value">
+                                            {formatWallTime12(scheduleDetails.start_time)} – {formatWallTime12(scheduleDetails.end_time)}
+                                        </span>
                                     </div>
                                     <div className="summary-item">
                                         <span className="label">Price</span>

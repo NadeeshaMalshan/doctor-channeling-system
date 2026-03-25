@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../css/CashierDashboard.css';
 import LogoHospital from '../../images/LogoHospital.png';
+import { formatMediumDateTimeLK, formatMediumDateLK, formatScheduleDateLK } from '../../utils/sriLankaTime';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const authHeaders = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('staffToken')}` }
@@ -43,19 +46,25 @@ const CashierDashboard = () => {
         const fetchPayments = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get('http://localhost:5000/api/payment/all-transactions', authHeaders());
-                const formattedData = response.data.map(item => ({
-                    id: item.appointment_id,
-                    orderId: item.transaction_id || 'N/A',
-                    patientName: item.patient_name || 'Unknown Patient',
-                    doctorName: item.doctor_name || 'Assigned Doctor',
-                    amount: parseFloat(item.amount) || 0,
-                    method: item.payment_method || 'Online',
-                    status: item.status ? item.status.toUpperCase() : 'PENDING',
-                    cardLast4: item.card_last_digits || '0000',
-                    date: item.created_at,
-                    paymentEnvironment: item.payment_environment || 'SANDBOX'
-                }));
+                const response = await axios.get(`${API_BASE}/api/payment/all-transactions`, authHeaders());
+                const formattedData = response.data.map((item) => {
+                    const pending = item.pending_refund_request;
+                    const hasPendingRefundRequest =
+                        pending === true || pending === 1 || pending === '1';
+                    return {
+                        id: item.appointment_id,
+                        orderId: item.transaction_id || 'N/A',
+                        patientName: item.patient_name || 'Unknown Patient',
+                        doctorName: item.doctor_name || 'Assigned Doctor',
+                        amount: parseFloat(item.amount) || 0,
+                        method: item.payment_method || 'Online',
+                        status: item.status ? item.status.toUpperCase() : 'PENDING',
+                        cardLast4: item.card_last_digits || '0000',
+                        date: item.created_at,
+                        paymentEnvironment: item.payment_environment || 'SANDBOX',
+                        hasPendingRefundRequest
+                    };
+                });
                 setPayments(formattedData);
                 setError(null);
             } catch (err) {
@@ -99,14 +108,20 @@ const CashierDashboard = () => {
         try {
             setRefundSubmitting(true);
             await axios.post(
-                `http://localhost:5000/api/payment/refund/${modal.data.orderId}`,
+                `${API_BASE}/api/payment/refund/${modal.data.orderId}`,
                 {
                     amount: modal.data.amount,
                     reason: `Cashier refund for ${modal.data.orderId}`
                 },
                 authHeaders()
             );
-            setPayments(prev => prev.map(p => p.orderId === modal.data.orderId ? { ...p, status: 'REFUNDED' } : p));
+            setPayments(prev =>
+                prev.map((p) =>
+                    p.orderId === modal.data.orderId
+                        ? { ...p, status: 'REFUNDED', hasPendingRefundRequest: false }
+                        : p
+                )
+            );
             showToast(`Payment ${modal.data.orderId} refunded`);
             setModal({ open: false, type: '', data: null });
         } catch (error) {
@@ -122,7 +137,7 @@ const CashierDashboard = () => {
 
     const handleUpdatePaymentStatus = async (payment, newStatus) => {
         try {
-            await axios.put(`http://localhost:5000/api/payment/update-status/${payment.orderId}`, { status: newStatus }, authHeaders());
+            await axios.put(`${API_BASE}/api/payment/update-status/${payment.orderId}`, { status: newStatus }, authHeaders());
             setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, status: newStatus } : p));
             showToast(`Payment ${payment.orderId} marked as ${newStatus}`);
         } catch (error) {
@@ -139,7 +154,7 @@ const CashierDashboard = () => {
 
     const confirmDeleteOld = async () => {
         try {
-            const response = await axios.delete('http://localhost:5000/api/payment/delete-old', authHeaders());
+            const response = await axios.delete(`${API_BASE}/api/payment/delete-old`, authHeaders());
             setPayments(prev => prev.filter(p => !isOlderThan2Years(p.date)));
             showToast(`Deleted ${response.data.count} old payment(s)`);
         } catch (error) {
@@ -157,7 +172,7 @@ const CashierDashboard = () => {
 
     const confirmDeleteSandbox = async () => {
         try {
-            const response = await axios.delete('http://localhost:5000/api/payment/delete-sandbox', authHeaders());
+            const response = await axios.delete(`${API_BASE}/api/payment/delete-sandbox`, authHeaders());
             setPayments(prev => prev.filter(p => !isSandboxPayment(p)));
             showToast(`Deleted ${response.data.count} sandbox payment(s)`);
         } catch (error) {
@@ -356,20 +371,22 @@ const CashierDashboard = () => {
                                                     )}
                                                 </td>
                                                 <td style={{ color: '#64748B' }}>
-                                                    {payment.date
-                                                        ? new Date(payment.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                                                        : 'N/A'}
+                                                    {payment.date ? formatMediumDateTimeLK(payment.date) : 'N/A'}
                                                 </td>
                                                 <td>
                                                     {payment.status === 'SUCCESS' ? (
-                                                        <button
-                                                            className="table-refund-btn"
-                                                            onClick={() => (new Date() - new Date(payment.date)) <= 24 * 60 * 60 * 1000 ? handleRefund(payment) : null}
-                                                            disabled={(new Date() - new Date(payment.date)) > 24 * 60 * 60 * 1000}
-                                                            title={(new Date() - new Date(payment.date)) > 24 * 60 * 60 * 1000 ? 'Refunds must be requested within 24 hours' : 'Refund this payment'}
-                                                        >
-                                                            Refund
-                                                        </button>
+                                                        payment.hasPendingRefundRequest ? (
+                                                            <button
+                                                                type="button"
+                                                                className="table-refund-btn"
+                                                                onClick={() => handleRefund(payment)}
+                                                                title="Process refund via PayHere (patient requested)"
+                                                            >
+                                                                Refund
+                                                            </button>
+                                                        ) : (
+                                                            <span style={{ color: '#CBD5E1' }}>—</span>
+                                                        )
                                                     ) : payment.status === 'PENDING' ? (
                                                         <div style={{ display: 'flex', gap: '5px' }}>
                                                             <button className="table-success-btn" onClick={() => handleUpdatePaymentStatus(payment, 'SUCCESS')}>
