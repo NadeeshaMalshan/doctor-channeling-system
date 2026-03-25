@@ -230,18 +230,30 @@ const AdminDashboard = () => {
     const handleAddOrUpdateStaff = async (e) => {
         e.preventDefault();
 
-        // Strict Validation
-        const errors = {
-            name: !staffFormData.name,
-            email: !staffFormData.email,
-            phone: !staffFormData.phone,
-            role: !staffFormData.role,
-            password: !editingStaffId && !staffFormData.password // password required only for new staff
-        };
+        // Build errors object with specific messages
+        const errors = {};
 
-        if (errors.name || errors.email || errors.phone || errors.role || errors.password) {
+        if (!staffFormData.name) errors.name = true;
+        if (!staffFormData.email) errors.email = true;
+        if (!staffFormData.role) errors.role = true;
+
+        // Phone validation: exactly 10 digits
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!staffFormData.phone) {
+            errors.phone = 'Please enter valid phone number';
+        } else if (!phoneRegex.test(staffFormData.phone)) {
+            errors.phone = 'Please enter valid phone number';
+        }
+
+        // Password validation: required for new staff, min 6 chars if provided
+        if (!editingStaffId && !staffFormData.password) {
+            errors.password = 'Password must be at least 6 characters';
+        } else if (staffFormData.password && staffFormData.password.length < 6) {
+            errors.password = 'Password must be at least 6 characters';
+        }
+
+        if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
-            alert("Please fill all required fields");
             return;
         }
 
@@ -337,26 +349,30 @@ const AdminDashboard = () => {
                                     <input type="email" name="email" placeholder="Email" autoComplete="off" value={staffFormData.email} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.email ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.email ? '#dc3545' : '#d1d5db'} />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <input type="text" name="phone" placeholder="Phone" autoComplete="off" value={staffFormData.phone} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.phone ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '12px' }} onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.phone ? '#dc3545' : '#d1d5db'} />
+                                    <input type="text" name="phone" placeholder="Phone" autoComplete="off" value={staffFormData.phone} onChange={handleStaffFormChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.phone ? '1px solid #ef4444' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', marginBottom: '4px' }} onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.phone ? '#ef4444' : '#d1d5db'} />
+                                    {formErrors.phone && <p style={{ color: '#ef4444', fontSize: '12px', margin: '0 0 8px 4px' }}>{formErrors.phone}</p>}
                                 </div>
-                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-                                    <input
-                                        type={showStaffPassword ? "text" : "password"}
-                                        name="password"
-                                        placeholder="Password"
-                                        autoComplete="new-password"
-                                        value={staffFormData.password}
-                                        onChange={handleStaffFormChange}
-                                        style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.password ? '1px solid #dc3545' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', paddingRight: '4rem' }}
-                                        onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.password ? '#dc3545' : '#d1d5db'}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowStaffPassword(!showStaffPassword)}
-                                        style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#1E3A5F', fontSize: '0.9rem', cursor: 'pointer', fontWeight: 'bold' }}
-                                    >
-                                        {showStaffPassword ? 'Hide' : 'Show'}
-                                    </button>
+                                <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '12px' }}>
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                        <input
+                                            type={showStaffPassword ? "text" : "password"}
+                                            name="password"
+                                            placeholder="Password"
+                                            autoComplete="new-password"
+                                            value={staffFormData.password}
+                                            onChange={handleStaffFormChange}
+                                            style={{ width: '100%', padding: '12px 15px', borderRadius: '8px', border: formErrors.password ? '1px solid #ef4444' : '1px solid #d1d5db', outline: 'none', transition: '0.3s ease', paddingRight: '4rem' }}
+                                            onFocus={(e) => e.target.style.borderColor = '#1E3A5F'} onBlur={(e) => e.target.style.borderColor = formErrors.password ? '#ef4444' : '#d1d5db'}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowStaffPassword(!showStaffPassword)}
+                                            style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#1E3A5F', fontSize: '0.9rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                        >
+                                            {showStaffPassword ? 'Hide' : 'Show'}
+                                        </button>
+                                    </div>
+                                    {formErrors.password && <p style={{ color: '#ef4444', fontSize: '12px', margin: '4px 0 0 4px' }}>{formErrors.password}</p>}
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '12px' }}>
                                     <select
