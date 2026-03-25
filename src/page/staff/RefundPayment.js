@@ -69,7 +69,7 @@ const RefundPayment = () => {
 
     const handleDeleteOldRefunds = () => {
         if (oldRefunds.length === 0) {
-            showToast('No refunds older than 2 years found');
+            showToast('These refunds are less than 2 years old. There are no eligible refunds to delete.');
             return;
         }
         setModal({ open: true, type: 'deleteOldRefunds', data: oldRefunds });
@@ -155,7 +155,7 @@ const RefundPayment = () => {
                             <button
                                 className="cashier-toolbar-btn delete-old"
                                 onClick={handleDeleteOldRefunds}
-                                disabled={deleteSubmitting || oldRefunds.length === 0}
+                                disabled={deleteSubmitting}
                                 title="Deletes only refunds older than 2 years"
                             >
                                 <span className="material-symbols-outlined">delete</span>
