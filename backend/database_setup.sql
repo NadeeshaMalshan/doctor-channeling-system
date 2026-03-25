@@ -112,7 +112,6 @@ CREATE TABLE IF NOT EXISTS payments (
     card_last_digits VARCHAR(4) DEFAULT NULL,
     payment_status VARCHAR(20) DEFAULT 'PENDING',
     payment_environment ENUM('SANDBOX', 'LIVE') DEFAULT 'SANDBOX',
-    receipt_email_sent_at DATETIME NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id),
@@ -125,6 +124,17 @@ CREATE TABLE IF NOT EXISTS payments (
 ALTER TABLE appointments
     ADD CONSTRAINT fk_appointments_payment_id
     FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL;
+
+-- Password reset OTPs (forgot password flow)
+CREATE TABLE IF NOT EXISTS password_reset_otps (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    user_type ENUM('patient', 'doctor') NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_password_reset_otps_email (email)
+);
 
 -- 2. Remove the old trigger to prevent conflicts
 DROP TRIGGER IF EXISTS sync_appointment_payment_status;

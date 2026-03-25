@@ -9,7 +9,6 @@ router.post('/generate-hash', paymentController.generateHash);
 router.post('/reserve-checkout', paymentController.reserveCheckout);
 router.post('/notify', paymentController.handleNotification);
 router.get('/status/:orderID', paymentController.getPaymentStatus);
-router.post('/request-receipt-email', paymentController.requestReceiptEmail);
 
 // Cashier-only routes (require staff JWT)
 router.get('/all-transactions', verifyStaffToken, paymentController.getAllPaymentsForCashier);

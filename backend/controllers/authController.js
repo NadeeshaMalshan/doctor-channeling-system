@@ -3,8 +3,7 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
-const { sendPasswordResetOtpEmail } = require('../services/passwordResetEmail');
-const { isReceiptEmailConfigured } = require('../utils/mailTransporter');
+const { sendMail } = require('../utils/emailSender');
 
 const verifyRecaptcha = async (token) => {
     if (!token) return false;
@@ -270,132 +269,148 @@ exports.login = async (req, res) => {
     }
 };
 
-async function findAccountForPasswordReset(rawEmail) {
+async function findUserForPasswordReset(rawEmail) {
     const email = String(rawEmail || '').trim();
     if (!email) return null;
 
-    const [patients] = await db.execute('SELECT email FROM patients WHERE email = ?', [email]);
+    const [patients] = await db.execute(
+        'SELECT email FROM patients WHERE LOWER(email) = LOWER(?) LIMIT 1',
+        [email]
+    );
     if (patients.length > 0) {
-        return { userType: 'patient', email: patients[0].email };
+        return { userType: 'patient', canonicalEmail: patients[0].email };
     }
 
-    const [doctors] = await db.execute('SELECT email, status FROM doctors WHERE email = ?', [email]);
+    const [doctors] = await db.execute(
+        'SELECT email, status FROM doctors WHERE LOWER(email) = LOWER(?) LIMIT 1',
+        [email]
+    );
     if (doctors.length > 0) {
-        const st = doctors[0].status;
-        if (st === 'rejected' || st === 'canceled') {
-            return null;
+        if (doctors[0].status === 'canceled') {
+            return { inactive: true };
         }
-        return { userType: 'doctor', email: doctors[0].email };
+        return { userType: 'doctor', canonicalEmail: doctors[0].email };
     }
 
     return null;
 }
 
-/** Step 1: validate email, send OTP */
-exports.requestPasswordReset = async (req, res) => {
-    const { email, recaptchaToken } = req.body;
+exports.forgotPasswordRequest = async (req, res) => {
+    const { email: rawEmail, recaptchaToken } = req.body;
 
     try {
-        if (!email || !String(email).trim()) {
-            return res.status(400).json({ message: 'Email is required' });
-        }
-
         const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
         if (!isRecaptchaValid) {
             return res.status(400).json({ message: 'Invalid reCAPTCHA. Please try again.' });
         }
 
-        const account = await findAccountForPasswordReset(email);
+        const account = await findUserForPasswordReset(rawEmail);
         if (!account) {
             return res.status(404).json({ message: 'No account found with this email address' });
         }
-
-        if (!isReceiptEmailConfigured()) {
-            return res.status(503).json({
-                message: 'Email is not configured on the server. Please contact support.'
+        if (account.inactive) {
+            return res.status(403).json({
+                message: 'This account is no longer active. Please contact support.'
             });
         }
 
-        const otp = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
-        const salt = await bcrypt.genSalt(10);
-        const otpHash = await bcrypt.hash(otp, salt);
+        const canonicalEmail = account.canonicalEmail;
+        const otp = String(crypto.randomInt(100000, 1000000));
+        const otpHash = await bcrypt.hash(otp, await bcrypt.genSalt(10));
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-        await db.execute('DELETE FROM password_reset_otps WHERE email = ?', [account.email]);
+        await db.execute('DELETE FROM password_reset_otps WHERE LOWER(email) = LOWER(?)', [
+            canonicalEmail
+        ]);
         await db.execute(
             'INSERT INTO password_reset_otps (email, user_type, otp_hash, expires_at) VALUES (?, ?, ?, ?)',
-            [account.email, account.userType, otpHash, expiresAt]
+            [canonicalEmail, account.userType, otpHash, expiresAt]
         );
 
-        const sent = await sendPasswordResetOtpEmail(account.email, otp);
-        if (!sent.ok) {
-            return res.status(500).json({ message: 'Could not send email. Please try again later.' });
+        const text = `Your NCC eCare password reset code is: ${otp}\n\nIt expires in 15 minutes. If you did not request this, you can ignore this email.`;
+        try {
+            await sendMail({
+                to: canonicalEmail,
+                subject: 'Password reset verification code',
+                text,
+                html: `<p>Your NCC eCare password reset code is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px;">${otp}</p><p style="color:#64748b;font-size:14px;">It expires in 15 minutes. If you did not request this, you can ignore this email.</p>`
+            });
+        } catch (mailErr) {
+            console.error('Forgot password email error:', mailErr);
+            await db.execute('DELETE FROM password_reset_otps WHERE LOWER(email) = LOWER(?)', [
+                canonicalEmail
+            ]);
+            return res.status(500).json({
+                message: 'Could not send email. Check SMTP settings or try again later.'
+            });
         }
 
-        res.status(200).json({ message: 'Verification code sent to your email.' });
+        res.status(200).json({ message: 'Verification code sent to your email', email: canonicalEmail });
     } catch (error) {
+        console.error('forgotPasswordRequest:', error);
         if (error.code === 'ER_NO_SUCH_TABLE') {
-            console.error(
-                'password_reset_otps table missing. Run: backend/migrations/create_password_reset_otps.sql'
-            );
-            return res.status(503).json({ message: 'Password reset is unavailable. Please contact support.' });
+            return res.status(500).json({
+                message: 'Password reset is not set up on the server. Run the database migration for password_reset_otps.'
+            });
         }
-        console.error('requestPasswordReset error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-/** Step 2: verify OTP, return short-lived reset token */
-exports.verifyPasswordResetOtp = async (req, res) => {
-    const { email, otp } = req.body;
-    const emailTrim = String(email || '').trim();
-    const otpTrim = String(otp || '').trim();
+exports.forgotPasswordVerifyOtp = async (req, res) => {
+    const { email: rawEmail, otp } = req.body;
 
     try {
-        if (!emailTrim || !otpTrim) {
+        if (!rawEmail || otp === undefined || otp === null || String(otp).trim() === '') {
             return res.status(400).json({ message: 'Email and verification code are required' });
         }
 
+        const account = await findUserForPasswordReset(rawEmail);
+        if (!account || account.inactive) {
+            return res.status(400).json({ message: 'Invalid or expired code' });
+        }
+        const canonicalEmail = account.canonicalEmail;
+
         const [rows] = await db.execute(
-            `SELECT id, email, user_type, otp_hash, expires_at FROM password_reset_otps
-             WHERE email = ? ORDER BY created_at DESC LIMIT 1`,
-            [emailTrim]
+            'SELECT id, user_type, otp_hash, expires_at FROM password_reset_otps WHERE LOWER(email) = LOWER(?) LIMIT 1',
+            [canonicalEmail]
         );
 
         if (rows.length === 0) {
-            return res.status(400).json({ message: 'Invalid or expired code' });
+            return res.status(400).json({ message: 'No reset request found. Request a new code from the login page.' });
         }
 
         const row = rows[0];
         if (new Date(row.expires_at) < new Date()) {
             await db.execute('DELETE FROM password_reset_otps WHERE id = ?', [row.id]);
-            return res.status(400).json({ message: 'Code has expired. Request a new code from the login page.' });
+            return res.status(400).json({ message: 'Code expired. Request a new one.' });
         }
 
-        const match = await bcrypt.compare(otpTrim, row.otp_hash);
-        if (!match) {
+        const ok = await bcrypt.compare(String(otp).trim(), row.otp_hash);
+        if (!ok) {
             return res.status(400).json({ message: 'Invalid verification code' });
         }
 
-        const secret = process.env.JWT_SECRET || 'fallback_dev_secret_change_in_production';
+        await db.execute('DELETE FROM password_reset_otps WHERE id = ?', [row.id]);
+
         const resetToken = jwt.sign(
-            { pwdReset: true, email: row.email, userType: row.user_type },
-            secret,
-            { expiresIn: '20m' }
+            {
+                purpose: 'password_reset',
+                email: canonicalEmail,
+                userType: row.user_type
+            },
+            process.env.JWT_SECRET || 'fallback_dev_secret_change_in_production',
+            { expiresIn: '30m' }
         );
 
-        res.status(200).json({ message: 'Code verified', resetToken });
+        res.status(200).json({ message: 'Verified', resetToken });
     } catch (error) {
-        if (error.code === 'ER_NO_SUCH_TABLE') {
-            return res.status(503).json({ message: 'Password reset is unavailable. Please contact support.' });
-        }
-        console.error('verifyPasswordResetOtp error:', error);
+        console.error('forgotPasswordVerifyOtp:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-/** Step 3: set new password */
-exports.completePasswordReset = async (req, res) => {
+exports.forgotPasswordReset = async (req, res) => {
     const { resetToken, newPassword, confirmPassword } = req.body;
 
     try {
@@ -409,46 +424,48 @@ exports.completePasswordReset = async (req, res) => {
             return res.status(400).json({ message: 'Password must be at least 6 characters' });
         }
 
-        const secret = process.env.JWT_SECRET || 'fallback_dev_secret_change_in_production';
         let payload;
         try {
-            payload = jwt.verify(resetToken, secret);
+            payload = jwt.verify(
+                resetToken,
+                process.env.JWT_SECRET || 'fallback_dev_secret_change_in_production'
+            );
         } catch {
-            return res.status(400).json({ message: 'Reset session expired. Please start again from the login page.' });
+            return res.status(400).json({
+                message: 'Reset session expired. Start again from Forgot Password.'
+            });
         }
 
-        if (!payload.pwdReset || !payload.email || !payload.userType) {
+        if (payload.purpose !== 'password_reset' || !payload.email || !payload.userType) {
             return res.status(400).json({ message: 'Invalid reset session' });
         }
 
         const salt = await bcrypt.genSalt(10);
-        const hashed = await bcrypt.hash(newPassword, salt);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         if (payload.userType === 'patient') {
             const [result] = await db.execute(
                 'UPDATE patients SET password_hash = ? WHERE email = ?',
-                [hashed, payload.email]
+                [hashedPassword, payload.email]
             );
             if (result.affectedRows === 0) {
-                return res.status(400).json({ message: 'Could not update password' });
+                return res.status(404).json({ message: 'Account not found' });
             }
         } else if (payload.userType === 'doctor') {
             const [result] = await db.execute(
                 'UPDATE doctors SET password_hash = ? WHERE email = ?',
-                [hashed, payload.email]
+                [hashedPassword, payload.email]
             );
             if (result.affectedRows === 0) {
-                return res.status(400).json({ message: 'Could not update password' });
+                return res.status(404).json({ message: 'Account not found' });
             }
         } else {
-            return res.status(400).json({ message: 'Invalid reset session' });
+            return res.status(400).json({ message: 'Invalid account type' });
         }
 
-        await db.execute('DELETE FROM password_reset_otps WHERE email = ?', [payload.email]);
         res.status(200).json({ message: 'Password updated successfully. You can sign in now.' });
     } catch (error) {
-        console.error('completePasswordReset error:', error);
+        console.error('forgotPasswordReset:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
-

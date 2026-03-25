@@ -30,18 +30,6 @@ const resolvePayHereOrderId = (raw) => {
 
 const TERMINAL_PAYMENT_FAIL = ['FAILED', 'CANCELED', 'CHARGEDBACK', 'DUPLICATE'];
 
-function queueReceiptEmail(orderId, patientId) {
-    if (orderId == null || String(orderId).trim() === '') return;
-    const pid = patientId != null ? Number(patientId) : NaN;
-    if (!Number.isFinite(pid)) return;
-    axios
-        .post(`${API_BASE}/api/payment/request-receipt-email`, {
-            order_id: String(orderId).trim(),
-            patient_id: pid
-        })
-        .catch(() => {});
-}
-
 /** Wait until PayHere /notify has written real status — never trust onCompleted alone. */
 async function pollPaymentUntilResolved(orderId) {
     for (let i = 0; i < 28; i++) {
@@ -544,7 +532,6 @@ const PaymentPortal = () => {
                         }
 
                         if (!finOk && polled.appointment_id != null && Number.isFinite(polled.appointment_id)) {
-                            queueReceiptEmail(oid, patientId);
                             sessionStorage.removeItem('pending_appointment');
                             sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/success', {
@@ -565,7 +552,6 @@ const PaymentPortal = () => {
                             return;
                         }
 
-                        queueReceiptEmail(oid, patientId);
                         sessionStorage.removeItem('pending_appointment');
                         sessionStorage.removeItem('payhere_order_ctx');
                         navigate('/ecare/payment/success', {
@@ -581,7 +567,6 @@ const PaymentPortal = () => {
                         console.error('Finalize error', e);
                         const polled = await pollPaymentUntilResolved(oid);
                         if (polled.ok && polled.appointment_id != null) {
-                            queueReceiptEmail(oid, patientId);
                             sessionStorage.removeItem('pending_appointment');
                             sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/success', {
@@ -613,7 +598,6 @@ const PaymentPortal = () => {
                         const status = String(response.data?.status ?? '').toUpperCase();
 
                         if (status === 'SUCCESS') {
-                            queueReceiptEmail(oid, patientId);
                             sessionStorage.removeItem('payhere_order_ctx');
                             navigate('/ecare/payment/success', {
                                 state: {
