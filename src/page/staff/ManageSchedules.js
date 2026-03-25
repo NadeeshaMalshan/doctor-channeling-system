@@ -266,6 +266,7 @@ const ManageSchedules = () => {
                                             <button
                                                 className="action-btn btn-outline"
                                                 onClick={() => handleStatusToggle(schedule.id, schedule.status)}
+                                                style={{ color: '#1a1a8f' }}
                                             >
                                                 Toggle Status
                                             </button>
@@ -320,29 +321,23 @@ const ManageSchedules = () => {
                                         <div className="appointment-item" key={app.id}>
                                             <div className="app-No">
                                                 {/* Use index + 1 to show 1, 2, 3... */}
-                                                <p>No. {index + 1}</p>
+                                                <p>No. {app.booking_queue_no}</p>
                                             </div>
                                             <div className="app-info">
                                                 <h4>{app.first_name} {app.second_name}</h4>
-                                                <p className="app-schedule-no">
-                                                    <strong>Schedule No:</strong> {app.schedule_id ?? selectedScheduleId}
-                                                </p>
                                                 <p>Phone: {app.customer_phone}</p>
                                                 <p>Booked on: {new Date(app.created_at).toLocaleString()}</p>
                                                 <p>
-                                                    <strong>Booking:</strong>{' '}
-                                                    {app.appointment_status ?? '—'}
                                                     {app.payment_id != null && app.payment_id !== ''
-                                                        ? ` · payment #${app.payment_id}`
+                                                        ? `paymentID #${app.payment_id}`
                                                         : ''}
                                                 </p>
                                             </div>
                                             <div className="app-actions">
-                                                <span id='payment'>Payment Status :</span>
-                                                <span className={`status ${app.appointment_payment_status}`}>
-                                                    {app.appointment_payment_status}
+                                                <span id='booking-status'>Booking Status :</span>
+                                                <span className={`status-${app.appointment_status}`}>
+                                                    {app.appointment_status}    
                                                 </span>
-
                                                 <button
                                                     className="btn-danger"
                                                     onClick={() => handleDeleteAppointment(app.id)}
