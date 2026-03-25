@@ -16,7 +16,6 @@ import RefundPayment from './page/staff/RefundPayment';
 import StaffProtectedRoute from './Components/StaffProtectedRoute';
 import CreateSchedule from './page/staff/CreateSchedule';
 import ManageSchedules from './page/staff/ManageSchedules';
-import ScheduleList from './page/ScheduleList';
 import AppointmentForm from './page/AppointmentForm';
 import CustomerSupport from './page/CustomerSupport';
 import HRCustomerSupport from './page/staff/HRCustomerSupport';
@@ -52,7 +51,6 @@ function App() {
           <Route path="/ecare/staff/booking" element={<StaffProtectedRoute element={<BookingManagerDashboard />} allowedRoles={['Booking Manager']} />} />
           <Route path="/schedules/create" element={<StaffProtectedRoute element={<CreateSchedule />} allowedRoles={['Booking Manager']} />} />
           <Route path="/schedules/manage" element={<StaffProtectedRoute element={<ManageSchedules />} allowedRoles={['Booking Manager']} />} />
-          <Route path="/schedules" element={<ScheduleList />} />
           <Route path="/appointments/new/:schedule_id/:doctor_id" element={<AppointmentForm />} />
           <Route path="/ecare/customer-support" element={<CustomerSupport />} />
           <Route path="/ecare/staff/customer-support" element={<StaffProtectedRoute element={<HRCustomerSupport />} allowedRoles={['HR', 'Admin']} />} />

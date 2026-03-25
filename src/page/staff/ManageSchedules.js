@@ -274,6 +274,7 @@ const ManageSchedules = () => {
                                             <button
                                                 className="action-btn btn-primary"
                                                 onClick={() => handleManageApps(schedule.id)}
+                                                style={{ color: '#1a1a8f' }}
                                             >
                                                 Manage Apps
                                             </button>
@@ -337,7 +338,7 @@ const ManageSchedules = () => {
                                             <div className="app-actions">
                                                 <span id='booking-status'>Booking Status :</span>
                                                 <span className={`status-${app.appointment_status}`}>
-                                                    {app.appointment_status}    
+                                                    {app.appointment_status}
                                                 </span>
                                                 <button
                                                     className="btn-danger"

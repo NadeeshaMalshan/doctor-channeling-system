@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS payments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL,
     CONSTRAINT fk_doctor_payments FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL,
-    FOREIGN KEY (appointment_id) REFERENCES appointments(id),
+    CONSTRAINT fk_appointments_payments FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
     FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id),
     UNIQUE KEY uniq_payments_internal_order (internal_order_id)
 );
