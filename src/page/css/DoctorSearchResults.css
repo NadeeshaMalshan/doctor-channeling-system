@@ -711,6 +711,16 @@
 
 .dsr-book-btn-full:hover { background: #E2E8F0; }
 
+.dsr-book-btn-already {
+    background: #6B7280;
+    color: #FFFFFF;
+    cursor: not-allowed;
+}
+
+.dsr-book-btn-already:hover {
+    background: #6B7280;
+}
+
 /* ── Modal ── */
 .dsr-modal-overlay {
     position: fixed;

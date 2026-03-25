@@ -7,7 +7,44 @@ import './css/ScheduleList.css';
 const ScheduleList = () => {
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [patientId, setPatientId] = useState(null);
+    const [bookedScheduleIds, setBookedScheduleIds] = useState(() => new Set());
     const navigate = useNavigate();
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+    useEffect(() => {
+        // Read patient id from localStorage (used for "already booked" validation)
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        try {
+            const userData = JSON.parse(userStr);
+            if (userData?.id != null) setPatientId(Number(userData.id));
+        } catch {
+            // ignore invalid stored user
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!patientId) return;
+        const fetchBookedSchedules = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/appointments/patient/${patientId}`);
+                const data = await res.json();
+                if (!res.ok) return;
+                const booked = (data.data || [])
+                    .filter((a) => {
+                        const st = String(a?.appointment_status || 'added').toLowerCase();
+                        return !['failed', 'cancelled'].includes(st);
+                    })
+                    .map((a) => Number(a.schedule_id))
+                    .filter((n) => Number.isFinite(n));
+                setBookedScheduleIds(new Set(booked));
+            } catch {
+                // if check fails, keep normal behavior (only slot-full disable)
+            }
+        };
+        fetchBookedSchedules();
+    }, [patientId, API_BASE]);
 
     useEffect(() => {
         fetchSchedules();
@@ -15,7 +52,7 @@ const ScheduleList = () => {
 
     const fetchSchedules = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/schedules');
+            const res = await fetch(`${API_BASE}/api/schedules`);
             const data = await res.json();
             if (data.success) {
                 // Filter only active schedules and future dates
@@ -45,7 +82,9 @@ const ScheduleList = () => {
             return;
         }
 
-        navigate(`/appointments/new/${schedule.id}/${schedule.doctor_id}`, { state: { schedule } });
+        navigate(`/appointments/new/${schedule.id}/${schedule.doctor_id}`, {
+            state: { schedule, from: '/schedules' }
+        });
     };
 
     const formatDate = (dateString) => formatScheduleDateLK(dateString);
@@ -91,7 +130,15 @@ const ScheduleList = () => {
                                     </div>
                                 </div>
 
-                                {schedule.booked_count >= schedule.max_patients || schedule.status === 'full' ? (
+                                {bookedScheduleIds.has(Number(schedule.id)) ? (
+                                    <button
+                                        className="book-now-btn"
+                                        style={{ backgroundColor: '#6B7280', cursor: 'not-allowed' }}
+                                        disabled
+                                    >
+                                        ALREADY BOOKED
+                                    </button>
+                                ) : schedule.booked_count >= schedule.max_patients || schedule.status === 'full' ? (
                                     <button
                                         className="book-now-btn"
                                         style={{ backgroundColor: '#6B7280', cursor: 'not-allowed' }}

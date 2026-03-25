@@ -36,6 +36,8 @@ const DoctorSearchResults = () => {
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
     const [error, setError] = useState('');
+    const [patientId, setPatientId] = useState(null);
+    const [bookedScheduleIds, setBookedScheduleIds] = useState(() => new Set());
 
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -44,6 +46,40 @@ const DoctorSearchResults = () => {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [suggestionLoading, setSuggestionLoading] = useState(false);
     const nameWrapperRef = useRef(null);
+
+    // Load patientId for "already booked" validation
+    useEffect(() => {
+        const stored = localStorage.getItem('user');
+        if (!stored) return;
+        try {
+            const u = JSON.parse(stored);
+            if (u?.id != null) setPatientId(Number(u.id));
+        } catch {
+            // ignore invalid stored user
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!patientId) return;
+        const fetchBookedSchedules = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/appointments/patient/${patientId}`);
+                const data = await res.json();
+                if (!res.ok) return;
+                const booked = (data.data || [])
+                    .filter((a) => {
+                        const st = String(a?.appointment_status || 'added').toLowerCase();
+                        return !['failed', 'cancelled'].includes(st);
+                    })
+                    .map((a) => Number(a.schedule_id))
+                    .filter((n) => Number.isFinite(n));
+                setBookedScheduleIds(new Set(booked));
+            } catch {
+                // silent
+            }
+        };
+        fetchBookedSchedules();
+    }, [patientId]);
 
     // Fetch specializations
     useEffect(() => {
@@ -149,7 +185,9 @@ const DoctorSearchResults = () => {
             navigate('/login');
             return;
         }
-        navigate(`/appointments/new/${schedule.id}/${schedule.doctor_id}`, { state: { schedule } });
+        navigate(`/appointments/new/${schedule.id}/${schedule.doctor_id}`, {
+            state: { schedule, from: '/ecare/doctors' }
+        });
     };
 
     const handleSearch = (e) => {
@@ -343,6 +381,7 @@ const DoctorSearchResults = () => {
                                                 ) : (
                                                     doctorSchedules.map(s => {
                                                         const isFull = s.booked_count >= s.max_patients || s.status === 'full';
+                                                        const isAlreadyBooked = bookedScheduleIds.has(Number(s.id));
                                                         const spotsLeft = s.max_patients - s.booked_count;
                                                         return (
                                                             <div key={s.id} className="dsr-schedule-row">
@@ -361,11 +400,13 @@ const DoctorSearchResults = () => {
                                                                     </div>
                                                                 </div>
                                                                 <button
-                                                                    className={`dsr-book-btn ${isFull ? 'dsr-book-btn-full' : ''}`}
-                                                                    onClick={() => !isFull && handleBook(s)}
-                                                                    disabled={isFull}
+                                                                    className={`dsr-book-btn ${
+                                                                        isFull ? 'dsr-book-btn-full' : ''
+                                                                    } ${isAlreadyBooked ? 'dsr-book-btn-already' : ''}`}
+                                                                    onClick={() => !(isFull || isAlreadyBooked) && handleBook(s)}
+                                                                    disabled={isFull || isAlreadyBooked}
                                                                 >
-                                                                    {isFull ? 'Full' : 'Book'}
+                                                                    {isAlreadyBooked ? 'Already Booked' : (isFull ? 'Full' : 'Book')}
                                                                 </button>
                                                             </div>
                                                         );

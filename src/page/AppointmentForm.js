@@ -21,6 +21,13 @@ const AppointmentForm = () => {
     const [patient, setPatient] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isAlreadyBooked, setIsAlreadyBooked] = useState(false);
+    const [bookedCheckLoading, setBookedCheckLoading] = useState(false);
+
+    const cancelDestination =
+        typeof location.state?.from === 'string' && location.state?.from.trim() !== ''
+            ? location.state.from
+            : '/ecare/doctors';
 
     useEffect(() => {
         const userStr = localStorage.getItem('user');
@@ -54,6 +61,11 @@ const AppointmentForm = () => {
     }, [navigate, schedule_id, location.state?.schedule]);
 
     const handleConfirm = async () => {
+        if (isAlreadyBooked) {
+            setError('You have already booked this appointment schedule. Please choose another slot.');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
@@ -128,6 +140,38 @@ const AppointmentForm = () => {
             ((Number(scheduleDetails.max_patients) || 0) > 0 &&
                 (Number(scheduleDetails.booked_count) || 0) >= Number(scheduleDetails.max_patients)));
 
+    useEffect(() => {
+        if (!patient || !schedule_id) return;
+        let cancelled = false;
+
+        const run = async () => {
+            setBookedCheckLoading(true);
+            try {
+                const res = await fetch(`${API_BASE}/api/appointments/patient/${patient.id}`);
+                const data = await res.json();
+                if (!res.ok || cancelled) return;
+
+                const targetScheduleId = Number(schedule_id);
+                const booked = (data.data || []).some((a) => {
+                    const st = String(a?.appointment_status || 'added').toLowerCase();
+                    if (['failed', 'cancelled'].includes(st)) return false;
+                    return Number(a.schedule_id) === targetScheduleId;
+                });
+
+                setIsAlreadyBooked(booked);
+            } catch {
+                // ignore (keep existing disabled state based on schedule full only)
+            } finally {
+                if (!cancelled) setBookedCheckLoading(false);
+            }
+        };
+
+        run();
+        return () => {
+            cancelled = true;
+        };
+    }, [patient, schedule_id]);
+
     return (
         <div className="appointment-form-page">
             <ECareNavBar />
@@ -181,6 +225,22 @@ const AppointmentForm = () => {
                                 }}
                             >
                                 This schedule is full (all slots booked). Please pick another time.
+                            </div>
+                        )}
+
+                        {isAlreadyBooked && !bookedCheckLoading && (
+                            <div
+                                style={{
+                                    background: '#E5E7EB',
+                                    color: '#374151',
+                                    padding: '15px',
+                                    borderRadius: '8px',
+                                    marginBottom: '20px',
+                                    textAlign: 'center',
+                                    fontWeight: 700
+                                }}
+                            >
+                                Already booked this schedule. Please choose another slot.
                             </div>
                         )}
 
@@ -250,13 +310,20 @@ const AppointmentForm = () => {
                         </div>
 
                         <div className="form-actions">
-                            <button className="btn-cancel" onClick={() => navigate('/schedules')}>
+                            <button className="btn-cancel" onClick={() => navigate(cancelDestination)}>
                                 Cancel
                             </button>
                             <button
                                 className="btn-confirm"
                                 onClick={handleConfirm}
-                                disabled={loading || !scheduleDetails || !patient || scheduleIsFull}
+                                disabled={
+                                    loading ||
+                                    bookedCheckLoading ||
+                                    !scheduleDetails ||
+                                    !patient ||
+                                    scheduleIsFull ||
+                                    isAlreadyBooked
+                                }
                             >
                                 {loading ? 'Processing...' : 'Proceed to Payment'}
                             </button>
