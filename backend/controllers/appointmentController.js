@@ -319,7 +319,7 @@ exports.getAppointmentsBySchedule = async (req, res) => {
                        ELSE 'pending'
                    END AS appointment_payment_status
             FROM appointments a
-            JOIN patients p ON a.patient_ID = p.id
+            LEFT JOIN patients p ON a.patient_ID = p.id
             WHERE a.schedule_id = ?
             ORDER BY a.created_at ASC
         `, [schedule_id]);

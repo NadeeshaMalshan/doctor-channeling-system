@@ -59,20 +59,20 @@ CREATE TABLE IF NOT EXISTS appointments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     schedule_id INT NOT NULL,
     doctor_id INT NOT NULL,
-    patient_ID INT NOT NULL,
+    patient_ID INT NULL,
     booking_queue_no INT NOT NULL,
     appointment_status ENUM('added', 'failed', 'cancelled') NOT NULL DEFAULT 'added',
     payment_id INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (schedule_id) REFERENCES appointment_schedules(id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_ID) REFERENCES patients(id) ON DELETE SET NULL,
     KEY idx_appointments_schedule_id (schedule_id)
 );
 
 CREATE TABLE IF NOT EXISTS support_tickets (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    patient_id INT NOT NULL,
+    patient_id INT NULL,
     patient_name VARCHAR(200) NOT NULL,
     patient_email VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS support_tickets (
     is_deleted TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id)
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL
 );
 
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS doc_availability_slots (
 CREATE TABLE IF NOT EXISTS payments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     internal_order_id VARCHAR(50) NOT NULL,
-    patient_id INT NOT NULL,
+    patient_id INT NULL,
     doctor_id INT NOT NULL,
     appointment_schedule_id INT NOT NULL,
     appointment_id INT DEFAULT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_status VARCHAR(20) DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id),
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL,
     FOREIGN KEY (doctor_id) REFERENCES doctors(id),
     FOREIGN KEY (appointment_id) REFERENCES appointments(id),
     FOREIGN KEY (appointment_schedule_id) REFERENCES appointment_schedules(id),
@@ -127,7 +127,7 @@ ALTER TABLE appointments
 CREATE TABLE IF NOT EXISTS refund_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     appointment_id INT NOT NULL,
-    patient_id INT NOT NULL,
+    patient_id INT NULL,
     payment_id INT NULL,
     internal_order_id VARCHAR(50) NOT NULL,
     status ENUM('pending', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS refund_requests (
     CONSTRAINT fk_refund_requests_appointment
         FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
     CONSTRAINT fk_refund_requests_patient
-        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL,
     CONSTRAINT fk_refund_requests_payment
         FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL
 );

@@ -661,7 +661,7 @@ exports.getAllPaymentsForCashier = async (req, res) => {
     const baseSelect = `
             SELECT
                 p.appointment_id,
-                CONCAT(pt.first_name, ' ', pt.second_name) AS patient_name,
+                NULLIF(TRIM(CONCAT(COALESCE(pt.first_name, ''), ' ', COALESCE(pt.second_name, ''))), '') AS patient_name,
                 d.name AS doctor_name,
                 p.internal_order_id AS transaction_id,
                 p.payment_method,
@@ -670,7 +670,7 @@ exports.getAllPaymentsForCashier = async (req, res) => {
                 p.card_last_digits,
                 p.created_at
             FROM payments p
-            JOIN patients pt ON p.patient_id = pt.id
+            LEFT JOIN patients pt ON p.patient_id = pt.id
             LEFT JOIN doctors d ON p.doctor_id = d.id
             ORDER BY p.created_at DESC`;
 
@@ -678,7 +678,7 @@ exports.getAllPaymentsForCashier = async (req, res) => {
         const [rows] = await db.execute(`
             SELECT
                 p.appointment_id,
-                CONCAT(pt.first_name, ' ', pt.second_name) AS patient_name,
+                NULLIF(TRIM(CONCAT(COALESCE(pt.first_name, ''), ' ', COALESCE(pt.second_name, ''))), '') AS patient_name,
                 d.name AS doctor_name,
                 p.internal_order_id AS transaction_id,
                 p.payment_method,
@@ -692,7 +692,7 @@ exports.getAllPaymentsForCashier = async (req, res) => {
                       AND rr.status = 'pending'
                 ) AS pending_refund_request
             FROM payments p
-            JOIN patients pt ON p.patient_id = pt.id
+            LEFT JOIN patients pt ON p.patient_id = pt.id
             LEFT JOIN doctors d ON p.doctor_id = d.id
             ORDER BY p.created_at DESC
             `);

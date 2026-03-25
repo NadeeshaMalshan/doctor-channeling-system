@@ -159,11 +159,9 @@ exports.deleteProfile = async (req, res) => {
             }
         }
 
-        // Delete associated records first to satisfy foreign key constraints.
-        // Without this, MySQL will block deleting the parent `patients` row.
-
-        await db.execute('DELETE FROM payments WHERE patient_id = ?', [parseInt(id)]);
-        await db.execute('DELETE FROM support_tickets WHERE patient_id = ?', [parseInt(id)]);
+        // Option 2: keep related records in other tables.
+        // The DB foreign keys should be configured with `ON DELETE SET NULL`
+        // so deleting the patient doesn't delete history rows.
         const [result] = await db.execute('DELETE FROM patients WHERE id = ?', [parseInt(id)]);
 
         if (result.affectedRows === 0) {

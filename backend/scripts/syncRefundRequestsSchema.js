@@ -25,7 +25,7 @@ async function main() {
         CREATE TABLE refund_requests (
             id INT AUTO_INCREMENT PRIMARY KEY,
             appointment_id INT NOT NULL,
-            patient_id INT NOT NULL,
+            patient_id INT NULL,
             payment_id INT NULL,
             internal_order_id VARCHAR(50) NOT NULL,
             status ENUM('pending', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
@@ -36,7 +36,7 @@ async function main() {
             CONSTRAINT fk_refund_requests_appointment
                 FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
             CONSTRAINT fk_refund_requests_patient
-                FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+                FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE SET NULL,
             CONSTRAINT fk_refund_requests_payment
                 FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL
         )

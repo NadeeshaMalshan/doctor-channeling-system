@@ -143,7 +143,7 @@ exports.listPendingRefundRequests = async (req, res) => {
                 rr.internal_order_id,
                 rr.requested_at,
                 rr.status,
-                CONCAT(TRIM(pt.first_name), ' ', TRIM(pt.second_name)) AS patient_name,
+                NULLIF(TRIM(CONCAT(COALESCE(pt.first_name, ''), ' ', COALESCE(pt.second_name, ''))), '') AS patient_name,
                 pt.phone AS patient_phone,
                 pt.email AS patient_email,
                 d.name AS doctor_name,
@@ -151,7 +151,7 @@ exports.listPendingRefundRequests = async (req, res) => {
                 s.schedule_date,
                 s.start_time
             FROM refund_requests rr
-            JOIN patients pt ON pt.id = rr.patient_id
+            LEFT JOIN patients pt ON pt.id = rr.patient_id
             JOIN appointments a ON a.id = rr.appointment_id
             JOIN appointment_schedules s ON s.id = a.schedule_id
             JOIN doctors d ON d.id = a.doctor_id
@@ -186,7 +186,7 @@ exports.listAllRefundRequests = async (req, res) => {
                 rr.requested_at,
                 rr.resolved_at,
                 rr.status,
-                CONCAT(TRIM(pt.first_name), ' ', TRIM(pt.second_name)) AS patient_name,
+                NULLIF(TRIM(CONCAT(COALESCE(pt.first_name, ''), ' ', COALESCE(pt.second_name, ''))), '') AS patient_name,
                 pt.phone AS patient_phone,
                 pt.email AS patient_email,
                 d.name AS doctor_name,
@@ -194,7 +194,7 @@ exports.listAllRefundRequests = async (req, res) => {
                 s.schedule_date,
                 s.start_time
             FROM refund_requests rr
-            JOIN patients pt ON pt.id = rr.patient_id
+            LEFT JOIN patients pt ON pt.id = rr.patient_id
             JOIN appointments a ON a.id = rr.appointment_id
             JOIN appointment_schedules s ON s.id = a.schedule_id
             JOIN doctors d ON d.id = a.doctor_id
