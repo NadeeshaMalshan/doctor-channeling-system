@@ -161,6 +161,7 @@ const CashierDashboard = () => {
         setModal({ open: false, type: '', data: null });
     };
 
+    
     const closeModal = () => setModal({ open: false, type: '', data: null });
     const filterTabs = ['ALL', 'SUCCESS', 'PENDING', 'REFUNDED', 'FAILED'];
     const handleLogout = () => {

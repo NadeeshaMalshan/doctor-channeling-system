@@ -29,7 +29,7 @@ const resolvePayHereOrderId = (raw) => {
 
 const TERMINAL_PAYMENT_FAIL = ['FAILED', 'CANCELED', 'CHARGEDBACK', 'DUPLICATE'];
 
-/** Wait until PayHere /notify has written real status — never trust onCompleted alone. */
+//load until payhere notify has written real status
 async function pollPaymentUntilResolved(orderId) {
     for (let i = 0; i < 28; i++) {
         try {
@@ -152,7 +152,7 @@ const PaymentPortal = () => {
     const appointmentIdFromBooking = idFromUrl || idFromState || idFromStorage;
 
 
-
+            //validate appointment, user for payment portal
     useEffect(() => {
         document.title = "Payment Portal";
 
@@ -257,7 +257,7 @@ const PaymentPortal = () => {
             </div>
         );
     }
-
+    //validate user for payment portal
     if (error === 'not_logged_in' || !user) {
         return (
             <>
@@ -276,7 +276,7 @@ const PaymentPortal = () => {
             </>
         );
     }
-
+    //validate appointment for payment portal
     if (error === 'no_appointment') {
         return (
             <>
@@ -315,6 +315,8 @@ const PaymentPortal = () => {
         );
     }
 
+    //time format design
+
     const formatScheduleDateTime = (scheduleDate, startTime) => {
         try {
             const raw = scheduleDate ? String(scheduleDate).split('T')[0] : '';
@@ -325,6 +327,8 @@ const PaymentPortal = () => {
             return `${scheduleDate} ${startTime || ''}`;
         }
     };
+
+    //names and appointment details
 
     const apiApptId = details.appointment_id;
     const resolvedAppointmentId =
@@ -354,10 +358,11 @@ const PaymentPortal = () => {
         serviceCharge,
         totalAmount: channelingFee + serviceCharge,
     };
-
+    //payhere payment button
     const handlePayHereClick = async () => {
         let paymentID = '';
         const pendingItem = sessionStorage.getItem('pending_appointment');
+        //validate patient id for payment portal
         if (pendingItem) {
             if (patientId == null || String(patientId).trim() === '') {
                 alert('Please log in again before paying.');
@@ -365,6 +370,7 @@ const PaymentPortal = () => {
             }
             paymentID = 'ORD' + appointmentScheduleId + '_' + patientId + '_' + Date.now();
         } else {
+            //validate appointment id for payment portal
             const appointmentID = paymentData.appointmentId;
             if (appointmentID == null || appointmentID === '') {
                 alert('Appointment number is missing. Please complete your booking again from the appointment page.');
@@ -372,6 +378,7 @@ const PaymentPortal = () => {
             }
             paymentID = 'ORD' + appointmentID + '_' + Date.now();
         }
+        //validate amount for payment portal
         const amount = paymentData.totalAmount;
         const currency = 'LKR';
 
@@ -381,8 +388,9 @@ const PaymentPortal = () => {
             alert('PayHere script failed to load. Refresh the page or check your internet connection.');
             return;
         }
-
+        //validate payhere script for payment portal
         try {
+            //validate appointment schedule id for payment portal
             const payQs = new URLSearchParams();
             if (appointmentScheduleId) payQs.set('appointment_schedule_id', String(appointmentScheduleId));
             if (paymentData.appointmentId != null && paymentData.appointmentId !== '') {
@@ -404,7 +412,9 @@ const PaymentPortal = () => {
             );
             const { hash, merchantID } = hashResponse.data;
 
+            //validate pending item for payment portal
             if (!pendingItem) {
+                //validate reserve checkout for payment portal
                 const reserveRes = await axios.post(
                     `${API_BASE}/api/payment/reserve-checkout`,
                     {
@@ -421,6 +431,7 @@ const PaymentPortal = () => {
                 }
             }
 
+            //validate payhere order context for payment portal
             try {
                 sessionStorage.setItem(
                     'payhere_order_ctx',
@@ -464,7 +475,7 @@ const PaymentPortal = () => {
                     navigate('/ecare/payment/failed');
                     return;
                 }
-
+                //validate pending item for payment portal
                 let pendingItemStr = sessionStorage.getItem('pending_appointment');
                 if (!pendingItemStr) {
                     try {
@@ -479,17 +490,21 @@ const PaymentPortal = () => {
                         /* ignore */
                     }
                 }
+                //validate pending data for payment portal
                 if (pendingItemStr) {
                     let pendingData;
                     try {
+                        //validate pending data for payment portal
                         pendingData = JSON.parse(pendingItemStr);
                     } catch (e) {
+                        //validate invalid pending data for payment portal
                         console.error('Invalid pending_appointment', e);
                         navigate('/ecare/payment/failed');
                         return;
                     }
 
                     try {
+                        //validate poll payment until resolved for payment portal
                         const polled = await pollPaymentUntilResolved(oid);
                         if (!polled.ok) {
                             sessionStorage.removeItem('payhere_order_ctx');
@@ -497,6 +512,7 @@ const PaymentPortal = () => {
                             return;
                         }
 
+                        //validate finalize appointment for payment portal
                         const finalizeRes = await axios.post(
                             `${API_BASE}/api/appointments/finalize`,
                             {
@@ -561,6 +577,7 @@ const PaymentPortal = () => {
                             }
                         });
                     } catch (e) {
+                        //validate finalize error for payment portal
                         console.error('Finalize error', e);
                         const polled = await pollPaymentUntilResolved(oid);
                         if (polled.ok && polled.appointment_id != null) {
