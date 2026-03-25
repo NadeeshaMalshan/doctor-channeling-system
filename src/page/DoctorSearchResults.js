@@ -434,12 +434,7 @@ const DoctorSearchResults = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="dsr-modal-footer">
-                            <button className="dsr-modal-book-btn" onClick={() => navigate('/schedules')}>
-                                <span className="material-symbols-outlined">event_available</span>
-                                Book Appointment Now
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             )}

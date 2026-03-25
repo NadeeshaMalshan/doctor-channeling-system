@@ -299,12 +299,7 @@ const ECare = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="dsr-modal-footer">
-                            <button className="dsr-modal-book-btn" onClick={() => navigate('/ecare/doctors')}>
-                                <span className="material-symbols-outlined">event_available</span>
-                                View Schedules & Book
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             )}
