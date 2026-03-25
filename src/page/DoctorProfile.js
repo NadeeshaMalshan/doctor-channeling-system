@@ -95,6 +95,22 @@ const DoctorProfile = () => {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+
+        if (!/^[A-Za-z\s-]+$/.test(formData.name)) {
+            alert('Doctor name can only contain letters, spaces, and hyphens');
+            return;
+        }
+
+        if (!/^[A-Za-z\s-]+$/.test(formData.specialization)) {
+            alert('Specialization can only contain letters, spaces, and hyphens');
+            return;
+        }
+
+        if (!/^0\d{9}$/.test(formData.phone)) {
+            alert('Phone number must start with 0 and be exactly 10 digits long');
+            return;
+        }
+
         try {
             await axios.put(`http://localhost:5000/api/auth/doctor/${doctorInfo.id}`, formData);
             alert('Profile updated successfully!');
