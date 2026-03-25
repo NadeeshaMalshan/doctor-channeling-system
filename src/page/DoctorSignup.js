@@ -34,8 +34,17 @@ const DoctorSignup = () => {
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.doctorName.trim()) newErrors.doctorName = 'Doctor name is required';
-        if (!formData.specialization.trim()) newErrors.specialization = 'Specialization is required';
+        if (!formData.doctorName.trim()) {
+            newErrors.doctorName = 'Doctor name is required';
+        } else if (!/^[A-Za-z\s-]+$/.test(formData.doctorName)) {
+            newErrors.doctorName = 'Doctor name can only contain letters, spaces, and hyphens';
+        }
+
+        if (!formData.specialization.trim()) {
+            newErrors.specialization = 'Specialization is required';
+        } else if (!/^[A-Za-z\s-]+$/.test(formData.specialization)) {
+            newErrors.specialization = 'Specialization can only contain letters, spaces, and hyphens';
+        }
         if (!formData.slmcId.trim()) newErrors.slmcId = 'SLMC ID is required';
 
         // Email Validation

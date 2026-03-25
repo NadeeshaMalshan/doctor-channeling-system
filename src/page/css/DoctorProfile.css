@@ -245,7 +245,7 @@
 }
 
 .input-with-currency input {
-    padding-left: 50px;
+    padding-left: 55px !important;
     width: 100%;
 }
 
