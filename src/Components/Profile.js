@@ -166,8 +166,13 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
         <div className="profile-overlay">
             <div className="profile-modal">
                 <div className="profile-header">
-                    <h2>Your Profile</h2>
-                    <button className="close-btn" onClick={onClose}>&times;</button>
+                    <div className="header-title">
+                        <span className="material-symbols-outlined header-icon">account_circle</span>
+                        <h2>Your Profile</h2>
+                    </div>
+                    <button className="close-btn" onClick={onClose}>
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
                 </div>
 
                 <div className="profile-content">
@@ -180,14 +185,13 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
                                 <img src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${patient.profile_photo}`} alt="Profile" />
                             ) : (
                                 <div className="avatar-placeholder">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                    </svg>
+                                    <span className="material-symbols-outlined">person</span>
                                 </div>
                             )}
                         </div>
                         <div className="photo-actions">
                             <label className="upload-btn">
+                                <span className="material-symbols-outlined">camera_alt</span>
                                 {uploading ? 'Uploading...' : 'Change Photo'}
                                 <input type="file" onChange={handlePhotoUpload} accept="image/*" hidden />
                             </label>
@@ -196,7 +200,10 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
 
                     <form className="profile-form" onSubmit={handleUpdate}>
                         <div className="form-group">
-                            <label>First Name</label>
+                            <div className="label-with-icon">
+                                <span className="material-symbols-outlined field-icon">person</span>
+                                <label>First Name</label>
+                            </div>
                             <input
                                 type="text"
                                 name="firstName"
@@ -207,7 +214,10 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Second Name</label>
+                            <div className="label-with-icon">
+                                <span className="material-symbols-outlined field-icon">person_book</span>
+                                <label>Second Name</label>
+                            </div>
                             <input
                                 type="text"
                                 name="secondName"
@@ -218,15 +228,32 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Email (Cannot be changed)</label>
+                            <div className="label-with-icon">
+                                <span className="material-symbols-outlined field-icon">mail</span>
+                                <label>Email</label>
+                                <span className="badge-readonly">
+                                    <span className="material-symbols-outlined">lock</span>
+                                    Cannot be changed
+                                </span>
+                            </div>
                             <input type="email" value={patient?.email || ''} disabled className="readonly-input" />
                         </div>
                         <div className="form-group">
-                            <label>NIC (Cannot be changed)</label>
+                            <div className="label-with-icon">
+                                <span className="material-symbols-outlined field-icon">badge</span>
+                                <label>NIC</label>
+                                <span className="badge-readonly">
+                                    <span className="material-symbols-outlined">lock</span>
+                                    Cannot be changed
+                                </span>
+                            </div>
                             <input type="text" value={patient?.nic || ''} disabled className="readonly-input" />
                         </div>
                         <div className="form-group">
-                            <label>Phone</label>
+                            <div className="label-with-icon">
+                                <span className="material-symbols-outlined field-icon">call</span>
+                                <label>Phone</label>
+                            </div>
                             <input
                                 type="tel"
                                 name="phone"
@@ -239,10 +266,16 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
 
                         <div className="profile-actions">
                             {!editMode ? (
-                                <button type="button" className="edit-btn" onClick={() => setEditMode(true)}>Edit Profile</button>
+                                <button type="button" className="edit-profile-btn" onClick={() => setEditMode(true)}>
+                                    <span className="material-symbols-outlined">edit</span>
+                                    Edit Profile
+                                </button>
                             ) : (
                                 <div className="edit-actions">
-                                    <button type="submit" className="save-btn">Save Changes</button>
+                                    <button type="submit" className="save-btn">
+                                        <span className="material-symbols-outlined">check</span>
+                                        Save Changes
+                                    </button>
                                     <button type="button" className="cancel-btn" onClick={() => {
                                         setEditMode(false);
                                         setFormData({
@@ -250,16 +283,25 @@ const Profile = ({ patientId, onClose, onUpdate }) => {
                                             secondName: patient.second_name,
                                             phone: patient.phone
                                         });
-                                    }}>Cancel</button>
+                                    }}>
+                                        <span className="material-symbols-outlined">close</span>
+                                        Cancel
+                                    </button>
                                 </div>
                             )}
                         </div>
                     </form>
 
                     <div className="danger-zone">
-                        <h3>Danger Zone</h3>
+                        <div className="danger-header">
+                            <span className="material-symbols-outlined">warning</span>
+                            <h3>Danger Zone</h3>
+                        </div>
                         <p>Once you delete your account, there is no going back. Please be certain.</p>
-                        <button className="delete-account-btn" onClick={() => setShowDeleteConfirm(true)}>Delete My Account</button>
+                        <button className="delete-account-btn" onClick={() => setShowDeleteConfirm(true)}>
+                            <span className="material-symbols-outlined">delete</span>
+                            Delete My Account
+                        </button>
                     </div>
                 </div>
             </div>

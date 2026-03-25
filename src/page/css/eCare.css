@@ -240,14 +240,212 @@
     align-items: center;
     gap: 6px;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 16px;
     font-style: italic;
+    font-weight: 600;
 }
 
 .ai-card-disclaimer .material-symbols-outlined {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.45);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 1);
+    font-weight: bold;
+}
+
+.view-more-container {
+    margin-top: 32px;
+    text-align: center;
+    width: 100%;
+}
+
+.view-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #FFFFFF;
+    color: #1E3A5F;
+    border: 2px solid #1E3A5F;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.1);
+}
+
+.view-more-btn:hover {
+    background: #1E3A5F;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(30, 58, 95, 0.2);
+}
+
+.view-more-btn .material-symbols-outlined {
+    font-size: 18px;
+    transition: transform 0.2s ease;
+}
+
+.view-more-btn:hover .material-symbols-outlined {
+    transform: translateX(4px);
+}
+
+/* ── Modal (Ported from Search Results) ── */
+.dsr-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.dsr-modal {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.dsr-modal-header {
+    padding: 20px 24px;
+    background: #F8FAFC;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.dsr-modal-header h3 {
+    margin: 0;
+    color: #1E3A5F;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.dsr-modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #94A3B8;
+    transition: color 0.15s;
+    padding: 4px;
+}
+
+.dsr-modal-close:hover { color: #B91C1C; }
+
+.dsr-modal-body {
+    padding: 28px;
+    display: flex;
+    gap: 24px;
+}
+
+.dsr-modal-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 14px;
+    background: #1E3A5F;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dsr-modal-avatar .material-symbols-outlined {
+    font-size: 44px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.dsr-modal-info { flex: 1; }
+
+.dsr-modal-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0F172A;
+    margin: 0 0 6px;
+}
+
+.dsr-modal-spec {
+    display: inline-block;
+    background: #DCFCE7;
+    color: #15803D;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 11px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dsr-modal-details { display: flex; flex-direction: column; gap: 14px; }
+
+.dsr-modal-row { display: flex; flex-direction: column; gap: 4px; }
+
+.dsr-modal-row strong {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #64748B;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+
+.dsr-modal-row span {
+    color: #1E293B;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.dsr-modal-fee {
+    color: #2563EB !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+}
+
+.dsr-modal-footer {
+    padding: 20px 24px;
+    background: #F8FAFC;
+    border-top: 1px solid #F1F5F9;
+}
+
+.dsr-modal-book-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: #1E3A5F;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dsr-modal-book-btn:hover {
+    background: #2D4E7A;
+    transform: translateY(-1px);
 }
 
 .ai-card-btn {

@@ -55,16 +55,12 @@ const ECareNavBar = () => {
 
     const handleProfileClick = () => {
         setIsDropdownOpen(false);
-        if (window.showPatientProfile) {
-            window.showPatientProfile();
-        }
+        window.dispatchEvent(new CustomEvent('openPatientProfile'));
     };
 
     const handleHistoryClick = () => {
         setIsDropdownOpen(false);
-        if (window.showAppointmentHistory) {
-            window.showAppointmentHistory();
-        }
+        window.dispatchEvent(new CustomEvent('openAppointmentHistory'));
     };
 
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);

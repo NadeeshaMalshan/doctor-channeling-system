@@ -541,7 +541,7 @@
     padding: 4px;
     display: flex;
     align-items: center;
-    color: #94A3B8;
+    color: #64748B;
     margin-left: auto;
     transition: color 0.15s;
     flex-shrink: 0;
@@ -576,11 +576,11 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #94A3B8;
+    color: #475569;
     margin-bottom: 8px;
 }
 
@@ -588,7 +588,7 @@
     font-family: 'Material Symbols Outlined';
     font-weight: normal;
     font-style: normal;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1;
     letter-spacing: normal;
     text-transform: none;
@@ -599,6 +599,7 @@
     -webkit-font-feature-settings: 'liga';
     font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
+    color: #475569;
 }
 
 .dsr-no-schedules {
@@ -606,7 +607,8 @@
     align-items: center;
     gap: 6px;
     font-size: 11px;
-    color: #CBD5E1;
+    font-weight: 600;
+    color: #475569;
     padding: 8px 0;
 }
 
@@ -625,6 +627,7 @@
     -webkit-font-feature-settings: 'liga';
     font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
+    color: #475569;
 }
 
 .dsr-schedule-row {
@@ -903,6 +906,47 @@
 
 .dsr-modal-book-btn:hover { background: #1D4ED8; }
 
+.dsr-bottom-disclaimer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 40px;
+    padding: 16px;
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 10px;
+    color: #1E3A5F;
+    font-size: 12px;
+    font-weight: 700; /* Bold as requested */
+}
+
+.dsr-bottom-disclaimer .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: 900; /* Extra bold for visibility */
+    font-style: normal;
+    font-size: 20px;
+    color: #2563EB;
+}
+
+.dsr-bottom-disclaimer p {
+    margin: 0;
+}
+
+/* ── Footer ── */
+.ecare-footer {
+    background: #1E3A5F;
+    padding: 24px 40px;
+    text-align: center;
+    margin-top: 50px;
+}
+
+.ecare-footer p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    margin: 0;
+}
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
     .dsr-cards-grid { grid-template-columns: 1fr; }
@@ -914,4 +958,5 @@
     .dsr-search-btn { width: 100%; justify-content: center; }
     .dsr-cards-grid { grid-template-columns: 1fr; }
     .dsr-modal-body { flex-direction: column; align-items: center; padding: 20px; }
+    .dsr-bottom-disclaimer { flex-direction: column; text-align: center; gap: 6px; }
 }

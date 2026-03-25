@@ -30,11 +30,12 @@ import DoctorSearchResults from './page/DoctorSearchResults';
 import DoctorProfile from './page/DoctorProfile';
 import DoctorPending from './page/DoctorPending';
 import DoctorReject from './page/DoctorReject';
+import GlobalModals from './Components/GlobalModals';
 
 function App() {
   return (
     <>
-
+      <GlobalModals />
       <div className="App">
         <Routes>
           <Route path="/" element={<Landing />} />
