@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ECareNavBar from '../Components/eCareNavBar';
 import ChannelDoctor from '../Components/ChannelDoctor';
-import Profile from '../Components/Profile';
-import AppointmentHistory from '../Components/AppointmentHistory';
 
 
 import './css/eCare.css';
@@ -15,10 +13,10 @@ const ECare = () => {
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showProfile, setShowProfile] = useState(false);
-    const [showAppointmentHistory, setShowAppointmentHistory] = useState(false);
     const [patientUser, setPatientUser] = useState(null);
     const [hasSupportUpdates, setHasSupportUpdates] = useState(false);
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     // Get patient user from local storage
     useEffect(() => {
@@ -26,16 +24,6 @@ const ECare = () => {
         if (storedUser) {
             setPatientUser(JSON.parse(storedUser));
         }
-    }, []);
-
-    // Expose show profile function to window for Navbar access
-    useEffect(() => {
-        window.showPatientProfile = () => setShowProfile(true);
-        window.showAppointmentHistory = () => setShowAppointmentHistory(true);
-        return () => { 
-            window.showPatientProfile = null; 
-            window.showAppointmentHistory = null;
-        };
     }, []);
 
     const handleProfileUpdate = (updatedUser) => {
@@ -107,24 +95,19 @@ const ECare = () => {
         // Handle search logic here
     };
 
+    const handleViewInfo = (doctor) => { 
+        setSelectedDoctor(doctor); 
+        setShowModal(true); 
+    };
+
+    const closeModal = () => { 
+        setShowModal(false); 
+        setSelectedDoctor(null); 
+    };
+
     return (
         <div className="ecare-page">
             <ECareNavBar />
-
-            {showProfile && patientUser && (
-                <Profile
-                    patientId={patientUser.id}
-                    onClose={() => setShowProfile(false)}
-                    onUpdate={handleProfileUpdate}
-                />
-            )}
-
-            {showAppointmentHistory && patientUser && (
-                <AppointmentHistory
-                    patientId={patientUser.id}
-                    onClose={() => setShowAppointmentHistory(false)}
-                />
-            )}
 
 
             <main className="ecare-main">
@@ -236,8 +219,9 @@ const ECare = () => {
                             <p>No doctors available at the moment.</p>
                         </div>
                     ) : (
-                        <div className="doctors-grid">
-                            {doctors.map((doctor) => (
+                        <div className="doctors-container">
+                            <div className="doctors-grid">
+                                {doctors.slice(0, 3).map((doctor) => (
                                 <div className="ecare-doctor-card" key={doctor.id}>
                                     <div className="doctor-card-header">
                                         <div className="doctor-avatar">
@@ -262,14 +246,68 @@ const ECare = () => {
                                         <div className="availability-badge available">
                                             Available
                                         </div>
-                                        <button className="viewInfo-btn">View info</button>
+                                        <button className="viewInfo-btn" onClick={() => handleViewInfo(doctor)}>View info</button>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    )}
+                        <div className="view-more-container">
+                            <button className="view-more-btn" onClick={() => navigate('/ecare/doctors')}>
+                                View More Doctors
+                                <span className="material-symbols-outlined">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
                 </section>
             </main>
+
+            {/* Doctor Info Modal */}
+            {showModal && selectedDoctor && (
+                <div className="dsr-modal-overlay" onClick={closeModal}>
+                    <div className="dsr-modal" onClick={e => e.stopPropagation()}>
+                        <div className="dsr-modal-header">
+                            <h3>Doctor Information</h3>
+                            <button className="dsr-modal-close" onClick={closeModal}>
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="dsr-modal-body">
+                            <div className="dsr-modal-avatar">
+                                <span className="material-symbols-outlined">person</span>
+                            </div>
+                            <div className="dsr-modal-info">
+                                <h4 className="dsr-modal-name">Dr. {selectedDoctor.name}</h4>
+                                <span className="dsr-modal-spec">{selectedDoctor.specialization}</span>
+                                <div className="dsr-modal-details">
+                                    <div className="dsr-modal-row">
+                                        <strong>Hospital</strong>
+                                        <span>{selectedDoctor.hospital || 'Narammala Channeling Center'}</span>
+                                    </div>
+                                    <div className="dsr-modal-row">
+                                        <strong>Phone</strong>
+                                        <span>{selectedDoctor.phone || 'Not Specified'}</span>
+                                    </div>
+                                    <div className="dsr-modal-row">
+                                        <strong>Email</strong>
+                                        <span>{selectedDoctor.email || 'Not Specified'}</span>
+                                    </div>
+                                    <div className="dsr-modal-row">
+                                        <strong>Consulting Fee</strong>
+                                        <span className="dsr-modal-fee">Rs. {selectedDoctor.consulting_fee || '1500.00'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="dsr-modal-footer">
+                            <button className="dsr-modal-book-btn" onClick={() => navigate('/ecare/doctors')}>
+                                <span className="material-symbols-outlined">event_available</span>
+                                View Schedules & Book
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Sticky Support Button */}
             <div className="ecare-support-btn" title="Contact Support" onClick={() => navigate('/ecare/customer-support')}>

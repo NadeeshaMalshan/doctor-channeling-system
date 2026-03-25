@@ -382,7 +382,20 @@ const DoctorSearchResults = () => {
                         )}
                     </>
                 )}
+
+                {/* Search Disclaimer at Bottom */}
+                <div className="dsr-bottom-disclaimer">
+                    <span className="material-symbols-outlined">info</span>
+                    <p>Search results are based on real-time availability. Always confirm with the channeling center for urgent matters.</p>
+                </div>
             </div>
+
+            {/* Footer */}
+            <footer className="ecare-footer">
+                <div className="footer-content">
+                    <p>&copy; 2026 NCC eCare - Narammala Channeling Center. All rights reserved.</p>
+                </div>
+            </footer>
 
             {/* Doctor Info Modal */}
             {showModal && selectedDoctor && (
