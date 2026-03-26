@@ -153,8 +153,8 @@ exports.listPendingRefundRequests = async (req, res) => {
             FROM refund_requests rr
             LEFT JOIN patients pt ON pt.id = rr.patient_id
             JOIN appointments a ON a.id = rr.appointment_id
-            JOIN appointment_schedules s ON s.id = a.schedule_id
-            JOIN doctors d ON d.id = a.doctor_id
+            LEFT JOIN appointment_schedules s ON s.id = a.schedule_id
+            LEFT JOIN doctors d ON d.id = a.doctor_id
             LEFT JOIN payments pay ON pay.internal_order_id = rr.internal_order_id
             WHERE rr.status = 'pending'
             ORDER BY rr.requested_at DESC
@@ -196,8 +196,8 @@ exports.listAllRefundRequests = async (req, res) => {
             FROM refund_requests rr
             LEFT JOIN patients pt ON pt.id = rr.patient_id
             JOIN appointments a ON a.id = rr.appointment_id
-            JOIN appointment_schedules s ON s.id = a.schedule_id
-            JOIN doctors d ON d.id = a.doctor_id
+            LEFT JOIN appointment_schedules s ON s.id = a.schedule_id
+            LEFT JOIN doctors d ON d.id = a.doctor_id
             LEFT JOIN payments pay ON pay.internal_order_id = rr.internal_order_id
             ORDER BY rr.requested_at DESC
         `);
