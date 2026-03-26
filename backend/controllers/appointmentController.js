@@ -474,34 +474,42 @@ exports.deleteAppointment = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Appointment not found' });
         }
         const appointment = existing[0];
-
+        const scheduleId = appointment.schedule_id;
         const apptStat = String(appointment.appointment_status || 'added');
-        const releaseSlot =
-            apptStat !== 'cancelled' &&
-            apptStat !== 'failed' &&
-            Number(appointment.booking_queue_no) > 0;
-        if (releaseSlot) {
-            const [schedules] = await connection.execute('SELECT * FROM appointment_schedules WHERE id = ? FOR UPDATE', [appointment.schedule_id]);
+        const bookedQueueNo = Number(appointment.booking_queue_no || 0);
+
+        // Execute DELETE FROM appointments WHERE id = ?
+        await connection.execute('DELETE FROM appointments WHERE id = ?', [id]);
+
+        // Then, decrement the booked_count if the appointment was active (not already cancelled/failed)
+        // and had a valid queue number.
+        const shouldDecrement = apptStat !== 'cancelled' && apptStat !== 'failed' && bookedQueueNo > 0;
+
+        if (shouldDecrement) {
+            const [schedules] = await connection.execute(
+                'SELECT * FROM appointment_schedules WHERE id = ? FOR UPDATE',
+                [scheduleId]
+            );
+
             if (schedules.length > 0) {
                 const schedule = schedules[0];
                 const newBookedCount = Math.max(0, schedule.booked_count - 1);
 
                 let scheduleUpdate = 'UPDATE appointment_schedules SET booked_count = ?';
-                let scheduleParams = [newBookedCount];
+                const scheduleParams = [newBookedCount];
 
+                // If the schedule was previously 'full', update the status back to 'active'
                 if (schedule.status === 'full') {
                     scheduleUpdate += ', status = ?';
                     scheduleParams.push('active');
                 }
 
                 scheduleUpdate += ' WHERE id = ?';
-                scheduleParams.push(appointment.schedule_id);
+                scheduleParams.push(scheduleId);
 
                 await connection.execute(scheduleUpdate, scheduleParams);
             }
         }
-
-        await connection.execute('DELETE FROM appointments WHERE id = ?', [id]);
 
         await connection.commit();
         res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
