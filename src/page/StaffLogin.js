@@ -80,7 +80,7 @@ const StaffLogin = () => {
                         navigate('/ecare/staff/cashier');
                         break;
                     case 'HR':
-                        navigate('/ecare/staff/hr');
+                        navigate('/ecare/staff/HRCustomerSupport');
                         break;
                     case 'Booking Manager':
                         navigate('/ecare/staff/booking');
