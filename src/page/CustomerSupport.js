@@ -12,11 +12,19 @@ const CustomerSupport = () => {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [ticketTitle, setTicketTitle] = useState('');
+    const [ticketCategory, setTicketCategory] = useState('');
     const [ticketDescription, setTicketDescription] = useState('');
     const [attachment, setAttachment] = useState(null);
     const [creating, setCreating] = useState(false);
     const [notification, setNotification] = useState(null);
+
+    const categories = [
+        "Appointments",
+        "Medical reports",
+        "Technical Issues",
+        "Payments and Billing",
+        "General Assistance"
+    ];
 
     // Show notification
     const showNotification = useCallback((message, type = 'success') => {
@@ -87,8 +95,8 @@ const CustomerSupport = () => {
     // Create ticket
     const handleCreateTicket = async (e) => {
         e.preventDefault();
-        if (!ticketTitle.trim() || !ticketDescription.trim()) {
-            showNotification('Title and description are required', 'error');
+        if (!ticketCategory || !ticketDescription.trim()) {
+            showNotification('Category and description are required', 'error');
             return;
         }
 
@@ -100,7 +108,7 @@ const CustomerSupport = () => {
         // Prevent duplication of the same ticket within 10 minutes
         if (tickets.length > 0) {
             const lastTicket = tickets[0];
-            if (lastTicket.subject === ticketTitle && lastTicket.description === ticketDescription) {
+            if (lastTicket.subject === ticketCategory && lastTicket.description === ticketDescription) {
                 const lastTime = new Date(lastTicket.created_at).getTime();
                 const now = new Date().getTime();
                 if ((now - lastTime) < 10 * 60 * 1000) {
@@ -116,7 +124,7 @@ const CustomerSupport = () => {
             formData.append('patientId', user.id);
             formData.append('patientName', displayName);
             formData.append('patientEmail', user.email);
-            formData.append('subject', ticketTitle);
+            formData.append('subject', ticketCategory);
             formData.append('description', ticketDescription);
             if (attachment) {
                 formData.append('attachment', attachment);
@@ -130,7 +138,7 @@ const CustomerSupport = () => {
             if (response.ok) {
                 showNotification('Ticket raised successfully.');
                 setShowCreateModal(false);
-                setTicketTitle('');
+                setTicketCategory('');
                 setTicketDescription('');
                 setAttachment(null);
                 fetchTickets();
@@ -270,8 +278,25 @@ const CustomerSupport = () => {
                         </div>
                         <form className="cs-modal-body" onSubmit={handleCreateTicket}>
                             <div className="cs-form-group">
-                                <label>Title <span className="cs-required">*</span></label>
-                                <input type="text" value={ticketTitle} onChange={(e) => setTicketTitle(e.target.value)} required />
+                                <label>Category <span className="cs-required">*</span></label>
+                                <select 
+                                    value={ticketCategory} 
+                                    onChange={(e) => setTicketCategory(e.target.value)} 
+                                    required
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        border: '1.5px solid #e2e8f0',
+                                        borderRadius: '12px',
+                                        fontSize: '14px',
+                                        backgroundColor: '#fafbfd'
+                                    }}
+                                >
+                                    <option value="" disabled>Select a category</option>
+                                    {categories.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="cs-form-group">
                                 <label>Description <span className="cs-required">*</span></label>
