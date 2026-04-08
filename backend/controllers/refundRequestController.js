@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { sendMail } = require('../utils/emailSender');
+const { appendDeletedRefundsToGoogleSheet } = require('../utils/googleSheetsPaymentArchive');
 const {
     buildRefundRequestSubmittedHtml,
     buildRefundRequestSubmittedText
@@ -198,7 +199,7 @@ exports.listAllRefundRequests = async (req, res) => {
             JOIN appointments a ON a.id = rr.appointment_id
             LEFT JOIN appointment_schedules s ON s.id = a.schedule_id
             LEFT JOIN doctors d ON d.id = a.doctor_id
-            LEFT JOIN payments pay ON pay.internal_order_id = rr.internal_order_id
+            LEFT JOIN payments pay ON pay.id = rr.payment_id
             ORDER BY rr.requested_at DESC
         `);
 
@@ -219,15 +220,63 @@ exports.deleteOldRefundRequests = async (req, res) => {
     }
 
     try {
-        const [result] = await db.execute(
-            `DELETE FROM refund_requests
-             WHERE requested_at < DATE_SUB(NOW(), INTERVAL 2 YEAR)`
+        const [rows] = await db.execute(
+            `SELECT
+                rr.id,
+                rr.appointment_id,
+                rr.internal_order_id,
+                rr.requested_at,
+                rr.resolved_at,
+                rr.status,
+                NULLIF(TRIM(CONCAT(COALESCE(pt.first_name, ''), ' ', COALESCE(pt.second_name, ''))), '') AS patient_name,
+                pt.phone AS patient_phone,
+                pt.email AS patient_email,
+                d.name AS doctor_name,
+                COALESCE(pay.amount, s.price) AS amount,
+                s.schedule_date,
+                s.start_time
+            FROM refund_requests rr
+            LEFT JOIN appointments a ON a.id = rr.appointment_id
+            LEFT JOIN patients pt ON pt.id = COALESCE(rr.patient_id, a.patient_ID)
+            LEFT JOIN appointment_schedules s ON s.id = a.schedule_id
+            LEFT JOIN doctors d ON d.id = a.doctor_id
+            LEFT JOIN payments pay ON pay.id = rr.payment_id
+            WHERE rr.requested_at < DATE_SUB(NOW(), INTERVAL 10 YEAR)`
         );
+
+        if (rows.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: 'Deleted 0 old refund request(s)',
+                count: 0,
+                archivedToSheet: false
+            });
+        }
+
+        const deletedBy = req.staff?.username != null ? String(req.staff.username) : String(req.staff?.id ?? '');
+        const archive = await appendDeletedRefundsToGoogleSheet(rows, {
+            deletedAt: new Date(),
+            deletedBy
+        });
+
+        if (!archive.skipped && !archive.ok) {
+            return res.status(502).json({
+                success: false,
+                message:
+                    'Could not save deleted refund details to Google Sheet. No refund requests were removed. Fix Google Sheets credentials, add a Sheet2 tab if missing, and ensure the sheet is shared with the service account.',
+                error: archive.error
+            });
+        }
+
+        const ids = rows.map((r) => r.id);
+        const placeholders = ids.map(() => '?').join(',');
+        const [result] = await db.execute(`DELETE FROM refund_requests WHERE id IN (${placeholders})`, ids);
 
         return res.status(200).json({
             success: true,
             message: `Deleted ${result.affectedRows} old refund request(s)`,
-            count: result.affectedRows
+            count: result.affectedRows,
+            archivedToSheet: !archive.skipped
         });
     } catch (error) {
         console.error('deleteOldRefundRequests error:', error);

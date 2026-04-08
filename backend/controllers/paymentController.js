@@ -6,6 +6,7 @@ const { buildRefundProcessedPatientEmail, colomboDateTimeLabel } = require('../u
 const { buildReceiptEmailHtml, buildReceiptEmailText } = require('../utils/receiptEmailHtml');
 const { buildReceiptFailEmailHtml, buildReceiptFailEmailText } = require('../utils/receiptFailEmailHtml');
 const { buildReceiptPdfBufferFromJsPDF } = require('../utils/generateReceiptPdfNode');
+const { appendDeletedPaymentsToGoogleSheet } = require('../utils/googleSheetsPaymentArchive');
 
 async function getPayHereOAuthToken() {
     const oauthUrl = String(process.env.PAYHERE_OAUTH_URL || '').trim();
@@ -715,10 +716,53 @@ exports.getAllPaymentsForCashier = async (req, res) => {
 
 exports.deleteOldPayments = async (req, res) => {
     try {
-        const [result] = await db.execute(
-            `DELETE FROM payments WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 YEAR)`
+        const [rows] = await db.execute(
+            `SELECT
+                p.id,
+                p.internal_order_id,
+                NULLIF(TRIM(CONCAT(COALESCE(pt.first_name, ''), ' ', COALESCE(pt.second_name, ''))), '') AS patient_name,
+                d.name AS doctor_name,
+                p.amount,
+                p.payment_method,
+                p.payment_status,
+                p.card_last_digits,
+                COALESCE(p.appointment_id, ap_id.id, ap_pid.id) AS appointment_id,
+                p.created_at
+            FROM payments p
+            LEFT JOIN appointments ap_id ON ap_id.id = p.appointment_id
+            LEFT JOIN appointments ap_pid ON ap_pid.payment_id = p.id AND p.appointment_id IS NULL
+            LEFT JOIN patients pt ON pt.id = COALESCE(p.patient_id, ap_id.patient_ID, ap_pid.patient_ID)
+            LEFT JOIN doctors d ON d.id = COALESCE(p.doctor_id, ap_id.doctor_id, ap_pid.doctor_id)
+            WHERE p.created_at < DATE_SUB(NOW(), INTERVAL 10 YEAR)`
         );
-        res.status(200).json({ message: `Deleted ${result.affectedRows} old payment(s)`, count: result.affectedRows });
+
+        if (rows.length === 0) {
+            return res.status(200).json({ message: 'Deleted 0 old payment(s)', count: 0, archivedToSheet: false });
+        }
+
+        const deletedBy = req.staff?.username != null ? String(req.staff.username) : String(req.staff?.id ?? '');
+        const archive = await appendDeletedPaymentsToGoogleSheet(rows, {
+            deletedAt: new Date(),
+            deletedBy
+        });
+
+        if (!archive.skipped && !archive.ok) {
+            return res.status(502).json({
+                message:
+                    'Could not save deleted payment details to Google Sheet. No payments were removed. Fix Google Sheets credentials or sharing, then try again.',
+                error: archive.error
+            });
+        }
+
+        const ids = rows.map((r) => r.id);
+        const placeholders = ids.map(() => '?').join(',');
+        const [result] = await db.execute(`DELETE FROM payments WHERE id IN (${placeholders})`, ids);
+
+        res.status(200).json({
+            message: `Deleted ${result.affectedRows} old payment(s)`,
+            count: result.affectedRows,
+            archivedToSheet: !archive.skipped
+        });
     } catch (error) {
         console.error('Error deleting old payments:', error);
         res.status(500).json({ message: 'Internal server error' });
