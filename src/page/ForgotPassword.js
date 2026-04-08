@@ -11,7 +11,7 @@ const ForgotPassword = () => {
     const location = useLocation();
     const initialEmail = location.state?.email || '';
 
-    const [email, setEmail] = useState(initialEmail);
+    const [email] = useState(initialEmail);
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -88,13 +88,17 @@ const ForgotPassword = () => {
 
     const handleResend = async () => {
         if (resendCooldown > 0 || !email) return;
+        if (!resendRecaptchaToken) {
+            setError('Please complete reCAPTCHA to resend the code');
+            return;
+        }
         setError('');
         setIsLoading(true);
         try {
             const response = await fetch(`${apiBase}/api/auth/forgot-password/request`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email, recaptchaToken: resendRecaptchaToken })
             });
             const data = await response.json();
             if (!response.ok) {
@@ -102,6 +106,8 @@ const ForgotPassword = () => {
                 return;
             }
             setResendCooldown(60);
+            setResendRecaptchaToken(null);
+            resendRecaptchaRef.current?.reset?.();
         } catch {
             setError('Connection error. Please try again.');
         } finally {

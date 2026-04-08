@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../css/CashierDashboard.css';
 import LogoHospital from '../../images/LogoHospital.png';
-import { formatMediumDateTimeLK, formatMediumDateLK, formatScheduleDateLK } from '../../utils/sriLankaTime';
+import { formatMediumDateTimeLK } from '../../utils/sriLankaTime';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 

@@ -26,13 +26,6 @@ const ECare = () => {
         }
     }, []);
 
-    const handleProfileUpdate = (updatedUser) => {
-        if (updatedUser) {
-            setPatientUser(updatedUser);
-        }
-        console.log('Profile updated');
-    };
-
     // Check for support updates
     useEffect(() => {
         if (patientUser) {
