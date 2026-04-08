@@ -11,11 +11,11 @@ const authHeaders = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('staffToken')}` }
 });
 
-const isOlderThan2Years = (dateStr) => {
+const isOlderThan10Years = (dateStr) => {
     if (!dateStr) return false;
-    const twoYearsAgo = new Date();
-    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-    return new Date(dateStr) < twoYearsAgo;
+    const tenYearsAgo = new Date();
+    tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+    return new Date(dateStr) < tenYearsAgo;
 };
 
 const STATUS_COLORS = {
@@ -144,19 +144,21 @@ const CashierDashboard = () => {
     };
 
     const handleDeleteOld = () => {
-        const old = payments.filter(p => isOlderThan2Years(p.date));
-        if (old.length === 0) { showToast('No payments older than 2 years found'); return; }
+        const old = payments.filter(p => isOlderThan10Years(p.date));
+        if (old.length === 0) { showToast('No payments older than 10 years found'); return; }
         setModal({ open: true, type: 'deleteOld', data: old });
     };
 
     const confirmDeleteOld = async () => {
         try {
             const response = await axios.delete(`${API_BASE}/api/payment/delete-old`, authHeaders());
-            setPayments(prev => prev.filter(p => !isOlderThan2Years(p.date)));
-            showToast(`Deleted ${response.data.count} old payment(s)`);
+            setPayments(prev => prev.filter(p => !isOlderThan10Years(p.date)));
+            const archived = response.data?.archivedToSheet ? ' Details saved to Google Sheet.' : '';
+            showToast(`Deleted ${response.data.count} old payment(s).${archived}`);
         } catch (error) {
             console.error('Error deleting old payments:', error);
-            showToast('Failed to delete old payments');
+            const msg = error?.response?.data?.message;
+            showToast(msg || 'Failed to delete old payments');
         }
         setModal({ open: false, type: '', data: null });
     };
@@ -284,7 +286,7 @@ const CashierDashboard = () => {
                             </div>
                             <button className="cashier-toolbar-btn delete-old" onClick={handleDeleteOld}>
                                 <span className="material-symbols-outlined">timer_off</span>
-                                Delete Old (&gt;2 yrs)
+                                Delete Old (&gt;10 yrs)
                             </button>
                             <button
                                 className="cashier-toolbar-btn refund-requests"
@@ -420,7 +422,7 @@ const CashierDashboard = () => {
                             <>
                                 <h3>Delete Old Payments</h3>
                                 <p>
-                                    This will permanently delete <strong>{modal.data.length}</strong> payment record(s) older than 2 years. This action cannot be undone.
+                                    This will permanently delete <strong>{modal.data.length}</strong> payment record(s) older than 10 years. This action cannot be undone.
                                 </p>
                                 <div className="modal-actions">
                                     <button className="modal-btn cancel" onClick={closeModal}>Cancel</button>

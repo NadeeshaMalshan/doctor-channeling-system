@@ -11,11 +11,11 @@ const authHeaders = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('staffToken')}` }
 });
 
-const isOlderThan2Years = (dateStr) => {
+const isOlderThan10Years = (dateStr) => {
     if (!dateStr) return false;
-    const twoYearsAgo = new Date();
-    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-    return new Date(dateStr) < twoYearsAgo;
+    const tenYearsAgo = new Date();
+    tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+    return new Date(dateStr) < tenYearsAgo;
 };
 
 const statusBadgeClass = (status) => {
@@ -65,11 +65,11 @@ const RefundPayment = () => {
         };
     }, []);
 
-    const oldRefunds = refunds.filter((r) => isOlderThan2Years(r.requested_at));
+    const oldRefunds = refunds.filter((r) => isOlderThan10Years(r.requested_at));
 
     const handleDeleteOldRefunds = () => {
         if (oldRefunds.length === 0) {
-            showToast('These refunds are less than 2 years old. There are no eligible refunds to delete.');
+            showToast('These refunds are less than 10 years old. There are no eligible refunds to delete.');
             return;
         }
         setModal({ open: true, type: 'deleteOldRefunds', data: oldRefunds });
@@ -80,8 +80,9 @@ const RefundPayment = () => {
         try {
             setDeleteSubmitting(true);
             const response = await axios.delete(`${API_BASE}/api/refund-requests/delete-old`, authHeaders());
-            setRefunds((prev) => prev.filter((r) => !isOlderThan2Years(r.requested_at)));
-            showToast(`Deleted ${response.data?.count ?? modal.data.length} old refund request(s)`);
+            setRefunds((prev) => prev.filter((r) => !isOlderThan10Years(r.requested_at)));
+            const archived = response.data?.archivedToSheet ? ' Details saved to Google Sheet (Sheet2).' : '';
+            showToast(`Deleted ${response.data?.count ?? modal.data.length} old refund request(s).${archived}`);
         } catch (err) {
             console.error('Error deleting old refunds:', err);
             showToast(err?.response?.data?.message || 'Failed to delete old refunds');
@@ -127,7 +128,7 @@ const RefundPayment = () => {
                 <div className="cashier-hero">
                     <div className="cashier-hero-content">
                         <h1>Refund Requests</h1>
-                        <p>View refund requests and delete only older than 2 years.</p>
+                        <p>View refund requests and delete only older than 10 years.</p>
                     </div>
                     <div className="bg-circles">
                         <div className="circle circle-1"></div>
@@ -156,10 +157,10 @@ const RefundPayment = () => {
                                 className="cashier-toolbar-btn delete-old"
                                 onClick={handleDeleteOldRefunds}
                                 disabled={deleteSubmitting}
-                                title="Deletes only refunds older than 2 years"
+                                title="Deletes only refunds older than 10 years"
                             >
                                 <span className="material-symbols-outlined">delete</span>
-                                Delete Old (&gt;2 yrs)
+                                Delete Old (&gt;10 yrs)
                             </button>
                         </div>
 
@@ -186,8 +187,8 @@ const RefundPayment = () => {
                                                     <span className={`status-badge ${statusBadgeClass(r.status)}`}>
                                                         {String(r.status || '').toUpperCase()}
                                                     </span>
-                                                    {isOlderThan2Years(r.requested_at) && (
-                                                        <span className="sandbox-tag" title="Eligible for delete (>2 years)">OLD</span>
+                                                    {isOlderThan10Years(r.requested_at) && (
+                                                        <span className="sandbox-tag" title="Eligible for delete (>10 years)">OLD</span>
                                                     )}
                                                 </td>
                                                 <td style={{ fontWeight: 500 }}>{r.patient_name}</td>
@@ -221,7 +222,7 @@ const RefundPayment = () => {
                             <>
                                 <h3>Delete Old Refund Requests</h3>
                                 <p>
-                                    This will permanently delete <strong>{modal.data.length}</strong> refund request(s) requested more than 2 years ago. This action cannot be undone.
+                                    This will permanently delete <strong>{modal.data.length}</strong> refund request(s) requested more than 10 years ago. This action cannot be undone.
                                 </p>
                                 <div className="modal-actions">
                                     <button className="modal-btn cancel" onClick={closeModal} disabled={deleteSubmitting}>
