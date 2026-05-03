@@ -22,10 +22,21 @@ reader = easyocr.Reader(["en"], verbose=False)
 # AI backend deployment (localhost)
 app = FastAPI(title="NCC eCare AI Backend", version="1.0.0")
 
-# CORS - Allow React frontend access
+
+def _cors_allow_origins():
+    """FRONTEND_URL can be comma-separated. Always allow local CRA dev."""
+    raw = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    for extra in ("http://localhost:3000", "http://127.0.0.1:3000"):
+        if extra not in parts:
+            parts.append(extra)
+    return parts
+
+
+# CORS - Allow React frontend access (Vercel + localhost dev)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:3000")],
+    allow_origins=_cors_allow_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

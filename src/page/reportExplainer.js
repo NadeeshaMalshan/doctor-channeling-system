@@ -2,6 +2,17 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ECareNavBar from '../Components/eCareNavBar';
 import './css/reportExplainer.css';
+import { AI_API_BASE_URL } from '../config';
+
+async function readAiError(response) {
+    const text = await response.text();
+    try {
+        const j = JSON.parse(text);
+        return j.detail || j.message || text.slice(0, 200);
+    } catch {
+        return text.slice(0, 200) || `HTTP ${response.status}`;
+    }
+}
 
 const ReportExplainer = () => {
     const navigate = useNavigate();
@@ -96,12 +107,16 @@ const ReportExplainer = () => {
                 formData.append('files', file);
             });
 
-            const AI_API_URL = process.env.REACT_APP_AI_API_URL || 'http://localhost:8000';
-            const response = await fetch(`${AI_API_URL}/api/ocr`, {
+            const response = await fetch(`${AI_API_BASE_URL}/api/ocr`, {
                 method: 'POST',
                 body: formData,
             });
 
+            if (!response.ok) {
+                const msg = await readAiError(response);
+                alert(`OCR failed (${response.status}): ${msg}`);
+                return;
+            }
             const data = await response.json();
             if (data.text) {
                 setOcrText(data.text);
@@ -111,7 +126,9 @@ const ReportExplainer = () => {
             }
         } catch (error) {
             console.error('OCR Error:', error);
-            alert('Cant connect to server.');
+            alert(
+                `Cant reach AI server (${AI_API_BASE_URL}). If using Hugging Face, redeploy the Space after CORS update, or run AI locally on port 8000. Details: ${error?.message || String(error)}`
+            );
         }
         setIsExtracting(false);
     };
@@ -120,8 +137,7 @@ const ReportExplainer = () => {
         if (!ocrText.trim()) return;
         setIsAnalyzing(true);
         try {
-            const AI_API_URL = process.env.REACT_APP_AI_API_URL || 'http://localhost:8000';
-            const response = await fetch(`${AI_API_URL}/api/explain`, {
+            const response = await fetch(`${AI_API_BASE_URL}/api/explain`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -131,6 +147,11 @@ const ReportExplainer = () => {
                 }),
             });
 
+            if (!response.ok) {
+                const msg = await readAiError(response);
+                alert(`Explain failed (${response.status}): ${msg}`);
+                return;
+            }
             const data = await response.json();
             if (data.explanation) {
                 setExplainedText(data.explanation);
@@ -140,7 +161,9 @@ const ReportExplainer = () => {
             }
         } catch (error) {
             console.error('AI Error:', error);
-            alert('Cant connect to server.');
+            alert(
+                `Cant reach AI server (${AI_API_BASE_URL}). If using Hugging Face, redeploy the Space after CORS update, or run AI locally on port 8000. Details: ${error?.message || String(error)}`
+            );
         }
         setIsAnalyzing(false);
     };

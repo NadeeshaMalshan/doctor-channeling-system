@@ -5,6 +5,7 @@ import './css/smartDocSuggestion.css';
 import symptomsData from '../data/symptoms.json';
 import gsap from 'gsap';
 import { Search, X, Loader2, Stethoscope, CheckCircle2, AlertCircle } from 'lucide-react';
+import { AI_API_BASE_URL } from '../config';
 
 const SmartDocSuggestion = () => {
     const navigate = useNavigate();
@@ -69,8 +70,7 @@ const SmartDocSuggestion = () => {
             // If the model throws an error, we can adjust.
             
             // 1. Get AI Disease Prediction
-            const AI_API_URL = process.env.REACT_APP_AI_API_URL || 'http://localhost:8000';
-            const predictResponse = await fetch(`${AI_API_URL}/api/predict`, {
+            const predictResponse = await fetch(`${AI_API_BASE_URL}/api/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(featureVector)
@@ -79,8 +79,7 @@ const SmartDocSuggestion = () => {
 
             if (predictData.success) {
                 // 2. Search for doctors by the recommended specialist
-                const AI_API_URL = process.env.REACT_APP_AI_API_URL || 'http://localhost:8000';
-                const doctorResponse = await fetch(`${AI_API_URL}/api/suggest-doctor?specialization=${predictData.suggested_specialist}`);
+                const doctorResponse = await fetch(`${AI_API_BASE_URL}/api/suggest-doctor?specialization=${predictData.suggested_specialist}`);
                 const doctorData = await doctorResponse.json();
 
                 setResults({
